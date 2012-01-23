@@ -1,0 +1,12 @@
+Package: ReadGenea
+Type: Package
+Title: Package For Reading Binary files
+Version: 2.0-1
+Date: 20/01/2012
+Author: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
+Maintainer: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
+Description: Functions and analytics for Genea accelerometer data into R objects
+License: GPL
+LazyLoad: yes
+Depends: bitops
+Packaged: 2011-10-12 13:17:57 UTC; admin
