@@ -102,8 +102,17 @@ return (x[floor(a*len) : floor(b*len)])
 }
 }
 
-plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T)
+plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
 
-#plots fft
-#plotfreqs = function(x, frequencies, new=F){
+#gets fft components corresponding to frequencies
+getfreqs = function(x, frequencies){
+n = length(x)
+fftobj = fft(x)
+frequencies = c(frequencies, n - frequencies) + 1
+frequencies = frequencies[which(frequencies != n+1)]
+fftobj = replace(fftobj, (1:n)[ - frequencies], 0)
+
+return(Re(fft(fftobj, inverse=T))/n)
+}
+
 
