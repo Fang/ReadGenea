@@ -36,8 +36,8 @@ null.logmean = mean(log(tmpdat$values[,-1]))
 null.logsd = sd(log(tmpdat$values[,-1]))
 }
 
-    Y<- list (values = cbind(y[,1] ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)]  )
+    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
+		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq)   )
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
     return(Y)
@@ -64,16 +64,16 @@ if (log.it){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 }
-time = (x$windowsize/2 +  x$increment * 0:(nrow(xv) - 1))/(x$freq)
-frequency= x$freq * (1:ncol(xv)  - 1 ) / x$windowsize
+time = x$time
+frequency= x$frequency
 if(log == "y"){
 frequency[1] = frequency[2]^2/frequency[3]
+frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 
     image( x = time , y = frequency,   z=xv, col=col, log = log,...)
 if (showmax){
-points ( time, frequency[apply(x$values,1,which.max)] ->principals, col=2 * (rowMeans(xv) > 0.1 * x$null.logmean)  , pch=".", cex = 3)
-invisible(principals)
+points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 }
 
 }
@@ -102,6 +102,8 @@ return (x[floor(a*len) : floor(b*len)])
 }
 }
 
-#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T)
+plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T)
 
+#plots fft
+#plotfreqs = function(x, frequencies, new=F){
 
