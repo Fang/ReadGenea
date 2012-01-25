@@ -70,13 +70,15 @@ frequency[1] = frequency[2]^2/frequency[3]
 
     image( x = time , y = frequency,   z=xv, col=col, log = log,...)
 if (showmax){
-points ( time, frequency[apply(x$values,1,which.max)] ->principals, col=2 * (rowMeans(xv) > 0.1 * x$null.logmean)  , pch=".")
+points ( time, frequency[apply(x$values,1,which.max)] ->principals, col=2 * (rowMeans(xv) > 0.1 * x$null.logmean)  , pch=".", cex = 3)
 invisible(principals)
 }
 
 }
 plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), log.it = T, log="y")
 plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
+plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), log.it = T)
+
 
 
 #plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F), log.it = T, log = "y")

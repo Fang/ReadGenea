@@ -1,4 +1,6 @@
+#calculates Short Time Fourier Transforms.
 #if center = T, remove means
+#if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/4)), coef=64, 
 		 wtype="hanning.window", freq = 100, center = T, plot.it = T, calc.null = T )
@@ -34,8 +36,8 @@ null.logmean = mean(log(tmpdat$values[,-1]))
 null.logsd = sd(log(tmpdat$values[,-1]))
 }
 
-    Y<- list (values = Mod(y[,(1):coef]), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd)
+    Y<- list (values = cbind(y[,1] ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
+		  windowtype=wtype, center = center, frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)]  )
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
     return(Y)
@@ -75,9 +77,11 @@ invisible(principals)
 }
 
 }
-plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), log.it = T, log="y")
-plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
-plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), log.it = T)
+
+#example code
+#plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), log.it = T, log="y")
+#plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
+#plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), log.it = T)
 
 
 
@@ -86,7 +90,7 @@ plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), log.it = T
 #stft(sin(1:1000 / (1 +sqrt(1000:1)) * 2 * pi), freq = 1)
 # stft(rep(1, 1000) + sin(1:1000/ 10 * 2*pi), freq = 1)
 
-
+#subsets a proportion of the dataset, or a certain length of the dataset starting at a specific proportion position
 subs <- function(x, a,b){
 len = length(x)
 if (a > 1){
@@ -98,5 +102,6 @@ return (x[floor(a*len) : floor(b*len)])
 }
 }
 
-plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T)
+#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T)
+
 
