@@ -59,17 +59,22 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
             stop(cat("Please input valid start and end times between ", 
                 t1c, " and ", tnc, " or pages between 1 and ", 
                 npages, ".\n\n"), call. = FALSE)
-        }
-        else {
+        } else if (start < 1) {
+#specify a proportional point to start
+		start = timestamps[max(floor( start * npages),1)]
+	} else {
             start <- max(start, 1)
             start <- timestamps[start]
         }
     }
     if (is.numeric(end)) {
         if ((end < 1)) {
-            stop(cat("Please input valid start and end times between ", 
-                t1c, " and ", tnc, " or pages between 1 and ", 
-                npages, ".\n\n"), call. = FALSE)
+#            stop(cat("Please input valid start and end times between ", 
+#                t1c, " and ", tnc, " or pages between 1 and ", 
+#                npages, ".\n\n"), call. = FALSE)
+#specify a proportional point to end
+		end= min(end * npages, end)
+		end = timestamps[end]
         }
         else {
             end <- min(end, npages)

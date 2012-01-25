@@ -168,7 +168,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #
 #if (nstreams > sizelim ){
 #cat("Splitting into ", ceiling(nstreams/sizelim), " chunks.\n")
-#temp = list(data.out = NULL, page.timestamps = NULL)
+#temp = list(data.out = NULL, page.timestamps = NULL, freq = freq)
 #while(length(index) > 0){
 #tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(sizelim, length(index))], 
 #    verbose , do.temp, calibrate, gain, 
@@ -222,7 +222,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     end.proc.time <- Sys.time()
     cat("processing took:", format(round(as.difftime(end.proc.time - 
         start.proc.time), 3)), ".\n")
-    processedfile <- list(data.out = proc.file, page.timestamps = timestampsc[index])
+    processedfile <- list(data.out = proc.file, page.timestamps = timestampsc[index], freq= freq)
     if (is.null(outfile)) {
         return(processedfile)
     }
