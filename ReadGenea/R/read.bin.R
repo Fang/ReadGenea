@@ -1,8 +1,9 @@
 #reads binary accelerometer data
+#blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
     verbose = FALSE, do.temp = TRUE, calibrate = FALSE, gain = NULL, 
-    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL) 
+    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf) 
 {
 #variables for positions and record lengths in file
 
@@ -178,23 +179,34 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #
 ##read blocks of pages at a time as memory allows
 #
-#if (nstreams > sizelim ){
-#cat("Splitting into ", ceiling(nstreams/sizelim), " chunks.\n")
-#temp = list(data.out = NULL, page.timestamps = NULL, freq = freq)
-#while(length(index) > 0){
-#tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(sizelim, length(index))], 
-#    verbose , do.temp, calibrate, gain, 
-#    offset, luxv, voltv, tformat,warn) 
-#temp$data.out = rbind(temp$data.out, tempobj$data.out)
-#temp$page.timestamps = c(temp$page.timestamps, tempobj$page.timestamps)
-#
-#index = index[- (1: min(sizelim, length(index)))]
-#}
-#    if (!(is.null(outfile))) {
-#        save(temp, file = outfile)
-#    }
-#return(temp)
-#}
+if (nstreams > blocksize ){
+cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n")
+tempchunk = list(data.out = NULL, page.timestamps = NULL, freq = freq)
+if (!is.null(downsample)){
+	downsampleoffset = 1
+	if (length(downsample) == 2) downsampleoffset = downsample[2]
+	downsample = downsample[1]
+}
+	
+while(length(index) > 0){
+tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
+    verbose , do.temp, calibrate, gain, 
+    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
+
+tempchunk$data.out = rbind(tempchunk$data.out, tempobj$data.out)
+tempchunk$page.timestamps = c(tempchunk$page.timestamps, tempobj$page.timestamps)
+
+downsampleoffset = (downsampleoffset-1 + nobs*blocksize )%% downsample ##### TODO
+
+index = index[- (1: min(blocksize, length(index)))]
+
+}
+tempchunk$freq  = freq * nrow(tempchunk$data.out)/ (nstreams*nobs)
+    if (!(is.null(outfile))) {
+        save(temp, file = outfile)
+    }
+return(temp)
+}
 #
     proc.file <- NULL
     start.proc.time <- Sys.time()
