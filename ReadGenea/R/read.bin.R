@@ -1,10 +1,14 @@
+#reads binary accelerometer data
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
     verbose = FALSE, do.temp = TRUE, calibrate = FALSE, gain = NULL, 
     offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE) 
 {
+#variables for positions and record lengths in file
     headlines <- 59
     reclength <- 10
+    position.data <- 10
+    position.temperature <- 6
     orig.opt <- options(digits.secs = 3)
     fc <- file(binfile, "rt")
     freq <- scan(fc, skip = 19, what = "", n = 2, sep = ":", 
@@ -38,8 +42,6 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     nobs <- 300
     freqseq <- seq(0, by = 1/freq, length = nobs)
     timespan <- nobs/freq
-    bseq <- seq(headlines, by = reclength, length = npages) - 
-        1
     t1 <- t1[2:length(t1)]
     t1[1] <- substr(t1[1], 6, nchar(t1[1]))
     t1c <- reformat.time(t1, format = "POSIX")
@@ -192,11 +194,18 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     proc.file <- NULL
     start.proc.time <- Sys.time()
     data <- NULL
-    tmpd <- readLines(binfile, n = max(bseq[index]) + 11)
-    data <- strsplit(paste(tmpd[bseq[index] + 11], collapse = ""), 
+#skip to start of data blocks
+binfile = file(binfile, "rt")
+tmpd <- readLines(binfile, n = headlines)
+#skip unneeded pages
+replicate ( min( index - 1 ), is.character(readLines(binfile, n=reclength)))
+    tmpd <- readLines(binfile, n = ((max(index) - min(index)) +1) * reclength  )
+close(binfile)
+bseq = (index - min(index) ) * reclength
+    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), 
         "")[[1]]
     if (do.temp) {
-        tdata <- tmpd[bseq[index] + 7]
+        tdata <- tmpd[bseq + position.temperature]
         temp <- as.numeric(substring(tdata, 13, nchar(tdata)))
         temperature <- rep(temp, each = nobs)
     }
