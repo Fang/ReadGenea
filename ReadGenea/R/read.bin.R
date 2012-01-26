@@ -2,9 +2,10 @@
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
     verbose = FALSE, do.temp = TRUE, calibrate = FALSE, gain = NULL, 
-    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE) 
+    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL) 
 {
 #variables for positions and record lengths in file
+
     headlines <- 59
     reclength <- 10
     position.data <- 10
@@ -35,6 +36,10 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     t1 <- scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1)
     freq <- as.integer(scan(fc, skip = 4, what = "", n = 2, sep = ":", 
         quiet = TRUE)[2])
+	if (!is.null(downsample)) {
+		cat("Downsampling to ", freq/downsample[1] , " Hz \n")
+		if (nobs %% downsample[1] != 0) cat("Warning, downsample divisor not factor of ", nobs, "!\n")
+	}
     if (verbose) {
         cat("Number of pages in binary file:", npages, "\n")
     }
@@ -202,26 +207,68 @@ replicate ( min( index - 1 ), is.character(readLines(binfile, n=reclength)))
     tmpd <- readLines(binfile, n = ((max(index) - min(index)) +1) * reclength  )
 close(binfile)
 bseq = (index - min(index) ) * reclength
-    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), 
-        "")[[1]]
-    if (do.temp) {
-        tdata <- tmpd[bseq + position.temperature]
-        temp <- as.numeric(substring(tdata, 13, nchar(tdata)))
-        temperature <- rep(temp, each = nobs)
-    }
+	    cat("done file reading.  Processing...\n")
+	if (is.null(downsample)){
+	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
+
+	    if (do.temp) {	
+        	tdata <- tmpd[bseq + position.temperature]
+	        temp <- as.numeric(substring(tdata, 13, nchar(tdata)))
+	        temperature <- rep(temp, each = nobs)
+	    }
     # line below added for future beneficial gc
-    rm(tmpd)
-    cat("done file reading.  Processing...\n")
+	    rm(tmpd)
   #  data <- check.hex(data) #removed checks because taking too long, convert.hexstream should throw an error anyway.
-    proc.file <- convert.hexstream(data)
+	    proc.file <- convert.hexstream(data)
+
+    		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
+	} else {
+		freqseq.orig = freqseq	
+		downsampleoffset = 1
+		if (length(downsample) == 2){
+			downsampleoffset = downsample[2]
+			downsample = downsample[1]
+		}
+
+
+		proc.file = NULL
+		nn = NULL
+		ind = 1
+		temperature = NULL
+		for (i in bseq){
+			positions = which((1:nobs - 1) %% downsample == 0)   + downsampleoffset - 1
+			if (max(positions) > nobs) {
+				downsampleoffset = tail(positions,1) - nobs
+				positions = head(positions, -1)
+			} else {
+				downsampleoffset = tail(positions, 1) +downsample - nobs
+			}
+			nobs.cur = length(positions)
+			if (nobs.cur > 0){
+				data <- strsplit(paste(tmpd[i + position.data], collapse=""), "")[[1]]
+				data <-data[rep( (positions -1)*12, each=12) + 1:12]
+				proc.file = rbind(proc.file, convert.hexstream(data))
+				freqseq = freqseq.orig[positions]
+				nn = c(nn, rep(timestamps[ index[ind]], length(freqseq)) + freqseq)
+				if (do.temp){
+					tdata = tmpd[i + position.temperature]
+					temperature = c(temperature, rep( as.numeric( substring(tdata,13, nchar(tdata))), each = nobs.cur))
+				}
+			}
+			ind = ind +1
+		}	
+		rm(tmpd)
+		freq = freq * ncol(proc.file)/ (nobs * (length(index)))
+	}	
+
+
     if (calibrate) {
         proc.file[1, ] <- (proc.file[1, ] * 100 - xoffset)/xgain
         proc.file[2, ] <- (proc.file[2, ] * 100 - yoffset)/ygain
         proc.file[3, ] <- (proc.file[3, ] * 100 - zoffset)/zgain
         proc.file[4, ] <- proc.file[4, ] * lux/volts
     }
-    nn <- rep(timestamps[1:length(index)], each = length(freqseq)) + 
-        freqseq
+
     proc.file <- t(proc.file)
     proc.file <- cbind(nn, proc.file)
 #    rownames(proc.file) <- paste("obs.", 1:nrow(proc.file)) # strip out row labels - waste of memory
