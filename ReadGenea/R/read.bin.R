@@ -6,7 +6,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf) 
 {
 #variables for positions and record lengths in file
-
+    nobs <- 300
     headlines <- 59
     reclength <- 10
     position.data <- 10
@@ -45,7 +45,6 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         cat("Number of pages in binary file:", npages, "\n")
     }
     close(fc)
-    nobs <- 300
     freqseq <- seq(0, by = 1/freq, length = nobs)
     timespan <- nobs/freq
     t1 <- t1[2:length(t1)]
@@ -71,7 +70,6 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #specify a proportional point to start
 		start = timestamps[max(floor( start * npages),1)]
 	} else {
-            start <- max(start, 1)
             start <- timestamps[start]
         }
     }
@@ -81,7 +79,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #                t1c, " and ", tnc, " or pages between 1 and ", 
 #                npages, ".\n\n"), call. = FALSE)
 #specify a proportional point to end
-		end= min(end * npages, end)
+		end= ceiling(end * npages)
 		end = timestamps[end]
         }
         else {
@@ -189,23 +187,27 @@ if (!is.null(downsample)){
 }
 	
 while(length(index) > 0){
-tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
-    verbose , do.temp, calibrate, gain, 
-    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
+if (is.null(downsample)){
+	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
+	    verbose , do.temp, calibrate, gain, 
+	    offset, luxv, voltv, tformat,warn, downsample = NULL, blocksize = Inf)
+} else {
+	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
+	    verbose , do.temp, calibrate, gain, 
+	    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
+	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
+}
 
 tempchunk$data.out = rbind(tempchunk$data.out, tempobj$data.out)
 tempchunk$page.timestamps = c(tempchunk$page.timestamps, tempobj$page.timestamps)
-
-downsampleoffset = (downsampleoffset-1 + nobs*blocksize )%% downsample ##### TODO
-
 index = index[- (1: min(blocksize, length(index)))]
 
 }
 tempchunk$freq  = freq * nrow(tempchunk$data.out)/ (nstreams*nobs)
     if (!(is.null(outfile))) {
-        save(temp, file = outfile)
+        save(tempchunk, file = outfile)
     }
-return(temp)
+return(tempchunk)
 }
 #
     proc.file <- NULL
@@ -234,42 +236,28 @@ bseq = (index - min(index) ) * reclength
 	    proc.file <- convert.hexstream(data)
 
     		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
+##So we are downsampling
 	} else {
-		freqseq.orig = freqseq	
 		downsampleoffset = 1
 		if (length(downsample) == 2){
 			downsampleoffset = downsample[2]
 			downsample = downsample[1]
 		}
-
-
-		proc.file = NULL
-		nn = NULL
-		ind = 1
-		temperature = NULL
-		for (i in bseq){
-			positions = which((1:nobs - 1) %% downsample == 0)   + downsampleoffset - 1
-			if (max(positions) > nobs) {
-				downsampleoffset = tail(positions,1) - nobs
-				positions = head(positions, -1)
-			} else {
-				downsampleoffset = tail(positions, 1) +downsample - nobs
-			}
-			nobs.cur = length(positions)
-			if (nobs.cur > 0){
-				data <- strsplit(paste(tmpd[i + position.data], collapse=""), "")[[1]]
-				data <-data[rep( (positions -1)*12, each=12) + 1:12]
-				proc.file = rbind(proc.file, convert.hexstream(data))
-				freqseq = freqseq.orig[positions]
-				nn = c(nn, rep(timestamps[ index[ind]], length(freqseq)) + freqseq)
-				if (do.temp){
-					tdata = tmpd[i + position.temperature]
-					temperature = c(temperature, rep( as.numeric( substring(tdata,13, nchar(tdata))), each = nobs.cur))
-				}
-			}
-			ind = ind +1
-		}	
-		rm(tmpd)
+		 data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
+	    if (do.temp) {	
+        	tdata <- tmpd[bseq + position.temperature]
+	        temp <- as.numeric(substring(tdata, 13, nchar(tdata)))
+	        temperature <- rep(temp, each = nobs)
+	    }
+    # line below added for future beneficial gc
+	    rm(tmpd)
+  #  data <- check.hex(data) #removed checks because taking too long, convert.hexstream should throw an error anyway.
+	    proc.file <- convert.hexstream(data)
+    		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
+		positions = downsampleoffset + (0: floor(( nobs * length(index)  - downsampleoffset )/downsample)) * downsample
+		proc.file = proc.file[, positions]
+		temperature = temperature[positions]
+		nn  = nn[positions]
 		freq = freq * ncol(proc.file)/ (nobs * (length(index)))
 	}	
 

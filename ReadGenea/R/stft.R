@@ -57,10 +57,10 @@ rep(1, n)
 }
 
 
-plot.stft <- function (x, col = gray (63:0/63), log.it = F, log = "", showmax = T, ...)
+plot.stft <- function (x, col = gray (63:0/63), zlog = F, log = "", showmax = T, ...)
   {
     xv <- x$values
-if (log.it){
+if (zlog){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 }
@@ -79,13 +79,13 @@ points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=
 }
 
 #example code
-#plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), log.it = T, log="y")
-#plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
-#plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), log.it = T)
+#plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), zlog = T, log="y")
+#plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
+#plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), zlog = T)
 
 
 
-#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F), log.it = T, log = "y")
+#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F), zlog = T, log = "y")
 #plot( stft(rep(1, 1000) + c(sin(1:500/ 10 * 2*pi), rep(0, 500)) + c(rep(0, 300),sin(1:500/ 20 * 2*pi), rep(0, 200)) , freq = 1, plot.it = F), log="x")
 #stft(sin(1:1000 / (1 +sqrt(1000:1)) * 2 * pi), freq = 1)
 # stft(rep(1, 1000) + sin(1:1000/ 10 * 2*pi), freq = 1)
@@ -102,7 +102,7 @@ return (x[floor(a*len) : floor(b*len)])
 }
 }
 
-plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), log.it = T, log="y")
+#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
 
 #gets fft components corresponding to frequencies
 getfreqs = function(x, frequencies){
