@@ -29,7 +29,7 @@ if (pvalues){
 temp = sample(X[st:(st + win - 1)])
 temp = (temp - mean(temp) * center)*wincoef
 temp = Mod(fft(temp))[1:coef]^2
-pval[i+1] = wilcox.test( (Mod(y[, i+1])^2 - mean(Mod(y[, i+1])^2))^2, (temp - mean(temp))^2)$p.value
+pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - mean(temp))^2)$p.value
 }
 	st <- st + inc
       }
