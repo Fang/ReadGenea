@@ -57,12 +57,15 @@ rep(1, n)
 }
 
 
-plot.stft <- function (x, col = gray (63:0/63), zlog = F, log = "", showmax = T, ...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, ...)
   {
     xv <- x$values
-if (zlog){
+mode = match.arg(mode)
+if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
+} else if (mode == "pval"){
+xv = t(apply(xv, 1, function(t)  pexp(t^2, 1/mean(t^2))))
 }
 time = x$time
 frequency= x$frequency

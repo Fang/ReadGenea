@@ -3,7 +3,7 @@
 #if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/4)), coef=64, 
-		 wtype="hanning.window", freq = 100, center = T, plot.it = T, calc.null = T )
+		 wtype="hanning.window", freq = 100, center = T, plot.it = T, calc.null = T , pvalues = F)
   {
     numcoef <- 2*coef
     if (win < numcoef)
@@ -17,6 +17,7 @@ stft <- function(X, win=min(80,floor(length(X)/10)),
     wincoef <- eval(parse(text=wtype))(win)
 
     ## create a matrix Z whose columns contain the windowed time-slices
+pval = rep(0, numwin+1)
     z <- matrix (0, numwin + 1, win)
     y <- matrix(0, numwin+1, win)
     st <- 1
@@ -24,6 +25,12 @@ stft <- function(X, win=min(80,floor(length(X)/10)),
       {
 	z[i+1, 1:win] <- (X[st:(st+win-1)] - mean(X[st:(st+win - 1)])* center) * wincoef
 	y[i+1,] <- fft(z[i+1,] )
+if (pvalues){
+temp = sample(X[st:(st + win - 1)])
+temp = (temp - mean(temp) * center)*wincoef
+temp = Mod(fft(temp))[1:coef]^2
+pval[i+1] = wilcox.test( (Mod(y[, i+1])^2 - mean(Mod(y[, i+1])^2))^2, (temp - mean(temp))^2)$p.value
+}
 	st <- st + inc
       }
 null.logmean = NULL
@@ -65,7 +72,7 @@ if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t) 1- pexp(t^2, 1/mean(t^2))))
+xv = t(apply(xv, 1, function(t)  pexp(t^2, 1/mean(t^2))))
 }
 time = x$time
 frequency= x$frequency
