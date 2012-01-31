@@ -32,8 +32,8 @@ if (calc.null){
 tmpdat = stft(sample(X), win = win, 
                  inc= inc, coef=coef, 
 		 wtype=wtype, freq = freq, center = T, plot.it = F, calc.null = F )
-null.logmean = mean(log(tmpdat$values[,-1]))
-null.logsd = sd(log(tmpdat$values[,-1]))
+null.logmean = log(sqrt(mean((tmpdat$values)^2)))
+#null.logsd = sd(tmpdat$values))
 }
 
     Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
@@ -57,12 +57,15 @@ rep(1, n)
 }
 
 
-plot.stft <- function (x, col = gray (63:0/63), zlog = F, log = "", showmax = T, ...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, ...)
   {
     xv <- x$values
-if (zlog){
+mode = match.arg(mode)
+if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
+} else if (mode == "pval"){
+xv = t(apply(xv, 1, function(t) 1- pexp(t^2, 1/mean(t^2))))
 }
 time = x$time
 frequency= x$frequency
