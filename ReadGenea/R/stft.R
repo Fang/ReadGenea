@@ -3,7 +3,7 @@
 #if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/4)), coef=64, 
-		 wtype="hanning.window", freq = 100, center = T, plot.it = T, calc.null = T , pvalues = F)
+		 wtype="hanning.window", freq = 100, center = T, plot.it = T, calc.null = T , pvalues = F, start.time = NULL)
   {
     numcoef <- 2*coef
     if (win < numcoef)
@@ -42,9 +42,14 @@ tmpdat = stft(sample(X), win = win,
 null.logmean = log(sqrt(mean((tmpdat$values)^2)))
 #null.logsd = sd(tmpdat$values))
 }
-
+if (is.null(start.time)){
     Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval )
+} else {
+times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
+   Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
+		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval )
+}
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
     return(Y)
@@ -82,8 +87,14 @@ frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 
     image( x = time , y = frequency,   z=xv, col=col, log = log,...)
-if (showmax){
-points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
+if (as.numeric(showmax) > 0){
+#points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
+
+points(time, x$principals, col = 2, pch = ".", cex = 3)
+
+}
+if (as.numeric(showmax) > 1){
+points(time, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
 }
 
 }
@@ -124,5 +135,4 @@ fftobj = replace(fftobj, (1:n)[ - frequencies], 0)
 
 return(Re(fft(fftobj, inverse=T))/n)
 }
-
 

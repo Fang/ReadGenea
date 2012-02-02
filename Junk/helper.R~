@@ -2236,7 +2236,7 @@ out = NULL
 if ("M" %in% contains) out = sprintf("%02d",minutes(x))
 if ("H" %in% contains) out = paste(sprintf("%02d",hours(x)), out, sep = ":")
 if ("S" %in% contains) out = paste( out,sprintf("%02d",seconds(x)),  sep = ":")
-if ("m" %in% contains) out = paste(out, sprintf("%02d",round(100*( xsec -floor(xsec) ))), sep= ".")
+if ("m" %in% contains) out = paste(out, sprintf("%02d",floor(100*( xsec -floor(xsec) ))), sep= ".")
 
 out
 }

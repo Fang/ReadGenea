@@ -1,0 +1,21 @@
+#implements blockwise group fused lasso of bleakly
+GFLasso <- function (Y, lambda, startpoint = NULL){
+Y = Y - colMeans(Y)
+p = ncol(Y)
+n = nrow(Y)
+d = rep(1, n-1)
+activeset = NULL
+beta = matrix(0, nrow(Y) - 1, ncol(Y)#rep(0, length(Y))
+C = -apply(Y, 2, cumsum) * d
+maxiter = 10000
+maxiter2 = 10000
+for (iter in 1:maxiter){
+
+for (iter2 in 1:maxiter2){
+S = activeset
+ivar = 1
+for (var in activeset){
+btmp = beta; btmp[var, ] = 0
+S[var,] = C[var,] -   apply(( rbind(0,apply(btmp, 2, cumsum)) - drop( ((n-1): 1) %*% btmp / n)), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) #need to incorporate d
+beta[var,] = S[var,] * n/(var * (n - var) * d[var]^2) *max(0, 1- lambda/sqrt(sum(S[var,]^2)))
+ivar = ivar +1

@@ -100,4 +100,4 @@ lines(jogandstuff$dat[ i:(i+1),3],jogandstuff$dat[i:(i+1),2], col=2, lwd = 3)
 
  plot(stft( princomp( jogandstuff$dat[1:20000,2:4])$scores[,1], coef = 500, inc = 250, start.time=jogandstuff$dat[1,1], plot= F)-> stfobj, showmax = 2, log="y", xaxt="n"); axis(1, at = stfobj$time[21+0:2 * 24], label = hms (stfobj$time[21+0:2 * 24], "HMS"))
 
-# minor.tick   ?
+
