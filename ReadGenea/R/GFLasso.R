@@ -18,7 +18,7 @@ Y = Y - rep(Ymeans, each = n)
 d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]#rep(1, n-1)
 
 beta = startpoint
-if (is.null(startpoint)) beta = matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
+if (is.null(startpoint)) beta = Matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
 
 activeset = which(rowSums(abs(beta)) != 0)
 
@@ -31,6 +31,7 @@ for (iter2 in 1:maxiter2){
 betaold = beta
 #ivar = 1
 if (length(activeset) == 0) break
+if (length(activeset) > 1) activeset = sample(activeset)
 for (var in activeset){
 btmp = beta * d; btmp[var, ] = 0
 Svar = C[var,] -   d[var] *apply(( rbind(0,apply(btmp, 2, cumsum)) - drop( ((n-1): 1) %*% btmp / n)), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) #need to incorporate d
@@ -54,10 +55,10 @@ if (trace) print(M)
 if (M >= lambda^2){
 activeset = c(activeset, candidate)
 } else {
-return(scale(apply(rbind(0,beta*d),2, cumsum), scale=F) + rep(Ymeans, each=n) )
+return(scale(rbind(0,apply((beta*d),2, cumsum)), scale=F) + rep(Ymeans, each=n) )
 }
 }
 print("Out of max iterations! (Outer loop)")
-invisible(scale(apply(rbind(0,beta*d),2, cumsum), scale=F) + rep(Ymeans, each=n))
+invisible(scale(rbind(0,apply((beta*d),2, cumsum)), scale=F) + rep(Ymeans, each=n))
 }
 
