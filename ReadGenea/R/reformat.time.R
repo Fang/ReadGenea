@@ -23,16 +23,16 @@ function (t, format = "julian")
     t1 <- paste(startdate, starttime, sep = " ")
     switch(format, julian = {
 	# modified julian (julian date-time from 2000-01-01 00:00)
-	    t1 <- as.POSIXct(t1, format = "%Y-%M-%d %H:%M:%OS")
+	    t1 <- as.POSIXct(t1, format = "%Y-%m-%d %H:%M:%OS")
         jdt <- as.numeric(julian(t1))
 	jdt <- jdt + 2440587.5 - 2451544.5
         t1 <- jdt + as.numeric(tmp[4])/864000000
     }, POSIX = {
         t1 <- paste(t1,tmp[4],sep=".")
-    t1 <- as.POSIXct(t1, format = "%Y-%M-%d %H:%M:%OS")
+    t1 <- as.POSIXct(t1, format = "%Y-%m-%d %H:%M:%OS")
     }, seconds = {
 	# modified "seconds" from origin: 2000-01-01 00:00
-    t1 <- as.POSIXct(t1, format = "%Y-%M-%d %H:%M:%OS")
+    t1 <- as.POSIXct(t1, format = "%Y-%m-%d %H:%M:%OS")
         t1 <- as.numeric(t1) + as.numeric(tmp[4])/1000
 	t1 <- t1 - 946684800
     })

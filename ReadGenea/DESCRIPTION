@@ -1,8 +1,8 @@
 Package: ReadGenea
 Type: Package
 Title: Package For Reading Binary files
-Version: 2.0-2
-Date: 20/01/2012
+Version: 2.0-3
+Date: 03/02/2012
 Author: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
 Maintainer: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
 Description: Functions and analytics for Genea accelerometer data into R objects
