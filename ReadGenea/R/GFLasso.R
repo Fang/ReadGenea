@@ -1,5 +1,7 @@
 #implements blockwise group fused lasso of bleakly
 GFLasso <- function (Y, lambda, startpoint = NULL){
+
+#might be faster to work with betad, really.
 Y = Y - colMeans(Y)
 p = ncol(Y)
 n = nrow(Y)
@@ -12,10 +14,31 @@ maxiter2 = 10000
 for (iter in 1:maxiter){
 
 for (iter2 in 1:maxiter2){
-S = activeset
-ivar = 1
+betaold = beta
+#ivar = 1
 for (var in activeset){
-btmp = beta; btmp[var, ] = 0
-S[var,] = C[var,] -   apply(( rbind(0,apply(btmp, 2, cumsum)) - drop( ((n-1): 1) %*% btmp / n)), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) #need to incorporate d
-beta[var,] = S[var,] * n/(var * (n - var) * d[var]^2) *max(0, 1- lambda/sqrt(sum(S[var,]^2)))
-ivar = ivar +1
+btmp = beta * d; btmp[var, ] = 0
+Svar = C[var,] -   d[var] *apply(( rbind(0,apply(btmp, 2, cumsum)) - drop( ((n-1): 1) %*% btmp / n)), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) #need to incorporate d
+beta[var,] = Svar * n/(var * (n - var) * d[var]^2) *max(0, 1- lambda/sqrt(sum(Svar^2)))
+#ivar = ivar +1
+}
+if (max(abs(betaold - beta) -> err) < 1e-3) break
+cat("[",iter2, ":" , err, "]")
+}
+activeset = activeset[rowSums(abs(beta[activeset,] )) != 0]
+
+#check KKT
+
+Ssq = rowSums( (C -   d[var] * apply(( rbind(0,apply(beta*d, 2, cumsum)) - drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsum(t) + sum(t) * (1:var)/n))^2)
+
+candidate = which.max(replace(Ssq ,activeset, 0)); M = max(Ssq[-activeset])
+
+if (M >= lambda^2){
+activeset = c(activeset, candidate)
+} else {
+return(beta)
+}
+}
+beta
+}
+
