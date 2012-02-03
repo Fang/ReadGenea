@@ -31,7 +31,7 @@ for (iter2 in 1:maxiter2){
 betaold = beta
 #ivar = 1
 if (length(activeset) == 0) break
-activeset = sample(activeset)
+if (length(activeset) > 1) activeset = sample(activeset)
 for (var in activeset){
 btmp = beta * d; btmp[var, ] = 0
 Svar = C[var,] -   d[var] *apply(( rbind(0,apply(btmp, 2, cumsum)) - drop( ((n-1): 1) %*% btmp / n)), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) #need to incorporate d

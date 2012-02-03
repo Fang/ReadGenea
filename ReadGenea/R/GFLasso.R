@@ -20,6 +20,8 @@ d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]#rep(1, n-1)
 beta = startpoint
 if (is.null(startpoint)) beta = Matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
 
+betasparse = matrix(apply(beta,2, removeZero), ncol=p)
+
 activeset = which(rowSums(abs(beta)) != 0)
 
 C = -apply(Y[1:(n-1),], 2, cumsum) * d
@@ -28,7 +30,7 @@ maxiter2 = 10000
 for (iter in 1:maxiter){
 if (trace) cat(iter, ", A=", activeset, "\n")
 for (iter2 in 1:maxiter2){
-betaold = beta
+betaold = betasparse
 #ivar = 1
 if (length(activeset) == 0) break
 if (length(activeset) > 1) activeset = sample(activeset)
@@ -43,7 +45,8 @@ if (trace) cat("[",iter2, ":" , err, "]")
 if (maxiter2 == iter2) print ("Out of max iterations! (Inner loop)")
 }
 if (trace) cat("\n")
-activeset = activeset[rowSums(abs(beta[activeset,, drop=F] )) != 0]
+activeset = activeset[rowSums(abs(betasparse )) != 0]
+betasparse = betasparse[rowSums(abs(betasparse )) != 0]
 
 #check KKT
 
