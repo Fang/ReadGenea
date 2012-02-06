@@ -6,8 +6,29 @@ return(cumsum(t)[-length(t)])
 
 #can this be done sparsely for speed?
 
+#windowed PCA
+
+winpca <- function( X, win = 1024, inc = floor(win/2)){
+res = list()
+dims = ncol(X)
+    numwin <- trunc ((nrow(X) - win) / inc)
+for (k in 1:dims) res[[k]] = matrix(0, dims, numwin)
+res$loadings = matrix(0, dims, numwin)
+st = 1
+for (i in 1:numwin){
+probj = prcomp(X[st:(st+win - 1),])
+for (k in 1:dims){
+res[[k]][,i] = probj$rot[,k]
+}
+res$loadings[, i] = probj$sdev
+st = st + inc
+}
+res
+}
+
 
 GFLasso <- function (Y, lambda, startpoint = NULL, trace = T){
+eps = 1e-2
 
 #might be faster to work with betad, really.
 Ymeans = colMeans(Y)
@@ -45,7 +66,7 @@ Svar = C[activevar,] +  d[activevar] * colSums(rbind( -drop( (n-activeset) %*% b
 betasparse[var,] = Svar * n/(activevar * (as.double(n) - activevar) * d[activevar]^2) *max(0, 1- lambda/sqrt(sum(Svar^2)))
 #ivar = ivar +1
 }
-if ((max(abs(betaold - betasparse)) -> err) < 1e-3) break
+if ((max(abs(betaold - betasparse)) -> err) < eps) break
 if (trace) cat("[",iter2, ":" , err, "]")
 if (maxiter2 == iter2) print ("Out of max iterations! (Inner loop)")
 }
@@ -62,7 +83,7 @@ Ssq = replace(rowSums( (C -   d * apply(  scale( rbind(0,apply(beta*d, 2, cumsum
 candidate = which.max(Ssq); M = max(Ssq) # warning, this can cause possible problems in case of ties in some applications.
 if (trace) print(M)
 
-if (M >= lambda^2){
+if (M >= (lambda+eps)^2){
 activeset = c(activeset, candidate)
 betasparse = rbind(betasparse,0)
 } else {
