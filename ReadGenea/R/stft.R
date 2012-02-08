@@ -77,7 +77,7 @@ if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  pexp(t^2, 1/mean(t^2))))
+xv = t(apply(xv, 1, function(t)  pexp(t^2, 1/mean(t^2)) ))
 }
 time = x$time
 frequency= x$frequency

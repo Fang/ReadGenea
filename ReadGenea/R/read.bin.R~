@@ -6,7 +6,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf) 
 {
 #variables for positions and record lengths in file
-
+    nobs <- 300
     headlines <- 59
     reclength <- 10
     position.data <- 10
@@ -36,7 +36,6 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         sep = ":", quiet = TRUE)[2])
     t1 <- scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1)
     freq <- as.integer(scan(fc, skip = 4, what = "", n = 2, sep = ":", 
-    nobs <- 300
         quiet = TRUE)[2])
 	if (!is.null(downsample)) {
 		cat("Downsampling to ", freq/downsample[1] , " Hz \n")
@@ -178,49 +177,70 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #
 ##read blocks of pages at a time as memory allows
 #
-if (nstreams > blocksize ){
-cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n")
-tempchunk = list(data.out = NULL, page.timestamps = NULL, freq = freq)
-if (!is.null(downsample)){
-	downsampleoffset = 1
-	if (length(downsample) == 2) downsampleoffset = downsample[2]
-	downsample = downsample[1]
-}
-	
-while(length(index) > 0){
-if (is.null(downsample)){
-	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
-	    verbose , do.temp, calibrate, gain, 
-	    offset, luxv, voltv, tformat,warn, downsample = NULL, blocksize = Inf)
-} else {
-	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
-	    verbose , do.temp, calibrate, gain, 
-	    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
-	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
-}
-
-tempchunk$data.out = rbind(tempchunk$data.out, tempobj$data.out)
-tempchunk$page.timestamps = c(tempchunk$page.timestamps, tempobj$page.timestamps)
-index = index[- (1: min(blocksize, length(index)))]
-
-}
-tempchunk$freq  = freq * nrow(tempchunk$data.out)/ (nstreams*nobs)
-    if (!(is.null(outfile))) {
-        save(tempchunk, file = outfile)
-    }
-return(tempchunk)
-}
 #
-    proc.file <- NULL
-    start.proc.time <- Sys.time()
+#tempchunk = list(data.out = NULL, page.timestamps = NULL, freq = freq)
+#if (!is.null(downsample)){
+#	downsampleoffset = 1
+#	if (length(downsample) == 2) downsampleoffset = downsample[2]
+#	downsample = downsample[1]
+#}
+#	
+#while(length(index) > 0){
+#if (is.null(downsample)){
+#	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
+#	    verbose , do.temp, calibrate, gain, 
+#	    offset, luxv, voltv, tformat,warn, downsample = NULL, blocksize = Inf)
+#} else {
+#	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
+#	    verbose , do.temp, calibrate, gain, 
+#	    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
+#	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
+#}
+#
+#tempchunk$data.out = rbind(tempchunk$data.out, tempobj$data.out)
+#tempchunk$page.timestamps = c(tempchunk$page.timestamps, tempobj$page.timestamps)
+#index = index[- (1: min(blocksize, length(index)))]
+#
+#}
+#tempchunk$freq  = freq * nrow(tempchunk$data.out)/ (nstreams*nobs)
+#    if (!(is.null(outfile))) {
+#        save(tempchunk, file = outfile)
+#    }
+#return(tempchunk)
+#}
+#
     data <- NULL
 #skip to start of data blocks
 binfile = file(binfile, "rt")
+#skip header
 tmpd <- readLines(binfile, n = headlines)
 #skip unneeded pages
 replicate ( min( index - 1 ), is.character(readLines(binfile, n=reclength)))
+
+
+numblocks = 1
+if (nstreams > blocksize ){
+cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n") 
+numblocks = ceiling(nstreams/blocksize)
+}
+Fulldat = NULL
+Fullindex = matrix(index, ncol = numblocks)
+
+if(!is.null(downsample)){
+	downsampleoffset = 1
+		if (length(downsample) == 2){
+			downsampleoffset = downsample[2]
+			downsample = downsample[1]
+		}
+}
+
+for (blocknumber in 1: numblocks){
+index = Fullindex[1:min(blocksize, length(Fullindex))]
+Fullindex = Fullindex[-(1:blocksize)]
+    proc.file <- NULL
+    start.proc.time <- Sys.time()
+
     tmpd <- readLines(binfile, n = ((max(index) - min(index)) +1) * reclength  )
-close(binfile)
 bseq = (index - min(index) ) * reclength
 	    cat("done file reading.  Processing...\n")
 	if (is.null(downsample)){
@@ -239,11 +259,7 @@ bseq = (index - min(index) ) * reclength
     		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
 ##So we are downsampling
 	} else {
-		downsampleoffset = 1
-		if (length(downsample) == 2){
-			downsampleoffset = downsample[2]
-			downsample = downsample[1]
-		}
+	
 		 data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
 	    if (do.temp) {	
         	tdata <- tmpd[bseq + position.temperature]
@@ -259,7 +275,8 @@ bseq = (index - min(index) ) * reclength
 		proc.file = proc.file[, positions]
 		temperature = temperature[positions]
 		nn  = nn[positions]
-		freq = freq * ncol(proc.file)/ (nobs * (length(index)))
+	#	freq = freq * ncol(proc.file)/ (nobs * (length(index)))
+	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
 	}	
 
 
@@ -284,7 +301,14 @@ bseq = (index - min(index) ) * reclength
     end.proc.time <- Sys.time()
     cat("processing took:", format(round(as.difftime(end.proc.time - 
         start.proc.time), 3)), ".\n")
-    processedfile <- list(data.out = proc.file, page.timestamps = timestampsc[index], freq= freq)
+
+Fulldat= rbind(Fulldat, proc.file)
+}
+
+freq = freq * nrow(Fulldat) / (nobs *  length(Fullindex))
+
+close(binfile)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index], freq= freq)
     if (is.null(outfile)) {
         return(processedfile)
     }
