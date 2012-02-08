@@ -68,16 +68,22 @@ uniform.window = function(n){
 rep(1, n)
 }
 
+library(robfilter)
 
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, ...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, ...)
   {
     xv <- x$values
+
+# 
+if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 100) )$level)$MED)
+
+
 mode = match.arg(mode)
 if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  pexp(t^2, 1/mean(t^2)) ))
+xv = t(apply(xv, 1, function(t)  constrain(pexp(t^2, 1/mean(t^2)), 0.5,1) ))
 }
 time = x$time
 frequency= x$frequency
