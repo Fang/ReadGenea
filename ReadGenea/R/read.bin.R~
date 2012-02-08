@@ -305,7 +305,7 @@ bseq = (index - min(index) ) * reclength
 Fulldat= rbind(Fulldat, proc.file)
 }
 
-freq = freq * nrow(Fulldat) / (nobs *  length(Fullindex))
+freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 
 close(binfile)
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index], freq= freq)

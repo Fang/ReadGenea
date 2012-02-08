@@ -219,6 +219,7 @@ replicate ( min( index - 1 ), is.character(readLines(binfile, n=reclength)))
 
 
 numblocks = 1
+blocksize = min(blocksize, nstreams)
 if (nstreams > blocksize ){
 cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n") 
 numblocks = ceiling(nstreams/blocksize)
