@@ -224,7 +224,7 @@ cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n")
 numblocks = ceiling(nstreams/blocksize)
 }
 Fulldat = NULL
-Fullindex = matrix(index, ncol = numblocks)
+Fullindex = index#matrix(index, ncol = numblocks)
 
 if(!is.null(downsample)){
 	downsampleoffset = 1
