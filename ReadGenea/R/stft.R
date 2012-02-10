@@ -5,6 +5,10 @@ stft <- function(X, win=min(80,floor(length(X)/10)),
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
 		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL)
   {
+if (length(dim(X)) ==2) {
+start.time = X[1,1]
+X = X[,2]
+}
     numcoef <- 2*coef
     if (win < numcoef)
       {
@@ -70,7 +74,7 @@ rep(1, n)
 
 library(robfilter)
 
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, ...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, ...)
   {
     xv <- x$values
 
@@ -91,8 +95,14 @@ if(log == "y"){
 frequency[1] = frequency[2]^2/frequency[3]
 frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
-
-    image( x = time , y = frequency,   z=xv, col=col, log = log,...)
+if (xaxis){
+plot(chron((  seq(min(time), max(time), len = 20) +946684800)  / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+par(new = T)
+    image( x = time- min(time) , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
+} else {
+ 
+    image( x = time , y = frequency,   z=xv, col=col, log = log, ...)
+}
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
