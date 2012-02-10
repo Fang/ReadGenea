@@ -96,7 +96,8 @@ frequency[1] = frequency[2]^2/frequency[3]
 frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 if (xaxis){
-plot(chron((  seq(min(time), max(time), len = 20) +946684800)  / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+if (time[1] < 946684800) time = time + 946684800
+plot(chron(  seq(min(time), max(time), len = 20)   / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
 par(new = T)
     image( x = time- min(time) , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
 } else {

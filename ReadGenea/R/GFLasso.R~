@@ -11,11 +11,11 @@ return(cumsum(t)[-length(t)])
 winpca <- function( X, win = 1024, inc = floor(win/2)){
 res = list()
 dims = ncol(X)
-    numwin <- trunc ((length(X) - win) / inc)
+    numwin <- trunc ((nrow(X) - win) / inc)
 for (k in 1:dims) res[[k]] = matrix(0, dims, numwin)
 res$loadings = matrix(0, dims, numwin)
 st = 1
-for (i in 1:(numwin-1)){
+for (i in 1:numwin){
 probj = prcomp(X[st:(st+win - 1),])
 for (k in 1:dims){
 res[[k]][,i] = probj$rot[,k]
@@ -26,8 +26,26 @@ st = st + inc
 res
 }
 
+cv.GFLasso <- function(Y, lambda
 
-GFLasso <- function (Y, lambda, startpoint = NULL, trace = T){
+
+GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T){
+
+
+
+if (length(lambda) > 1){
+
+output = list()
+ii = 1
+for (i in sort(lambda, dec=T)){
+if (trace) cat("## Lambda = ", i ," \n")
+startpoint = GFLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace,...)
+output[[ order(lambda, dec=T)[ii] ]] = startpoint
+ii = ii+1
+}
+
+return(output)
+}
 eps = 1e-2
 
 #might be faster to work with betad, really.

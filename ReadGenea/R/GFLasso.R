@@ -26,8 +26,26 @@ st = st + inc
 res
 }
 
+cv.GFLasso <- function(Y, lambda
 
-GFLasso <- function (Y, lambda, startpoint = NULL, trace = T){
+
+GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T, huber = Inf){
+
+
+
+if (length(lambda) > 1){
+
+output = list()
+ii = 1
+for (i in sort(lambda, dec=T)){
+if (trace) cat("## Lambda = ", i ," \n")
+startpoint = GFLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace,...)
+output[[ order(lambda, dec=T)[ii] ]] = startpoint
+ii = ii+1
+}
+
+return(output)
+}
 eps = 1e-2
 
 #might be faster to work with betad, really.
@@ -35,6 +53,8 @@ Ymeans = colMeans(Y)
 p = ncol(Y)
 n = as.double(nrow(Y))
 Y = Y - rep(Ymeans, each = n)
+huberalpha = rep(0, length(Y))
+
 d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]#rep(1, n-1)
 
 beta = startpoint
