@@ -30,7 +30,8 @@ cv.GFLasso <- function(Y, lambda
 
 
 GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T, huber = Inf){
-
+# relative - want lambda on relative scale
+# huber - threshold for huberisation as function of Y sd (Inf means no huberisation)
 
 
 if (length(lambda) > 1){
@@ -65,6 +66,8 @@ betasparse = as.matrix(matrix(apply(beta,2, removeZero), ncol=p))
 activeset = which(rowSums(abs(beta)) != 0)
 
 C = -apply(Y[1:(n-1),], 2, cumsum) * d
+
+if (relative ) lambda = lambda * sqrt(max(rowSums(C^2)))
 maxiter = 10000
 maxiter2 = 10000
 for (iter in 1:maxiter){
@@ -96,12 +99,25 @@ activeset = activeset[rowSums(abs(betasparse )) != 0]
 betasparse = betasparse[rowSums(abs(betasparse )) != 0,, drop=F]
 
 #check KKT
+#
+#betasparse * d[activeset]
+#meanfit = -drop((n-activeset) %*% (betasparse* d[activeset])/n)
+#Ssq = rep(0, n)
+#for (ip in 1:p){
+#tmp = cumsum(c( meanfit[ip],(n-activeset) betasparse[,ip]  * d[activeset]))
+#
+#turnpoints = cumsum(c(0, head(tmp, -1) * diff(activeset)))
+#
+#sinceturnpoint = 1:n - 
+#
+#C[,ip] - 
+#
 
-Ssq = replace(rowSums( (C -   d * apply(  scale( rbind(0,apply(beta*d, 2, cumsum)), scale = F, center =  drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t)))^2), activeset, 0) # need a speedup
+Ssq = replace(rowSums( (C -   d * apply(  scale( apply(beta*d, 2, function(t) c(0,cumsum (t)) ), scale = F, center =  drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t)))^2), activeset, 0) # need a speedup
 #Ssq = replace(rowSums( (C -   d * apply(( rbind(0,apply(beta*d, 2, cumsum)) - drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t) + sum(t) * (1:(n-1))/n))^2), activeset, 0) # need a speedup
 
 candidate = which.max(Ssq); M = max(Ssq) # warning, this can cause possible problems in case of ties in some applications.
-if (trace) print(M)
+if (trace) print(sqrt(M))
 
 if (M >= (lambda+eps)^2){
 activeset = c(activeset, candidate)
