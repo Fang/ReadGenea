@@ -26,28 +26,59 @@ st = st + inc
 res
 }
 
-cv.GFLasso <- function(Y, lambda
+
+#conduct cross validation
+cv.GFLasso <- function(Y, lambda = seq.log(1, 0.1, 20), K = 10, plot.it = T, relative.lambdas = T, ...){
+
+n = nrow(Y)
+if (relative.lambdas) lambda = lambda * sqrt(max(rowSums(   (  apply(scale(Y, scale=F), 2, function(t) -cumsum ( head(t, -1)) )   )^2) * n/head(as.double(1:n) * (n- as.double(1:n)), -1)))
+
+inds = sample(1:n)
+inds.orig = inds
+res = NULL
+
+for (i in 1:K){
+cat("Starting fold number ", i , " / ", K, "\n")
+    start.proc.time <- Sys.time()
+cut = sort(inds[1:min(ceiling(n/K), length(inds))])
+fitobj = GFLasso(Y[-cut,] , lambda, relative.lambdas = F, mode = "fit",...)
+#fitobj = rbind(fitobj[1,] , fitobj)
+incl = c(0,(1:n )[-cut], n+1)
+diffincl = diff(incl) - 1
+Ycut = Y[cut,]
+res = cbind(res,sapply(fitobj, function(t) sum((Ycut - rbind(t[1,] ,t)[ (rep(which(diffincl > 0), removeZero(diffincl)) ), ])^2)))
+    end.proc.time <- Sys.time()
+    cat("processing took:", format(round(as.difftime(end.proc.time - 
+        start.proc.time), 3)), ".\n")
+inds = tail(inds, -length(cut))
+}
+
+invisible(res)
+
+}
 
 
-GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T, huber = Inf){
+GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf){
 # relative - want lambda on relative scale
 # huber - threshold for huberisation as function of Y sd (Inf means no huberisation)
 
+mode = match.arg(mode)
 
 if (length(lambda) > 1){
-
 output = list()
 ii = 1
 for (i in sort(lambda, dec=T)){
 if (trace) cat("## Lambda = ", i ," \n")
-startpoint = GFLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace,...)
-output[[ order(lambda, dec=T)[ii] ]] = startpoint
+startpoint = GFLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace, huber = huber, mode= mode, relative.lambdas = relative.lambdas)
+output[[ order(lambda, decreasing=T)[ii] ]] = startpoint
 ii = ii+1
 }
 
-return(output)
+return(invisible(output))
 }
+
 eps = 1e-2
+if (length(dim(Y)) != 2) Y = matrix(Y, ncol = 1)
 
 #might be faster to work with betad, really.
 Ymeans = colMeans(Y)
@@ -59,19 +90,23 @@ huberalpha = rep(0, length(Y))
 d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]#rep(1, n-1)
 
 beta = startpoint
-if (is.null(startpoint)) beta = Matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
+if (is.null(startpoint)) {
+beta = Matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
+} else if (nrow(beta) == n){
+beta = Matrix(apply(beta,2,diff))
+}
 
 betasparse = as.matrix(matrix(apply(beta,2, removeZero), ncol=p))
 
 activeset = which(rowSums(abs(beta)) != 0)
 
-C = -apply(Y[1:(n-1),], 2, cumsum) * d
+C = matrix(-apply(Y[1:(n-1),, drop = F], 2, cumsum) * d, ncol = p)
 
-if (relative ) lambda = lambda * sqrt(max(rowSums(C^2)))
+if (relative.lambdas ) lambda = lambda * sqrt(max(rowSums(C^2)))
 maxiter = 10000
 maxiter2 = 10000
 for (iter in 1:maxiter){
-if (trace) cat(iter, ", A=", activeset, "\n")
+if (trace) cat(iter, ", A [ ", length(activeset), "] =", activeset, "\n")
 for (iter2 in 1:maxiter2){
 betaold = betasparse
 #ivar = 1
@@ -99,34 +134,31 @@ activeset = activeset[rowSums(abs(betasparse )) != 0]
 betasparse = betasparse[rowSums(abs(betasparse )) != 0,, drop=F]
 
 #check KKT
-#
-#betasparse * d[activeset]
-#meanfit = -drop((n-activeset) %*% (betasparse* d[activeset])/n)
-#Ssq = rep(0, n)
-#for (ip in 1:p){
-#tmp = cumsum(c( meanfit[ip],(n-activeset) betasparse[,ip]  * d[activeset]))
-#
-#turnpoints = cumsum(c(0, head(tmp, -1) * diff(activeset)))
-#
-#sinceturnpoint = 1:n - 
-#
-#C[,ip] - 
-#
 
-Ssq = replace(rowSums( (C -   d * apply(  scale( apply(beta*d, 2, function(t) c(0,cumsum (t)) ), scale = F, center =  drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t)))^2), activeset, 0) # need a speedup
+Ssq = replace(rowSums( (C -   d * apply( scale( apply(beta*d, 2, function(t) c(0,cumsum (t)) ), scale = F, center =  drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t)))^2), activeset, 0) # need a speedup
 #Ssq = replace(rowSums( (C -   d * apply(( rbind(0,apply(beta*d, 2, cumsum)) - drop( ((n-1): 1) %*% (beta*(d / n)))),2, function(t) -cumsumsh(t) + sum(t) * (1:(n-1))/n))^2), activeset, 0) # need a speedup
+candidate = order(Ssq, decreasing = T)[1:min(10, (n - 1 - length(activeset)))] #h(Ssq >  (lambda - eps)^2)
+M  = max(Ssq) # let's add multiple simultaneously (here we add 10)
 
-candidate = which.max(Ssq); M = max(Ssq) # warning, this can cause possible problems in case of ties in some applications.
-if (trace) print(sqrt(M))
+#candidate = which.max(Ssq); M = max(Ssq) # warning, this can cause possible problems in case of ties in some applications.
+if (trace) cat(sqrt(M) , " -> ", lambda, "\n")
 
-if (M >= (lambda+eps)^2){
+if (M >= (lambda*(1+eps))^2){
 activeset = c(activeset, candidate)
-betasparse = rbind(betasparse,0)
+betasparse = rbind(betasparse,matrix(0, length(candidate), p) )
 } else {
-return(scale(rbind(0,apply((beta*d),2, cumsum)), scale=F) + rep(Ymeans, each=n) )
+
+break
 }
 }
-print("Out of max iterations! (Outer loop)")
-invisible(scale(rbind(0,apply((beta*d),2, cumsum)), scale=F) + rep(Ymeans, each=n))
+if (iter == maxiter) print("Out of max iterations! (Outer loop)")
+if (mode == "fit"){
+obj = (scale(rbind(0,apply((beta*d),2, cumsum)), scale=F) + rep(Ymeans, each=n) )
+} else {
+obj = beta * d
+}
+ 
+attr(obj, "lambda") = lambda
+invisible(obj)
 }
 
