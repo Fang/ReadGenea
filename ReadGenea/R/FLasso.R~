@@ -119,13 +119,14 @@ btmp = betasparse * d[activeset]; btmp[var, ] = 0
 #cumsums = scale(matrix(apply(btmp,2, cumsum), ncol = p), scale=F, center =  drop( (n-activeset) %*% btmp / n))
 
 
-Svar = C[activevar,] +  d[activevar] * sum(c(  (activeset-n) %*% btmp / n, btmp) *  pmax(activevar - c(0,activeset), 0 ))
+Svar = C[activevar,] +  d[activevar] * sum(c(  (activeset-n) %*% btmp / n, btmp) *  pmax.int( activevar - c(0,activeset), 0 ))
 #Svar = C[activevar,] +  d[activevar] * colSums(rbind( -drop( (n-activeset) %*% btmp / n), btmp) *  pmax(activevar - c(0,activeset), 0 ))
 #C[var,] -   d[var] *apply(   (    scale(rbind(0,apply(btmp, 2, cumsum)) ,scale=F, center= drop( ((n-1): 1) %*% btmp / n))), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) 
 betasparse[var,] = Svar * n/(activevar * (as.double(n) - activevar) * d[activevar]^2) *max(0, 1- lambda/sqrt(sum(Svar^2)))
 #ivar = ivar +1
 }
 if ((max(abs(betaold - betasparse)) -> err) < eps) break
+#if ((max(abs(betaold - betasparse)) -> err) < (eps * max(1, 10^(3-(iter)^(1/3) )))) break
 if (trace) cat("[",iter2, ":" , err, "]")
 if (maxiter2 == iter2) print ("Out of max iterations! (Inner loop)")
 }

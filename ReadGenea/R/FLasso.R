@@ -28,7 +28,7 @@ res
 
 
 #conduct cross validation
-cv.GFLasso <- function(Y, lambda = seq.log(1, 0.1, 20), K = 10, plot.it = T, relative.lambdas = T, ...){
+cv.FLasso <- function(Y, lambda = seq.log(1, 0.1, 20), K = 10, plot.it = T, relative.lambdas = T, ...){
 
 n = nrow(Y)
 if (relative.lambdas) lambda = lambda * sqrt(max(rowSums(   (  apply(scale(Y, scale=F), 2, function(t) -cumsum ( head(t, -1)) )   )^2) * n/head(as.double(1:n) * (n- as.double(1:n)), -1)))
@@ -41,7 +41,7 @@ for (i in 1:K){
 cat("Starting fold number ", i , " / ", K, "\n")
     start.proc.time <- Sys.time()
 cut = sort(inds[1:min(ceiling(n/K), length(inds))])
-fitobj = GFLasso(Y[-cut,] , lambda, relative.lambdas = F, mode = "fit",...)
+fitobj = FLasso(Y[-cut,] , lambda, relative.lambdas = F, mode = "fit",...)
 #fitobj = rbind(fitobj[1,] , fitobj)
 incl = c(0,(1:n )[-cut], n+1)
 diffincl = diff(incl) - 1
@@ -58,7 +58,7 @@ invisible(res)
 }
 
 
-GFLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf){
+FLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf){
 # relative - want lambda on relative scale
 # huber - threshold for huberisation as function of Y sd (Inf means no huberisation)
 
@@ -69,7 +69,7 @@ output = list()
 ii = 1
 for (i in sort(lambda, dec=T)){
 if (trace) cat("## Lambda = ", i ," \n")
-startpoint = GFLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace, huber = huber, mode= mode, relative.lambdas = relative.lambdas)
+startpoint = FLasso(Y=Y, lambda = i, startpoint = startpoint, trace=trace, huber = huber, mode= mode, relative.lambdas = relative.lambdas)
 output[[ order(lambda, decreasing=T)[ii] ]] = startpoint
 ii = ii+1
 }
@@ -119,13 +119,14 @@ btmp = betasparse * d[activeset]; btmp[var, ] = 0
 #cumsums = scale(matrix(apply(btmp,2, cumsum), ncol = p), scale=F, center =  drop( (n-activeset) %*% btmp / n))
 
 
-Svar = C[activevar,] +  d[activevar] * sum(c(  (activeset-n) %*% btmp / n, btmp) *  pmax(activevar - c(0,activeset), 0 ))
+Svar = C[activevar,] +  d[activevar] * sum(c(  (activeset-n) %*% btmp / n, btmp) *  pmax.int( activevar - c(0,activeset), 0 ))
 #Svar = C[activevar,] +  d[activevar] * colSums(rbind( -drop( (n-activeset) %*% btmp / n), btmp) *  pmax(activevar - c(0,activeset), 0 ))
 #C[var,] -   d[var] *apply(   (    scale(rbind(0,apply(btmp, 2, cumsum)) ,scale=F, center= drop( ((n-1): 1) %*% btmp / n))), 2, function(t) -sum(t[1:var]) + sum(t) * var/n) 
 betasparse[var,] = Svar * n/(activevar * (as.double(n) - activevar) * d[activevar]^2) *max(0, 1- lambda/sqrt(sum(Svar^2)))
 #ivar = ivar +1
 }
 if ((max(abs(betaold - betasparse)) -> err) < eps) break
+#if ((max(abs(betaold - betasparse)) -> err) < (eps * max(1, 10^(3-(iter)^(1/3) )))) break
 if (trace) cat("[",iter2, ":" , err, "]")
 if (maxiter2 == iter2) print ("Out of max iterations! (Inner loop)")
 }
