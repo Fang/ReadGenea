@@ -1,3 +1,5 @@
+#changes time display from package chron to use h:m:s for >1 day times.
+
 times2 = function(x, ...){
 out = times(x)
 class(out) = c("times2",class(out))
@@ -19,7 +21,8 @@ function(x, digits, quote = FALSE, prefix = "", simplify, ...)
 #ZF#    if(all(is.na(x)) || any(x[!is.na(x)] >= 1))
  #ZF#       cat("Time in days:\n")
     x <- format.times2(x, simplify = simplify)
-    NextMethod("print", quote = quote)
+#    NextMethod("print", quote = quote)
+print(x, quote = quote)
     invisible(xo)
 }
 

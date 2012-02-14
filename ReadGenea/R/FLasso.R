@@ -1,8 +1,4 @@
-#implements blockwise group fused lasso of bleakly
-cumsumsh = function(t){
-return(cumsum(t)[-length(t)])
-}
-
+#implements blockwise group fused lasso of bleakly - optimised for 1d fused lasso
 
 #can this be done sparsely for speed?
 
@@ -29,7 +25,7 @@ res
 
 #conduct cross validation
 cv.FLasso <- function(Y, lambda = seq.log(1, 0.1, 20), K = 10, plot.it = T, relative.lambdas = T, ...){
-
+if (length(dim(Y)) != 2) Y = matrix(Y, ncol=1)
 n = nrow(Y)
 if (relative.lambdas) lambda = lambda * sqrt(max(rowSums(   (  apply(scale(Y, scale=F), 2, function(t) -cumsum ( head(t, -1)) )   )^2) * n/head(as.double(1:n) * (n- as.double(1:n)), -1)))
 
@@ -61,6 +57,10 @@ invisible(res)
 FLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf){
 # relative - want lambda on relative scale
 # huber - threshold for huberisation as function of Y sd (Inf means no huberisation)
+
+cumsumsh = function(t){
+return(cumsum(t)[-length(t)])
+}
 
 mode = match.arg(mode)
 

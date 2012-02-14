@@ -1,3 +1,5 @@
+#extends time display from package chron to use h:m:s for >1 day times.
+
 times2 = function(x, ...){
 out = times(x)
 class(out) = c("times2",class(out))

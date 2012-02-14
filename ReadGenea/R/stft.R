@@ -72,11 +72,12 @@ uniform.window = function(n){
 rep(1, n)
 }
 
-library(robfilter)
 
 plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, ...)
   {
     xv <- x$values
+
+require(robfilter)
 
 # 
 if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 100) )$level)$MED)
@@ -97,7 +98,8 @@ frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 if (xaxis){
 if (time[1] < 946684800) time = time + 946684800
-plot(chron(  seq(min(time), max(time), len = 20)   / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+require(chron)
+plot(times2(  seq(min(time), max(time), len = 20)   / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
 par(new = T)
     image( x = time- min(time) , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
 } else {
