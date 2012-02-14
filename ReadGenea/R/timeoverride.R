@@ -1,9 +1,23 @@
 #extends time display from package chron to use h:m:s for >1 day times.
 
-times2 = function(x, ...){
-out = times(x)
+times2 = function(x, units = c("seconds", "days"),...){
+require(chron)
+units = match.arg(units)
+#convert to days
+if (units == "seconds") x = x /(60*60*24)
+#this bit might trigger a y2k style bug, remove when time formats are rationalised or we go to a class based system
+if (x[1] < 946684800/(60*60*24)) x = x + 946684800/(60*60*24)
+out = times(x,...)
 class(out) = c("times2",class(out))
 out
+}
+
+chron2 = function(x, units = c("seconds", "days"), ...){
+require(chron)
+units = match.arg(units)
+if (units == "seconds") x = x/(60 *60*24)
+if (x[1] < 946684800/(60*60*24)) x = x + 946684800/(60*60*24)
+chron(x,...)
 }
 
 print.times2 <-
