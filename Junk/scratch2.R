@@ -90,6 +90,11 @@ wristend =  read.bin("C:/Users/zhou/Data/wrist3__011661_2012-01-25 16-14-57.bin"
 
 
 
+a = rnorm(3)
+b = rnorm(3)
+
+x = a + b*i
+
 twist = atan( jogandstuff$dat[,4]/ jogandstuff$dat[,2])*180/pi
 updown = acos(-jogandstuff$data.out[,3]/sqrt(rowSums( jogandstuff$data.out[,2:4]^2)))*180/pi
 
@@ -101,3 +106,11 @@ lines(jogandstuff$dat[ i:(i+1),3],jogandstuff$dat[i:(i+1),2], col=2, lwd = 3)
  plot(stft( princomp( jogandstuff$dat[1:20000,2:4])$scores[,1], coef = 500, inc = 250, start.time=jogandstuff$dat[1,1], plot= F)-> stfobj, showmax = 2, log="y", xaxt="n"); axis(1, at = stfobj$time[21+0:2 * 24], label = hms (stfobj$time[21+0:2 * 24], "HMS"))
 
 # minor.tick   ?
+
+
+library(rgl)
+
+tmp = jogandstuff[1:4000,2:4]
+plot3d(tmp, xlim = c(-2,2), ylim = c(-2,2), zlim = c(-2,2)); lines3d(tmp, col=2)
+
+

@@ -80,7 +80,7 @@ plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", 
 require(robfilter)
 
 # 
-if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 100) )$level)$MED)
+if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 20) )$level)$MED)
 
 
 mode = match.arg(mode)
@@ -88,7 +88,7 @@ if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  constrain(pexp(t^2, 1/mean(t^2)), 0.5,1) ))
+xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) ) ))
 }
 time = x$time
 frequency= x$frequency
@@ -98,7 +98,7 @@ frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 if (xaxis){
 if (time[1] < 946684800) time = time + 946684800
-plot(times2(  seq(min(time), max(time), len = 20)   / (60*60*24)), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
 par(new = T)
     image( x = time- min(time) , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
 } else {
