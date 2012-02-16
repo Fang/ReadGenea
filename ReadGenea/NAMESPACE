@@ -1,0 +1,15 @@
+# Default NAMESPACE created by R
+# Remove the previous line if you edit this file
+
+# Export all names
+#exportPattern(".")
+#
+
+S3method(print, times2)
+
+export(read.bin, stft, plot.stft, cv.GFLasso, GFLasso, FLasso, cv.FLasso, times2, chron2, getfreqs)
+
+# Import all packages listed as Imports or Depends
+import(
+  bitops
+)
