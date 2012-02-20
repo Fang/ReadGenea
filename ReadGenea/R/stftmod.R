@@ -1,14 +1,16 @@
-#calculates Short Time Fourier Transforms.
+#calculates MODIFIED Short Time Fourier Transforms.
 #if center = T, remove means
 #if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
+#if reassign, calculate reassigned stft
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
-		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL)
+		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
   {
 if (length(dim(X)) ==2) {
 start.time = X[1,1]
 X = X[,2]
 }
+Xdel = shift(X, c(1,0), fill = "edge")
     numcoef <- 2*coef
     if (win < numcoef)
       {
@@ -24,11 +26,16 @@ X = X[,2]
 pval = rep(0, numwin+1)
     z <- matrix (0, numwin + 1, win)
     y <- matrix(0, numwin+1, win)
+    ydel <- matrix(0, numwin+1, win)
     st <- 1
     for (i in 0:numwin)
       {
 	z[i+1, 1:win] <- (X[st:(st+win-1)] - mean(X[st:(st+win - 1)])* center) * wincoef
 	y[i+1,] <- fft(z[i+1,] )
+if (reassign){	
+	z[i+1, 1:win] <- (Xdel[st:(st+win-1)] - mean(Xdel[st:(st+win - 1)])* center) * wincoef
+	ydel[i+1,] <- fft(z[i+1,] )
+}
 if (pvalues){
 temp = sample(X[st:(st + win - 1)])
 temp = (temp - mean(temp) * center)*wincoef
@@ -37,6 +44,17 @@ pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - me
 }
 	st <- st + inc
       }
+if (reassign){
+yfreqdel = t(apply(y, 1, function(t) shift(t, 1, fill = "loop")))
+
+ydel = Arg(y*Conj(ydel)) *(freq/(2*pi))
+yfreqdel = -(win/(2*pi*freq)) * Arg(y * Conj(yfreqdel)) + win/(2*freq)
+} else {
+yfreqdel = NULL
+}
+
+
+
 null.logmean = NULL
 null.logsd = NULL
 if (calc.null){
@@ -48,11 +66,11 @@ null.logmean = log(sqrt(mean((tmpdat$values)^2)))
 }
 if (is.null(start.time)){
     Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval )
+		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef] )
 } else {
 times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval )
+		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef]  )
 }
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
@@ -77,10 +95,10 @@ plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", 
   {
     xv <- x$values
 
-require(robfilter)
+#require(robfilter)
 
 # 
-if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 20) )$level)$MED)
+if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.1*length(t))) ceiling(length(t) / 20) )))
 
 
 mode = match.arg(mode)
@@ -97,7 +115,6 @@ frequency[1] = frequency[2]^2/frequency[3]
 frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 }
 if (xaxis){
-#if (time[1] < 946684800) time = time + 946684800
 plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
 par(new = T)
     image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)

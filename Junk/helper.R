@@ -2294,6 +2294,8 @@ if (fill == "loop") print("Currently umimplemented loop fill, edging instead")
 
 } else {
 #return(drop(shift(x=matrix(x, ncol=1), offset = c(offset,0), expand =c(expand, 0), fill = fill)))
+offset = offset[1]
+expand  = expand[1]
 x2 = rep(0, length(x) + expand)
 beg = 1 - pmin(offset, 0)
 end =  min (offset + length(x), length(x2)) - offset # min(  length(x) - beg + offset + 1, length(x) + expand) - offset
@@ -2301,9 +2303,9 @@ end =  min (offset + length(x), length(x2)) - offset # min(  length(x) - beg + o
 x2[( max(offset,0) +1) : min(length(x2), length(x)+ offset)] = x[beg:end]
 
 if (fill == "loop"){
-if (offset > 0)
-x2[1:offset] = tail(x, -offset)
-else{
+if (offset > 0){
+x2[1:offset] = tail(x, offset)
+}else{
 x2[((length(x) + offset + 1): length(x2))] = x[1:(-offset)]
 }
 } else if (fill == "edge"){
@@ -2320,3 +2322,8 @@ x2[ (length(x) + offset +1) : length(x2)] = tail(x,1)
 x2
 }
 
+
+#puts a vector into the range 0-1
+conv01 <- function(x){
+(x - min(x))/ (max(x)- min(x))
+}
