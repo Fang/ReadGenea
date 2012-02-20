@@ -91,15 +91,15 @@ rep(1, n)
 }
 
 
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, ...)
+#topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
+#reassign - use reassigned stft?
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim,...)
   {
     xv <- x$values
+if missing(ylim) ylim = range( x$frequency)
 
-#require(robfilter)
 
-# 
-if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.1*length(t))) ceiling(length(t) / 20) )))
-
+if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.1*length(t))) )))
 
 mode = match.arg(mode)
 if (mode == "decibels"){
@@ -108,19 +108,39 @@ if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
 xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) ) ))
 }
-time = x$time
+time = x$times
 frequency= x$frequency
 if(log == "y"){
 frequency[1] = frequency[2]^2/frequency[3]
 frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
+ylim[1] = max(min(frequency), ylim[1])
 }
+if (topthresh < Inf){
+ylim[2] = min(ylim[2], topthresh)
+#do top thresholding
+}
+
 if (xaxis){
-plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
-par(new = T)
-    image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
+	if (reassign){
+		time = times2(rep(obj$times, ncol(xv) )+ as.vector(obj$LGD ))
+		frequency =  as.vector(obj$CIF[,1:ncol(xv)])
+			plot( time, frequency,pch= ".", cex = 2 , col = grey(level = 1-conv01(as.vector(xv))) , log = log,ylim = ylim , topthresh), ...)
+#####
+	}else {
+	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+	par(new = T)
+		image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,...)
+	}
 } else {
- 
-    image( x = time , y = frequency,   z=xv, col=col, log = log, ...)
+	if (reassign){
+
+		time = (rep(obj$times, ncol(xv) )+ as.vector(obj$LGD )
+		frequency =  as.vector(obj$CIF[,1:ncol(xv)])
+			plot( time, frequency,pch= ".", cex = 2 , col = grey(level = 1-conv01(as.vector(xv))) , log = log,ylim = ylim , topthresh), ...)
+	#######
+	} else {
+	    image( x = time , y = frequency,   z=xv, col=col, log = log, ylim = ylim...)
+	}
 }
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
