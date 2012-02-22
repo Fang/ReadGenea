@@ -16,7 +16,7 @@ chron2 = function(x, units = c("seconds", "days"), ...){
 require(chron)
 units = match.arg(units)
 if (units == "seconds") x = x/(60 *60*24)
-if (x[1] < (946684800/(60*60*24))) x = x + 946684800/(60*60*24)
+if (x[1] < (946684800/(60*60*24)) & (x[1] > 365 ) ) x = x + 946684800/(60*60*24)
 chron(x,...)
 }
 
