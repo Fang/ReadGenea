@@ -1,156 +1,156 @@
-#calculates Short Time Fourier Transforms.
-#if center = T, remove means
-#if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
-stft <- function(X, win=min(1000,floor(length(X)/10)), 
-                 inc= max(1, floor(win/2)), coef=floor(win/2), 
-		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL)
-  {
-if (length(dim(X)) ==2) {
-start.time = X[1,1]
-X = X[,2]
-}
-    numcoef <- 2*coef
-    if (win < numcoef)
-      {
-	win <- numcoef
-	cat ("stft: window size adjusted to", win, ".\n")
-      }
-    numwin <- trunc ((length(X) - win) / inc)
-
-    ## compute the windows coefficients
-    wincoef <- eval(parse(text=wtype))(win)
-
-    ## create a matrix Z whose columns contain the windowed time-slices
-pval = rep(0, numwin+1)
-    z <- matrix (0, numwin + 1, win)
-    y <- matrix(0, numwin+1, win)
-    st <- 1
-    for (i in 0:numwin)
-      {
-	z[i+1, 1:win] <- (X[st:(st+win-1)] - mean(X[st:(st+win - 1)])* center) * wincoef
-	y[i+1,] <- fft(z[i+1,] )
-if (pvalues){
-temp = sample(X[st:(st + win - 1)])
-temp = (temp - mean(temp) * center)*wincoef
-temp = Mod(fft(temp))[1:coef]^2
-pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - mean(temp))^2)$p.value
-}
-	st <- st + inc
-      }
-null.logmean = NULL
-null.logsd = NULL
-if (calc.null){
-tmpdat = stft(sample(X), win = win, 
-                 inc= inc, coef=coef, 
-		 wtype=wtype, freq = freq, center = T, plot.it = F, calc.null = F )
-null.logmean = log(sqrt(mean((tmpdat$values)^2)))
-#null.logsd = sd(tmpdat$values))
-}
-if (is.null(start.time)){
-    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval )
-} else {
-times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
-   Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
-		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval )
-}
-    class(Y) <- "stft"
-    if (plot.it) plot.stft(Y)
-    return(Y)
-  }
-
-hanning.window = function (n) {
-    if (n == 1) 
-        c <- 1
-    else {
-        n <- n - 1
-        c <- 0.5 - 0.5 * cos(2 * pi * (0:n)/n)
-    }
-    return(c)
-}
-uniform.window = function(n){
-rep(1, n)
-}
-
-
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, ...)
-  {
-    xv <- x$values
-
-require(robfilter)
-
+##calculates Short Time Fourier Transforms.
+##if center = T, remove means
+##if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
+#stft <- function(X, win=min(1000,floor(length(X)/10)), 
+#                 inc= max(1, floor(win/2)), coef=floor(win/2), 
+#		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL)
+#  {
+#if (length(dim(X)) ==2) {
+#start.time = X[1,1]
+#X = X[,2]
+#}
+#    numcoef <- 2*coef
+#    if (win < numcoef)
+#      {
+#	win <- numcoef
+#	cat ("stft: window size adjusted to", win, ".\n")
+#      }
+#    numwin <- trunc ((length(X) - win) / inc)
+#
+#    ## compute the windows coefficients
+#    wincoef <- eval(parse(text=wtype))(win)
+#
+#    ## create a matrix Z whose columns contain the windowed time-slices
+#pval = rep(0, numwin+1)
+#    z <- matrix (0, numwin + 1, win)
+#    y <- matrix(0, numwin+1, win)
+#    st <- 1
+#    for (i in 0:numwin)
+#      {
+#	z[i+1, 1:win] <- (X[st:(st+win-1)] - mean(X[st:(st+win - 1)])* center) * wincoef
+#	y[i+1,] <- fft(z[i+1,] )
+#if (pvalues){
+#temp = sample(X[st:(st + win - 1)])
+#temp = (temp - mean(temp) * center)*wincoef
+#temp = Mod(fft(temp))[1:coef]^2
+#pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - mean(temp))^2)$p.value
+#}
+#	st <- st + inc
+#      }
+#null.logmean = NULL
+#null.logsd = NULL
+#if (calc.null){
+#tmpdat = stft(sample(X), win = win, 
+#                 inc= inc, coef=coef, 
+#		 wtype=wtype, freq = freq, center = T, plot.it = F, calc.null = F )
+#null.logmean = log(sqrt(mean((tmpdat$values)^2)))
+##null.logsd = sd(tmpdat$values))
+#}
+#if (is.null(start.time)){
+#    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
+#		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval )
+#} else {
+#times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
+#   Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
+#		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval )
+#}
+#    class(Y) <- "stft"
+#    if (plot.it) plot.stft(Y)
+#    return(Y)
+#  }
+#
+#hanning.window = function (n) {
+#    if (n == 1) 
+#        c <- 1
+#    else {
+#        n <- n - 1
+#        c <- 0.5 - 0.5 * cos(2 * pi * (0:n)/n)
+#    }
+#    return(c)
+#}
+#uniform.window = function(n){
+#rep(1, n)
+#}
+#
+#
+#plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, ...)
+#  {
+#    xv <- x$values
+#
+#require(robfilter)
+#
+## 
+#if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 20) )$level)$MED)
+#
+#
+#mode = match.arg(mode)
+#if (mode == "decibels"){
+#xv = log(xv)
+#if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
+#} else if (mode == "pval"){
+#xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) ) ))
+#}
+#time = x$time
+#frequency= x$frequency
+#if(log == "y"){
+#frequency[1] = frequency[2]^2/frequency[3]
+#frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
+#}
+#if (xaxis){
+##if (time[1] < 946684800) time = time + 946684800
+#plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
+#par(new = T)
+#    image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
+#} else {
 # 
-if (median) xv = apply(xv,2, function(t) (med.filter(t, width = ceiling(length(t) / 20) )$level)$MED)
-
-
-mode = match.arg(mode)
-if (mode == "decibels"){
-xv = log(xv)
-if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
-} else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) ) ))
-}
-time = x$time
-frequency= x$frequency
-if(log == "y"){
-frequency[1] = frequency[2]^2/frequency[3]
-frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
-}
-if (xaxis){
-#if (time[1] < 946684800) time = time + 946684800
-plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
-par(new = T)
-    image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n",...)
-} else {
- 
-    image( x = time , y = frequency,   z=xv, col=col, log = log, ...)
-}
-if (as.numeric(showmax) > 0){
-#points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
-
-points(time, x$principals, col = 2, pch = ".", cex = 3)
-
-}
-if (as.numeric(showmax) > 1){
-points(time, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
-}
-
-}
-
-#example code
-#plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), zlog = T, log="y")
-#plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
-#plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), zlog = T)
-
-
-
-#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F), zlog = T, log = "y")
-#plot( stft(rep(1, 1000) + c(sin(1:500/ 10 * 2*pi), rep(0, 500)) + c(rep(0, 300),sin(1:500/ 20 * 2*pi), rep(0, 200)) , freq = 1, plot.it = F), log="x")
-#stft(sin(1:1000 / (1 +sqrt(1000:1)) * 2 * pi), freq = 1)
-# stft(rep(1, 1000) + sin(1:1000/ 10 * 2*pi), freq = 1)
-
-#subsets a proportion of the dataset, or a certain length of the dataset starting at a specific proportion position
-subs <- function(x, a,b){
-len = length(x)
-if (a > 1){
-return(x[a : (a+b - 1)])
-} else if (b > 1) {
-return( x [ floor(a * len): (floor(a*len) + b - 1)])
-} else {
-return (x[floor(a*len) : floor(b*len)])
-}
-}
-
-#plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
-
-#gets fft components corresponding to frequencies
-getfreqs = function(x, frequencies){
-n = length(x)
-fftobj = fft(x)
-frequencies = c(frequencies, n - frequencies) + 1
-frequencies = frequencies[which(frequencies != n+1)]
-fftobj = replace(fftobj, (1:n)[ - frequencies], 0)
-
-return(Re(fft(fftobj, inverse=T))/n)
-}
-
+#    image( x = time , y = frequency,   z=xv, col=col, log = log, ...)
+#}
+#if (as.numeric(showmax) > 0){
+##points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
+#
+#points(time, x$principals, col = 2, pch = ".", cex = 3)
+#
+#}
+#if (as.numeric(showmax) > 1){
+#points(time, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
+#}
+#
+#}
+#
+##example code
+##plot(stft(subs(mag, 0.94,0.96), win = 1024, plot = F, coef = 512), zlog = T, log="y")
+##plot(stft(subs(mag, 0.7,8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
+##plot(stft(subs(mag, 0.0001,0.005), win = 1024, plot = F, coef = 512), zlog = T)
+#
+#
+#
+##plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F), zlog = T, log = "y")
+##plot( stft(rep(1, 1000) + c(sin(1:500/ 10 * 2*pi), rep(0, 500)) + c(rep(0, 300),sin(1:500/ 20 * 2*pi), rep(0, 200)) , freq = 1, plot.it = F), log="x")
+##stft(sin(1:1000 / (1 +sqrt(1000:1)) * 2 * pi), freq = 1)
+## stft(rep(1, 1000) + sin(1:1000/ 10 * 2*pi), freq = 1)
+#
+##subsets a proportion of the dataset, or a certain length of the dataset starting at a specific proportion position
+#subs <- function(x, a,b){
+#len = length(x)
+#if (a > 1){
+#return(x[a : (a+b - 1)])
+#} else if (b > 1) {
+#return( x [ floor(a * len): (floor(a*len) + b - 1)])
+#} else {
+#return (x[floor(a*len) : floor(b*len)])
+#}
+#}
+#
+##plot(stft(subs(mag, 0.7,0.8), win = 1024, plot = F, coef = 512), zlog = T, log="y")
+#
+##gets fft components corresponding to frequencies
+#getfreqs = function(x, frequencies){
+#n = length(x)
+#fftobj = fft(x)
+#frequencies = c(frequencies, n - frequencies) + 1
+#frequencies = frequencies[which(frequencies != n+1)]
+#fftobj = replace(fftobj, (1:n)[ - frequencies], 0)
+#
+#return(Re(fft(fftobj, inverse=T))/n)
+#}
+#
