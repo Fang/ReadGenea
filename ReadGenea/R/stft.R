@@ -1,7 +1,7 @@
 #calculates Short Time Fourier Transforms.
 #if center = T, remove means
 #if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
-stft <- function(X, win=min(80,floor(length(X)/10)), 
+stft <- function(X, win=min(1000,floor(length(X)/10)), 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
 		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL)
   {

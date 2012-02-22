@@ -45,7 +45,7 @@ pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - me
 	st <- st + inc
       }
 if (reassign){
-yfreqdel = t(apply(y, 1, function(t) shift(t, 1, fill = "loop")))
+yfreqdel = cbind(y[, win],y[, 2: win - 1])# t(apply(y, 1, function(t) shift(t, 1, fill = "loop")))
 
 ydel = Arg(y*Conj(ydel)) *(freq/(2*pi))
 yfreqdel = -(win/(2*pi*freq)) * Arg(y * Conj(yfreqdel)) + win/(2*freq)
@@ -93,10 +93,9 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim,...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T,...)
   {
     xv <- x$values
-if missing(ylim) ylim = range( x$frequency)
 
 
 if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.1*length(t))) )))
@@ -106,50 +105,83 @@ if (mode == "decibels"){
 xv = log(xv)
 if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
 } else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) ) ))
+xv = t(apply(xv, 1, function(t)  constrain(-log10(1-pexp(t^2, 1/mean(t^2)) ) , 0, 15)))
 }
-time = x$times
+timegrid = x$times
+if (missing(ylim)) ylim = range( x$frequency)
+if (missing(xlim)) xlim = range(timegrid)
 frequency= x$frequency
+if (topthresh < Inf){
+
+if (new){
+ layout(matrix(c(1,2,2,2), ncol = 1))
+ par(mar = c(0,1,0,0))
+ par(oma = c(5, 4, 4, 2) + 0.1)
+if (xaxis){
+plot(  times2(timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", ...)
+} else {
+
+plot(  (timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", ...)
+}
+}
+ylim[2] = min(ylim[2], topthresh)
+xv[, which(frequency > topthresh)]
+xv = xv[,which(frequency <= topthresh)]
+#do top thresholding
+}
+
 if(log == "y"){
 frequency[1] = frequency[2]^2/frequency[3]
 frequency = c(frequency, tail(frequency,1)^2/tail(frequency,2)[1])
 ylim[1] = max(min(frequency), ylim[1])
 }
-if (topthresh < Inf){
-ylim[2] = min(ylim[2], topthresh)
-#do top thresholding
+if (reassign){
+		frequency =  as.vector(x$CIF[,1:ncol(xv)])
+if (is.numeric(col)){
+	colours = col2rgb(palette()[col] )
+	colours = rgb(colours[1], colours[2], colours[3], alpha = 255*(conv01(as.vector(xv)))  , m = 255)
+} else {
+	colours = col[1+ (length(col) - 1) * ( conv01(as.vector(xv)))]
 }
-
+}
 if (xaxis){
 	if (reassign){
-		time = times2(rep(obj$times, ncol(xv) )+ as.vector(obj$LGD ))
-		frequency =  as.vector(obj$CIF[,1:ncol(xv)])
-			plot( time, frequency,pch= ".", cex = 2 , col = grey(level = 1-conv01(as.vector(xv))) , log = log,ylim = ylim , topthresh), ...)
+		time = times2(rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
+		if (new){
+			plot( time, frequency,pch= ".", cex = 2 , col = colours , log = log,ylim = ylim , xlim = times2(xlim), ...)
+		}else{
+			points ( time, frequency,pch= ".", cex = 2 , col = colours , ylim = ylim ,  ...)
+		}
 #####
 	}else {
+	time = timegrid
 	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
 	par(new = T)
-		image( x = time , y = frequency,   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,...)
+		image( x = time , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = xlim,...)
 	}
 } else {
 	if (reassign){
 
-		time = (rep(obj$times, ncol(xv) )+ as.vector(obj$LGD )
-		frequency =  as.vector(obj$CIF[,1:ncol(xv)])
-			plot( time, frequency,pch= ".", cex = 2 , col = grey(level = 1-conv01(as.vector(xv))) , log = log,ylim = ylim , topthresh), ...)
+		time = (rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
+		if (new){
+			plot( time, frequency,pch= ".", cex = 2 , col = colours , log = log,ylim = ylim , xlim = xlim, ...)
+		} else {
+			points( time, frequency,pch= ".", cex = 2 , col = colours , ylim = ylim , ...)
+		}
 	#######
 	} else {
-	    image( x = time , y = frequency,   z=xv, col=col, log = log, ylim = ylim...)
+	time = timegrid
+	    image( x = time , y = frequency[1:ncol(xv)],   z=xv, col=col, log = log, ylim = ylim,xlim=xlim,...)
 	}
 }
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
-points(time, x$principals, col = 2, pch = ".", cex = 3)
+points(timegrid, x$principals, col = 2, pch = ".", cex = 3)
 
 }
 if (as.numeric(showmax) > 1){
-points(time, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
+points(timegrid, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
 }
 
 }

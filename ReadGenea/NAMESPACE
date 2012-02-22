@@ -5,9 +5,8 @@
 #exportPattern(".")
 #
 
-S3method(print, times2)
 
-export(read.bin, stft, plot.stft, cv.GFLasso, GFLasso, FLasso, cv.FLasso, times2, chron2, getfreqs)
+export(read.bin, stft, plot.stft, cv.GFLasso, GFLasso, FLasso, cv.FLasso, times2, print.times2, chron2, getfreqs)
 
 # Import all packages listed as Imports or Depends
 import(
