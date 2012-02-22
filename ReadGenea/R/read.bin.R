@@ -310,6 +310,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 
 close(binfile)
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index], freq= freq)
+class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
     }
