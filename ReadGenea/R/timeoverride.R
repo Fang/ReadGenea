@@ -117,3 +117,35 @@ style = list(periods = c("h", "m", "s"), sep = ":")
     attributes(out) <- att
     out
 }
+
+
+"axis.times2"<-
+function(n, x, add = TRUE, labels, simplify = TRUE, ...)
+{
+    if(!inherits(x, "times2"))
+        x <- times2(x)
+    bad <- is.na(x) | abs(as.vector(x)) == Inf
+    rng <- if(n == 1 || n == 3) par("usr")[1:2] else par("usr")[3:4]
+    tmp <- c(rng, as.numeric(x[!bad]))
+    rng1 <- diff(range(tmp))
+    if (rng1 > 1) fctr <- 1
+    else if (rng1 > 1/24) fctr <- 24
+    else if (rng1 > 1/1440) fctr <- 1440
+    else fctr <- 86400
+    tmp <- pretty(fctr*tmp)/fctr
+    if (simplify) {
+        step <- diff(tmp[1:2])
+    	simplify <- step >= 1/1440
+    	if (inherits(x, "chron") && step >= 1) class(x) <- class(x)[-1]
+    }
+    
+    att <- attributes(x)
+    at.x <- structure(tmp[tmp >= rng[1] & tmp <= rng[2]], format = att$
+                      format, origin = att$origin, class = att$class)
+    if(missing(labels) || (is.logical(labels) && labels)) 
+        labels <- format(at.x, simplify = simplify)
+    if(add)
+        axis(n, at = at.x, labels = labels, ...)
+    invisible(list(n = n, at = at.x, labels = labels))
+}
+

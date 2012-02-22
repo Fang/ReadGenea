@@ -118,10 +118,13 @@ if (new){
  par(mar = c(0,1,0,0))
  par(oma = c(5, 4, 4, 2) + 0.1)
 if (xaxis){
-plot(  times2(timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", ...)
+plot(  times2(timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", xaxt = "n", ...)
+axis.times2( 1, times2(timegrid), labels = F)
 } else {
 
-plot(  (timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", ...)
+plot(  (timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", xaxt="n", ...)
+axis(1, pretty(timegrid), labels = F)
+
 }
 }
 ylim[2] = min(ylim[2], topthresh)
@@ -155,9 +158,9 @@ if (xaxis){
 #####
 	}else {
 	time = timegrid
-	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "", ylab = "", yaxt = "n")
-	par(new = T)
-		image( x = time , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = xlim,...)
+	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "time", ylab = "frequency", ylim = ylim, xlim = times2(xlim), xpd = NA)
+#	par(new = T)
+		image( x = times2(time) , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = times2(xlim), add= T,...)
 	}
 } else {
 	if (reassign){
@@ -174,6 +177,7 @@ if (xaxis){
 	    image( x = time , y = frequency[1:ncol(xv)],   z=xv, col=col, log = log, ylim = ylim,xlim=xlim,...)
 	}
 }
+axis(2, pretty(constrain(frequency, ylim[1], ylim[2]), floor(topthresh)), labels = F)
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
