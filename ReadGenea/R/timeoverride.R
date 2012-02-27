@@ -136,7 +136,7 @@ function(n, x, add = TRUE, labels, simplify = TRUE, ...)
     if (simplify) {
         step <- diff(tmp[1:2])
     	simplify <- step >= 1/1440
-    	if (inherits(x, "chron") && step >= 1) class(x) <- class(x)[-1]
+    #	if (inherits(x, "chron") && step >= 1) class(x) <- class(x)[-1]
     }
     
     att <- attributes(x)

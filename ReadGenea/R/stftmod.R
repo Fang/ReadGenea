@@ -164,7 +164,7 @@ axis(1, pretty(timegrid), labels = F)
 }
 }
 ylim[2] = min(ylim[2], topthresh)
-xv[, which(frequency > topthresh)]
+#xv[, which(frequency > topthresh)]
 xv = xv[,which(frequency <= topthresh)]
 #do top thresholding
 }
@@ -213,7 +213,7 @@ if (xaxis){
 	    image( x = time , y = frequency[1:ncol(xv)],   z=xv, col=col, log = log, ylim = ylim,xlim=xlim,...)
 	}
 }
-axis(2, pretty(constrain(frequency, ylim[1], ylim[2]), floor(topthresh)), labels = F)
+axis(2, pretty(constrain(frequency, ylim[1], ylim[2]), min(floor(topthresh), floor(max(frequency))) ), labels = F, tcl = -0.2)
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
