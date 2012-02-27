@@ -97,3 +97,91 @@ x2
 conv01 <- function(x){
 (x - min(x))/ (max(x)- min(x))
 }
+
+
+
+#convert time intervals #TODO: split out from plotsphere
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements"), incl.date = F){
+
+sampling.freq = 100
+time.format = match.arg(time.format)
+
+if (inherits(x, "list")){
+sampling.freq = x$freq
+ x = x$data.out[,(2- incl.date):4]
+}
+n = nrow(x)
+
+#auto detect time format
+if (time.format == "auto"){
+if (start <1){
+ time.format = "proportion"
+}else if (floor(start) == start) {
+ time.format = "seconds"
+} else {
+time.format = "days"
+}
+}
+if (length(start) > 1) {
+end = max(start)
+start = min(start)
+}
+
+if (is.null(length)){
+if ((time.format == "proportion") & (end > 1)){
+length = end
+end = NULL
+}
+}
+
+if (!is.null(length)) {
+if ((time.format == "proportion") && (length >= 1)){
+time.format ="seconds"
+start = (start * n/sampling.freq)
+}
+end = start + length
+}
+
+#convert into measurements
+
+if (time.format == "proportion"){
+start = ceiling(start * n)
+end  = floor(end * n)
+} else if (time.format == "seconds") {
+start = ceiling(start * sampling.freq)
+end = floor(end * sampling.freq)
+} else if (time.format == "days"){
+start = ceiling(start * sampling.freq*60*60*24)
+end = floor(end * sampling.freq*60*60*24)
+}
+
+start = max(start,1)
+end = min(end, n)
+
+return(x[start:end,])
+}
+
+
+#'between' operator for convenience
+#takes [min, max), or c("[", min, max, "]") style second terms
+#default is [min, max] for c(,) terms
+"%bt%" = function(X, y){
+if (is.character(y)){
+if (length(y) == 4) y = paste(y[1],y[2], ",",y[3], y[4], sep="")
+y = strsplit(y, ",")[[1]]
+if (substr(y[1],1,1) == "["){
+res = (X >= as.numeric(substring(y[1], 2)))
+}else {
+res = (X > as.numeric(substring(y[1], 2)))
+}
+nc = nchar(y[2])
+if (substr(y[2],nc,nc) == "]"){
+res = res &(X <= as.numeric(substring(y[2],1, nc -1)))
+}else {
+res = res & (X < as.numeric(substring(y[2], 1,nc - 1)))
+}
+} else {
+res = (X >= y[1] ) & (X<= y[2])
+}
+res
+}

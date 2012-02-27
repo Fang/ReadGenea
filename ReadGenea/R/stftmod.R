@@ -2,6 +2,42 @@
 #if center = T, remove means
 #if calc.null, calculate 'null hypothesis' by randomising data (sampling w/o replacement) and calculating FFT on that.
 #if reassign, calculate reassigned stft
+
+
+#DA method wrapper
+stft.da <- function(X, date.col, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements"),...){
+if (inherits(X, "list")){
+X = get.intervals(X, start, end, length, time.format, incl.date=T)
+}
+
+#is first col date-like?
+if (missing(date.col)){
+
+if (X[1,1] >= 365 * 60*60*24){
+print("Assuming first column is time.")
+date.col = T
+} else {
+date.col = F
+}
+}
+
+ind = 1
+if (date.col) ind = c(1,ind +1)
+
+obj1 = stft(X[,ind], ...) 
+
+if (ncol(X) > 1+date.col){
+for (ind in 2: (ncol(X) - date.col)) {
+
+if (date.col) ind = c(1,ind +1)
+obj = stft(X[,ind], ...)
+obj1$va = pmax(obj1$va, obj$va)
+}
+}
+obj1
+}
+
+
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
 		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
@@ -158,7 +194,7 @@ if (xaxis){
 #####
 	}else {
 	time = timegrid
-	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "time", ylab = "frequency", ylim = ylim, xlim = times2(xlim), xpd = NA)
+	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "time", ylab = "frequency", ylim = ylim, xlim = times2(xlim), xpd = NA, log =log)
 #	par(new = T)
 		image( x = times2(time) , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = times2(xlim), add= T,...)
 	}

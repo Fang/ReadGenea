@@ -1,12 +1,13 @@
 #plot an 3d sequence with sedentary sphere
 
 
+
 #start,end: specify by time in seconds, days, or proportion
 plotsphere <- function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements"), smooth = F, col, arrow = T){
+require(rgl)
 sampling.freq = 100
 time.format = match.arg(time.format)
 
-require(rgl)
 if (inherits(x, "list")){
 sampling.freq = x$freq
  x = x$data.out[,2:4]
