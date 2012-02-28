@@ -6,6 +6,7 @@
 
 #DA method wrapper
 stft.da <- function(X, date.col, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements"),...){
+call <- match.call()
 if (inherits(X, "list")){
 X = get.intervals(X, start, end, length, time.format, incl.date=T)
 }
@@ -34,6 +35,7 @@ obj = stft(X[,ind], ...)
 obj1$va = pmax(obj1$va, obj$va)
 }
 }
+obj1$call = call
 obj1
 }
 
@@ -42,6 +44,7 @@ stft <- function(X, win=min(80,floor(length(X)/10)),
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
 		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
   {
+call = match.call()
 if (length(dim(X)) ==2) {
 start.time = X[1,1]
 X = X[,2]
@@ -108,6 +111,7 @@ times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef]  )
 }
+Y$call = call
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
     return(Y)
@@ -129,7 +133,7 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T,...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T, zlim.raw,zlim.quantile, ...)
   {
     xv <- x$values
 
@@ -139,10 +143,45 @@ if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1
 mode = match.arg(mode)
 if (mode == "decibels"){
 xv = log(xv)
-if (!is.null(x$null.logmean)) xv = pmax(xv, x$null.logmean)
-} else if (mode == "pval"){
-xv = t(apply(xv, 1, function(t)  constrain(-log10(1-pexp(t^2, 1/mean(t^2)) ) , 0, 15)))
+if (missing(zlim.raw)){
+
+if (missing(zlim.quantile)){
+zlim.raw = c(median(xv), Inf)
+if (!is.null(x$null.logmean)) zlim.raw = c(x$null.logmean, Inf)
+
+} else {
+zlim.raw = c(quantile(xv, zlim.quantile[1]), quantile(xv, zlim.quantile[2]))
 }
+}
+if (length(zlim.raw) == 1) zlim.raw = c(zlim.raw, zlim.raw + abs(zlim.raw)*0.0001)
+xv = constrain(xv, zlim.raw[1], zlim.raw[2])
+
+} else if (mode == "pval"){
+xv = t(apply(xv, 1, function(t)  -log10(1-pexp(t^2, 1/mean(t^2)) )))
+if (missing(zlim.raw)){
+if (missing(zlim.quantile)){
+zlim.raw = c(0, 15)
+} else {
+zlim.raw = c(quantile(xv, zlim.quantile[1]), quantile(xv, zlim.quantile[2]))
+}
+}
+ 
+if (length(zlim.raw) == 1) zlim.raw = c(zlim.raw, zlim.raw + abs(zlim.raw)*0.0001)
+xv = constrain(xv, zlim.raw[1], zlim.raw[2])
+
+} else {
+if (missing(zlim.raw)){
+if (missing(zlim.quantile)){
+zlim.raw = c(0, Inf)
+} else {
+zlim.raw = c(quantile(xv, zlim.quantile[1]), quantile(xv, zlim.quantile[2]))
+}
+}
+
+if (length(zlim.raw) == 1) zlim.raw = c(zlim.raw, zlim.raw + abs(zlim.raw)*0.0001)
+xv = constrain(xv, zlim.raw[1], zlim.raw[2])
+}
+
 timegrid = x$times
 if (missing(ylim)) ylim = range( x$frequency)
 if (missing(xlim)) xlim = range(timegrid)

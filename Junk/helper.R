@@ -2327,3 +2327,11 @@ x2
 conv01 <- function(x){
 (x - min(x))/ (max(x)- min(x))
 }
+
+#fill up the current layout.
+fillplots <- function(){
+while ( !identical(par("mfg")[1:2],par("mfg")[3:4])){
+plot.new()
+}
+}
+
