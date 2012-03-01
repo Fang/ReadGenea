@@ -101,20 +101,24 @@ conv01 <- function(x){
 
 
 #convert time intervals #TODO: split out from plotsphere
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements"), incl.date = F){
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), incl.date = F){
 
 sampling.freq = 100
 time.format = match.arg(time.format)
 
-if (inherits(x, "list")){
-sampling.freq = x$freq
- x = x$data.out[,(2- incl.date):4]
-}
-n = nrow(x)
 
+if (length(start) > 1) {
+end = (start)[2]
+start = (start)[1]
+}
 #auto detect time format
 if (time.format == "auto"){
-if (start <1){
+if (is.character(start)){
+time.format = "time"
+
+} else if (inherits(start, "times2")){
+time.format = "date"
+}else if (start <1){
  time.format = "proportion"
 }else if (floor(start) == start) {
  time.format = "seconds"
@@ -122,10 +126,43 @@ if (start <1){
 time.format = "days"
 }
 }
-if (length(start) > 1) {
-end = max(start)
-start = min(start)
+
+
+if ((time.format == "time") || (time.format = "date")){
+times = times2(x$data.out[,1])
 }
+
+if (inherits(x, "list")){
+sampling.freq = x$freq
+ x = x$data.out[,(2- incl.date):4]
+}
+n = nrow(x)
+
+if (time.format == "time"){
+if (nchar(start) < 7) start = paste(start, ":00", sep = "")
+start = (times[min(which(abs((times - floor( times))- times(start)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
+if (is.character(end)){
+if (nchar(end) < 7) end = paste(end, ":00", sep = "")
+end = (times[min(which(abs((times - floor( times))- times(end)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
+
+if (end < start) end = end + 24*60*60
+} else {
+length = end
+end = NULL
+}
+
+time.format = "seconds"
+
+}
+
+if (time.format == "date"){
+start = (start - times[1]) * 60*60*24
+if (inherits(end, "times2")){
+end =(end - times[1]) * 60*60*24
+}
+time.format = "seconds"
+}
+
 
 if (is.null(length)){
 if ((time.format == "proportion") & (end > 1)){

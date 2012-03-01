@@ -5,7 +5,7 @@
 
 
 #DA method wrapper
-stft.da <- function(X, date.col, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements"),...){
+stft.da <- function(X, date.col, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements"), svm = F,...){
 call <- match.call()
 if (inherits(X, "list")){
 X = get.intervals(X, start, end, length, time.format, incl.date=T)
@@ -22,6 +22,13 @@ date.col = F
 }
 }
 
+if (svm){
+if (date.col){
+obj1 = stft(cbind(X[,1], sqrt(rowSums(X[,2:4]^2))), ...)
+} else {
+obj1 = stft( sqrt(rowSums(X[,1:3]^2)), ...)
+}
+} else {
 ind = 1
 if (date.col) ind = c(1,ind +1)
 
@@ -34,6 +41,9 @@ if (date.col) ind = c(1,ind +1)
 obj = stft(X[,ind], ...)
 obj1$va = pmax(obj1$va, obj$va)
 }
+}
+
+
 }
 obj1$call = call
 obj1
@@ -192,15 +202,37 @@ if (new){
  layout(matrix(c(1,2,2,2), ncol = 1))
  par(mar = c(0,1,0,0))
  par(oma = c(5, 4, 4, 2) + 0.1)
+res = apply(x$values, 2, function(t)  apply(matrix(t, 10), 2, median))
+timegridtop = matrix(timegrid, 10)[1,]
+ind = ceiling(ncol(xv) * 1:20/20)
+ylim =  c(0, quantile(sqrt(rowSums(res^2)), 0.95)*1.1)
 if (xaxis){
-plot(  times2(timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", xaxt = "n", ...)
-axis.times2( 1, times2(timegrid), labels = F)
+
+plot(  times2(timegridtop), sqrt(rowSums(res^2)) , type="l", xaxt = "n", ylim =ylim, ...)
+axis.times2( 1, times2(timegridtop), labels = F)
+timegridtop = times2(timegridtop)
 } else {
 
-plot(  (timegrid), runmed(rowSums(x$values[, which( frequency > topthresh )] ^2) , k= 1 + 2 * min((length(timegrid)-1)%/% 2, ceiling(0.01*length(timegrid)))  ) , type="l", xaxt="n", ...)
-axis(1, pretty(timegrid), labels = F)
+plot(  (timegridtop), sqrt(rowSums(res^2))  , type="l", xaxt="n", ylim = ylim,...)
+axis(1, pretty(timegridtop), labels = F)
 
 }
+
+for (k in ind){
+if (frequency[k] <= (topthresh *2/3)){
+colour = "black"
+} else if (frequency[k] %bt% c(topthresh * 2/3, topthresh)){
+colour = "red"
+} else {
+colour = "blue"
+}
+
+lines(timegridtop,sqrt(apply((res)[, k:ncol(res), drop=F]^2, 1, sum)), col=  colour)
+abline(h = 0)
+}
+
+
+
 }
 ylim[2] = min(ylim[2], topthresh)
 #xv[, which(frequency > topthresh)]
