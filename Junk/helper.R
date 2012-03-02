@@ -2335,3 +2335,39 @@ plot.new()
 }
 }
 
+#faster apply among consecutive blocks, trim off incomplete blocks
+#bapply <- function(X, size = 1, FUN, Y = NULL){
+#
+##get dimensionality of output
+#n = floor(length(X)/size)
+#dimout = length(FUN(X[ 1:size]))
+#if (dimout > 1) {
+#res = matrix(0, dimout,n )
+#if (length(Y) > n){
+#for (i in 1:n) res[,i] = FUN(X[ (i-1)*k + 1:k], Y[i])
+#}else {
+#for (i in 1:n) res[,i] = FUN(X[ (i-1)*k + 1:k])
+#}
+#}else{
+#res = rep(0, n)
+#if (length(Y) > n){
+#for (i in 1:n) res[i] = FUN(X[ (i-1)*k + 1:k], Y[i])
+#}else {
+#for (i in 1:n) res[i] = FUN(X[ (i-1)*k + 1:k])
+#}
+#}
+#
+#res
+#}
+
+#simplified bapply for vectors
+bapply.basic <- function(X, k, FUN) { res = rep(0, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[i] = FUN(X[ (i-1)*k + 1:k]); return(res)}
+
+bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(res)}
+
+
+require(compiler)
+bapplyc.basic <- cmpfun(bapply.basic)
+bapplyc <- cmpfun(bapply)
+
+
