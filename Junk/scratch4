@@ -1,0 +1,27 @@
+tmp2 = get.intervals(halfday2, "16:10", "14:00" , incl.date=T)
+svm = sqrt(rowSums( tmp2[,-1]^2))
+iqrsvm = bapplyc.basic(svm, 60000, function(t) diff(quantile(t, c(0.25, 0.75))))
+plot(times2(tmp2[,1]),svm, type="l")
+qsvm = bapplyc(svm, 6000, function(t) quantile(t, c(0.1, 0.25, 0.5, 0.75, 0.9)))
+#repeatplot(bapplyc.basic(times2(tmp2[,1]), 6000, function(t) (t[3000])) ,qsvm, 1, type="l", col=2, new = F)
+
+plot(times2(tmp2[,1]), -acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, col = hcl(180 *acos(-tmp2[,4] / sqrt(rowSums(tmp2[,-c(1,3)]^2)))/pi +180 , alpha = constrain(1 - 0*abs( sqrt(rowSums(tmp2[,-1]^2)) - 1), 0,1) ), pch=".", ylim = c(-90, 90), xlab = "", ylab=""); abline(h = c(-2:2) * 45, lty= 2)
+axis(1, at = times2(tmp2[,1])[ which(((tmp2[,1]) %% (60*60)) < 0.005) ], label = c(17:23, 0:13), tcl = -0.5)
+dev.new()
+
+
+
+plot(cumsum((rep(iqrsvm, each = 60000))),  (-acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90)[1:(length(iqrsvm)*60000)] , col = hcl((180 *acos(-tmp2[,4] / sqrt(rowSums(tmp2[,-c(1,3)]^2)))/pi +180)[1:(length(iqrsvm)*60000)]),  pch=".", ylim = c(-90, 90), xlab = "", ylab="" , xaxt="n");abline(h = c(-2:2) * 45, lty= 2)
+axis(1, at = cumsum((rep(iqrsvm, each = 60000)))[ which(((tmp2[,1]) %% (30*60)) < 0.1) ], label = NA, tcl = -0.2)
+axis(1, at = cumsum((rep(iqrsvm, each = 60000)))[ which(((tmp2[,1]) %% (60*60)) < 0.005) ], label = c(17:23, 0:13), tcl = -0.5)
+
+
+#repeatplot(bapplyc.basic(cumsum((rep(iqrsvm, each = 60000))), 6000, function(t) mean(t)) ,qsvm[,1:1300], 1, type="l", col=2, new = F)
+
+
+
+plot( bapplyc.basic(-acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, 6000, mean), type="l")
+segments(1:length( bapplyc.basic(-acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, 60000, mean))*10, y0= bapplyc.basic(-acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, 60000, mean), y1 =bapplyc.basic(-acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, 60000, mean)+ (bapplyc(180 *acos(-tmp2[,4] / sqrt(rowSums(tmp2[,-c(1,3)]^2)))/pi, 60000, mean)   )/10,col=2)
+
+
+ cumsum(rep(c(iqrsvm, tail(iqrsvm,1)), each = 60000))[(1:2618) * 3000]

@@ -2366,8 +2366,14 @@ bapply.basic <- function(X, k, FUN) { res = rep(0, floor(length(X) / k)); for (i
 bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(res)}
 
 
+expand <- function(X, length = (length(X)*100)){
+c(rep(X, each = floor(length / length(X))), rep(tail(X,1), length - length(X) * floor(length/length(X))))
+}
+
+
 require(compiler)
 bapplyc.basic <- cmpfun(bapply.basic)
 bapplyc <- cmpfun(bapply)
+expandc <- cmpfun(expand)
 
 

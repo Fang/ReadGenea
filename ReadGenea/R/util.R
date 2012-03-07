@@ -198,6 +198,31 @@ end = min(end, n)
 return(x[start:end,])
 }
 
+#quantile version of bt
+"%bq%" = function(X, y){
+if (is.character(y)){
+if (length(y) == 4) y = paste(y[1],y[2], ",",y[3], y[4], sep="")
+y = strsplit(y, ",")[[1]]
+nc = nchar(y[2])
+yl = quantile(X, c(as.numeric(substring(y[1], 2)), as.numeric(substring(y[2], 1,nc - 1))))
+if (substr(y[1],1,1) == "["){
+res = (X >= yl[1])
+}else {
+res = (X >  yl[1])
+}
+if (substr(y[2],nc,nc) == "]"){
+res = res &(X <= yl[2] )
+}else {
+res = res & (X < yl[2])
+}
+} else {
+y = quantile(X, y)
+
+res = (X >= y[1] ) & (X<= y[2])
+}
+res
+}
+
 
 #'between' operator for convenience
 #takes [min, max), or c("[", min, max, "]") style second terms

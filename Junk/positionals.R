@@ -30,23 +30,31 @@ plot(times2(tmp2[,1]), sqrt(rowSums(tmp2[,-1]^2)), type="l", ylim=c(0, 3)); abli
 
 
 tmp2 = get.intervals(halfday2, "9:30", "11:30" , incl.date=T)
+
 tmp2 = get.intervals(halfday2, "7:10", "9:10" , incl.date=T)
 tmp2 = get.intervals(halfday2, "8:10", "9:10" , incl.date=T)
-tmp2 = get.intervals(halfday2, "12:00", "14:00" , incl.date=T)
-tmp2 = get.intervals(halfday2, "16:50", "18:50" , incl.date=T)
-tmp2 = get.intervals(halfday2, "19:20", "21:20" , incl.date=T)
-tmp2 = get.intervals(halfday2, "23:00", "01:00" , incl.date=T)
+#tmp2 = get.intervals(halfday2, "12:00", "14:00" , incl.date=T)
+tmp2 = get.intervals(halfday2, "14:50", "18:50" , incl.date=T)
+#tmp2 = get.intervals(halfday2, "19:20", "21:20" , incl.date=T)
 
-dev.new();par(mfrow = c(2,1), mar = c(1,1,1,1))
+#tmp2 = get.intervals(halfday2, "02:00", "02:05" , incl.date=T)
+#tmp2 = get.intervals(halfday2, "23:00", "01:00" , incl.date=T) sleeping
+
+dev.new();par(mfrow = c(2,1), mar = 2*c(1,1,1,1))
 
 
 plot(times2(tmp2[,1]), -acos(tmp2[,3] / sqrt(rowSums(tmp2[,-1]^2)) ) *180/pi +90, col = hcl(180 *acos(-tmp2[,4] / sqrt(rowSums(tmp2[,-c(1,3)]^2)))/pi +180 , alpha = constrain(1 - 0*abs( sqrt(rowSums(tmp2[,-1]^2)) - 1), 0,1) ), pch=".", ylim = c(-90, 90), xlab = "", ylab=""); abline(h = c(-2:2) * 45, lty= 2)
 
 
 svm = sqrt(rowSums(tmp2[,-1]^2))
-plot(times2(tmp2[,1]),svm, pch = ".", col=2)
-lines(times2(tmp2[,1]),(cumsum(svm) - shift(cumsum(svm), 6000, fill="edge")) / 6000, type="l")
+#plot(times2(tmp2[,1]),svm, pch = ".", col=2)
+#lines(times2(tmp2[,1]),(cumsum(svm) - shift(cumsum(svm), 6000, fill="edge")) / 6000, type="l")
 
+
+#source("C:/Users/zhou/PortableGit/ReadGenea/Junk/helper.R")
+qsvm = bapplyc(svm, 6000, function(t) quantile(t, c(0.1, 0.25, 0.5, 0.75, 0.9)))
+plot(times2(tmp2[,1]),svm, pch = ".", col=2, ylim = c(0, 3))
+repeatplot(bapplyc(tmp2[,1] , 6000, function(t) times2(t[3000])), qsvm, mar = 1, type="l", new = F, col=3)
 
 #plot(times2(tmp2[,1]), sqrt(rowSums(tmp2[,-1]^2)), type="l", ylim=c(0, 3)); abline(h=1:2, col=2)
 
