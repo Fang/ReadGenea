@@ -5,7 +5,7 @@
 
 
 #MV method wrapper
-stft.mv <- function(X, date.col, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), svm = F,...){
+stft.mv <- function(X, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), svm = F,date.col,...){
 call <- match.call()
 if (inherits(X, "list")){
 X = get.intervals(X, start, end, length, time.format, incl.date=T)
