@@ -128,7 +128,7 @@ time.format = "days"
 }
 
 
-if ((time.format == "time") || (time.format = "date")){
+if ((time.format == "time") || (time.format == "date")){
 times = times2(x$data.out[,1])
 }
 
