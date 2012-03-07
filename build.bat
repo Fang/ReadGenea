@@ -1,6 +1,6 @@
-C:\R2141\bin\x64\Rcmd.exe build ReadGenea
+C:\R\R-2.14.1\bin\x64\Rcmd.exe build ReadGenea
 pause
-C:\R2141\bin\x64\Rcmd.exe INSTALL ReadGenea
+C:\R\R-2.14.1\bin\x64\Rcmd.exe INSTALL ReadGenea
 pause
-C:\R2141\bin\x64\Rcmd.exe INSTALL --build ReadGenea
+C:\R\R-2.14.1\bin\x64\Rcmd.exe INSTALL --build ReadGenea
 pause
