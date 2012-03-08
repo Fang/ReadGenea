@@ -103,7 +103,7 @@ conv01 <- function(x){
 
 
 
-#convert time intervals #TODO: split out from plotsphere
+#convert time intervals
 get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), incl.date = F){
 
 sampling.freq = 100
@@ -131,14 +131,23 @@ time.format = "days"
 }
 
 
+if (inherits(x, "list")){
+
 if ((time.format == "time") || (time.format == "date")){
 times = times2(x$data.out[,1])
 }
 
-if (inherits(x, "list")){
 sampling.freq = x$freq
  x = x$data.out[,(2- incl.date):4]
+} else {
+if (ncol(x) == 3) x =cbind (1:nrow(x)/sampling.freq, x)
+
+if ((time.format == "time") || (time.format == "date")){
+times = times2(x[,1])
 }
+if (!incl.date)  x = x[,-1]
+}
+
 n = nrow(x)
 
 if (time.format == "time"){
@@ -168,7 +177,7 @@ time.format = "seconds"
 
 
 if (is.null(length)){
-if ((time.format == "proportion") & (end > 1)){
+if ( end < start){
 length = end
 end = NULL
 }
@@ -197,6 +206,8 @@ end = floor(end * sampling.freq*60*60*24)
 
 start = max(start,1)
 end = min(end, n)
+
+if (incl.date) cat("Extracting time interval: ", times2(x[start,1]), " to " , times2(x[end,1]), "\n")
 
 return(x[start:end,])
 }

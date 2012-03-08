@@ -143,7 +143,7 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T, zlim.raw,zlim.quantile, ...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T, zlim.raw,zlim.quantile, cex = 2,...)
   {
     xv <- x$values
 
@@ -258,9 +258,9 @@ if (xaxis){
 	if (reassign){
 		time = times2(rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
 		if (new){
-			plot( time, frequency,pch= ".", cex = 2 , col = colours , log = log,ylim = ylim , xlim = times2(xlim), ...)
+			plot( time, frequency,pch= ".", cex = cex , col = colours , log = log,ylim = ylim , xlim = times2(xlim), ...)
 		}else{
-			points ( time, frequency,pch= ".", cex = 2 , col = colours , ylim = ylim ,  ...)
+			points ( time, frequency,pch= ".", cex = cex , col = colours , ylim = ylim ,  ...)
 		}
 #####
 	}else {
@@ -274,9 +274,9 @@ if (xaxis){
 
 		time = (rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
 		if (new){
-			plot( time, frequency,pch= ".", cex = 2 , col = colours , log = log,ylim = ylim , xlim = xlim, ...)
+			plot( time, frequency,pch= ".", cex = cex , col = colours , log = log,ylim = ylim , xlim = xlim, ...)
 		} else {
-			points( time, frequency,pch= ".", cex = 2 , col = colours , ylim = ylim , ...)
+			points( time, frequency,pch= ".", cex = cex , col = colours , ylim = ylim , ...)
 		}
 	#######
 	} else {
