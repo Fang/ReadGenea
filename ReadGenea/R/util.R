@@ -1,7 +1,10 @@
 #utility functions for ReadGenea
 
 
-constrain <- function(x, minimum, maximum=-minimum){
+constrain <- function(x, minimum, maximum){
+if (missing(maximum)) maximum = Inf
+if (missing(minimum)) minimum = -Inf
+
   if (minimum > maximum) {
     temp <- minimum
     minimum <- maximum
@@ -247,3 +250,41 @@ res = (X >= y[1] ) & (X<= y[2])
 }
 res
 }
+
+removeZero <- function(obj){
+  obj[which(obj!=0)]
+}
+
+
+seq.log <- function(from = 1, to = 1, length.out = 50, add.zero = FALSE, shifting = 0){
+  res = exp(seq(from = log(from + shifting), to = log(to + shifting), length=length.out - add.zero)) - shifting
+  if (add.zero) {
+    if (from > to) {
+      res = c(res,0)
+    } else {
+      res = c(0,res)
+    }
+  }
+  res
+}
+
+
+bapply.basic <- function(X, k, FUN) { res = rep(0, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[i] = FUN(X[ (i-1)*k + 1:k]); return(res)}
+
+bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(res)}
+
+
+expand <- function(X, length = (length(X)*100)){
+c(rep(X, each = floor(length / length(X))), rep(tail(X,1), length - length(X) * floor(length/length(X))))
+}
+
+
+#compile bapply and so on if we have a compiler
+require(compiler)
+if (exists("cmpfun")){
+bapply.basic <- cmpfun(bapply.basic)
+bapply <- cmpfun(bapply)
+expand <- cmpfun(expand)
+}
+
+
