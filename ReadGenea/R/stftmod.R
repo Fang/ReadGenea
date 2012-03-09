@@ -52,13 +52,18 @@ obj1
 
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
-		 wtype="hanning.window", freq = 100, center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
+		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
   {
 call = match.call()
 if (length(dim(X)) ==2) {
 start.time = X[1,1]
+if (missing(freq)) freq =1/(X[2,1] -  X[1,1] )
 X = X[,2]
+
 }
+
+if (missing(freq) ) freq = 100
+
 Xdel = shift(X, c(1,0), fill = "edge")
     numcoef <- 2*coef
     if (win < numcoef)

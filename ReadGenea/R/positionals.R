@@ -14,8 +14,10 @@ if (filter==0){
 ind = rep(T, nrow(tmp2))
 } else if (filter == 1) {
 ind = expand((bapply.basic(1: nrow(tmp2), 100 , function(t) sum(cov(1:100, tmp2[t, 2:4])^2) / sum(apply(tmp2[t, 2:4], 2, sd)^2)) / var(1:100)) %bq% "[0, 0.5]", nrow(tmp2))
-
 } else if (filter == 2){
+ind = expand(  (bapplyc.basic(1: nrow(tmp2), 100 , function(t) sum(diag(cov( tmp2[t[1:99], 2:4], tmp2[t[2:100], 2:4]))^2) / sum(sd(tmp2[t, 2:4])^2)^2)) %bq% "[0, 0.5]", nrow(tmp2))
+
+} else if (filter == 3){
 
 
 tmp2 = apply(tmp2, 2, function(t) runmed(t, 501))
