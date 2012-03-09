@@ -226,6 +226,7 @@ numblocks = ceiling(nstreams/blocksize)
 }
 Fulldat = NULL
 Fullindex = index#matrix(index, ncol = numblocks)
+index.orig = index
 
 if(!is.null(downsample)){
 	downsampleoffset = 1
@@ -309,7 +310,7 @@ Fulldat= rbind(Fulldat, proc.file)
 freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 
 close(binfile)
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index], freq= freq)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq)
 class(processedfile) = c("AccData", class(processedfile))
     if (is.null(outfile)) {
         return(processedfile)

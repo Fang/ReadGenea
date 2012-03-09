@@ -207,7 +207,7 @@ end = floor(end * sampling.freq*60*60*24)
 start = max(start,1)
 end = min(end, n)
 
-if (incl.date) cat("Extracting time interval: ", times2(x[start,1]), " to " , times2(x[end,1]), "\n")
+if (incl.date) cat("Extracting time interval: ", format.times2(times2(x[start,1])), " to " , format.times2(times2(x[end,1])), "\n")
 
 return(x[start:end,])
 }

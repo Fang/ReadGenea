@@ -7,7 +7,7 @@ plotsphere <- function(x, start, end= NULL, length = NULL, time.format = c("auto
 require(rgl)
 
 time.format = match.arg(time.format)
-tmp3 = get.intervals(x, start, end, length, time.format, incl.date = F)
+tmp3 = get.intervals(x, start, end, length, time.format, incl.date = T)[,-1]
 sampling.freq = 100
 #time.format = match.arg(time.format)
 
