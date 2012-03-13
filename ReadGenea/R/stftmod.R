@@ -28,6 +28,7 @@ obj1 = stft(cbind(X[,1], sqrt(rowSums(X[,2:4]^2))), ...)
 } else {
 obj1 = stft( sqrt(rowSums(X[,1:3]^2)), ...)
 }
+obj1$type = "svm"
 } else {
 ind = 1
 if (date.col) ind = c(1,ind +1)
@@ -38,8 +39,9 @@ if (ncol(X) > 1+date.col){
 for (ind in 2: (ncol(X) - date.col)) {
 
 if (date.col) ind = c(1,ind +1)
-obj = stft(X[,ind], ...)
+obj = stft(X[,ind], reassign = F, ...)
 obj1$va = pmax(obj1$va, obj$va)
+obj1$type = "mv"
 }
 }
 
@@ -52,7 +54,7 @@ obj1
 
 stft <- function(X, win=min(80,floor(length(X)/10)), 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
-		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T)
+		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T )
   {
 call = match.call()
 if (length(dim(X)) ==2) {
@@ -148,7 +150,7 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = !(is.null(x$LGD)), ylim, xlim,new = T, zlim.raw,zlim.quantile, cex = 2,...)
+plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = T, zlim.raw,zlim.quantile, cex = 2,...)
   {
     xv <- x$values
 
