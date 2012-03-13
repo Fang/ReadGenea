@@ -153,7 +153,7 @@ plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", 
     xv <- x$values
 
 
-if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.1*length(t))) )))
+if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.005*length(t))) )))
 
 mode = match.arg(mode)
 if (mode == "decibels"){

@@ -2377,3 +2377,16 @@ bapplyc <- cmpfun(bapply)
 expandc <- cmpfun(expand)
 
 
+
+#subsets a proportion of the dataset, or a certain length of the dataset starting at a specific proportion position
+subs <- function(x, a,b){
+len = length(x)
+if (a > 1){
+return(x[a : (a+b - 1)])
+} else if (b > 1) {
+return( x [ floor(a * len): (floor(a*len) + b - 1)])
+} else {
+return (x[floor(a*len) : floor(b*len)])
+}
+}
+
