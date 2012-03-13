@@ -3,7 +3,7 @@
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
     verbose = FALSE, do.temp = TRUE, calibrate = FALSE, gain = NULL, 
-    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf) 
+    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE) 
 {
 #variables for positions and record lengths in file
     nobs <- 300
@@ -228,12 +228,20 @@ Fulldat = NULL
 Fullindex = index#matrix(index, ncol = numblocks)
 index.orig = index
 
+
 if(!is.null(downsample)){
 	downsampleoffset = 1
 		if (length(downsample) == 2){
 			downsampleoffset = downsample[2]
 			downsample = downsample[1]
 		}
+}
+
+if (test){
+close(binfile)
+Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
+if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
+return(list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) ))
 }
 
 for (blocknumber in 1: numblocks){
