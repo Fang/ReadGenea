@@ -209,8 +209,11 @@ if (new){
  layout(matrix(c(1,2,2,2), ncol = 1))
  par(mar = c(0,1,0,0))
  par(oma = c(5, 4, 4, 2) + 0.1)
-res = apply(x$values, 2, function(t)  apply(matrix(t, 10), 2, median))
-timegridtop = matrix(timegrid, 10)[1,]
+
+binwidth = ceiling(length(timegrid) /100)
+
+res = apply(x$values, 2, function(t)  apply(matrix(t, binwidth), 2, median))
+timegridtop = matrix(timegrid, binwidth)[1,]
 ind = ceiling(ncol(xv) * 1:20/20)
 ylim =  c(0, quantile(sqrt(rowSums(res^2)), 0.95)*1.1)
 if (xaxis){
