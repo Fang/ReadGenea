@@ -234,11 +234,11 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #
     data <- NULL
 #skip to start of data blocks
-binfile = file(binfile, "rt")
+fc2 = file(binfile, "rt")
 #skip header
-tmpd <- readLines(binfile, n = headlines)
+tmpd <- readLines(fc2, n = headlines)
 #skip unneeded pages
-replicate ( min( index - 1 ), is.character(readLines(binfile, n=reclength)))
+replicate ( min( index - 1 ), is.character(readLines(fc2, n=reclength)))
 
 
 numblocks = 1
@@ -252,7 +252,7 @@ Fullindex = index#matrix(index, ncol = numblocks)
 index.orig = index
 
 	    cat("Processing...\n")
-pb <- txtProgressBar(min = 0, max = 100,style=3)
+pb <- txtProgressBar(min = 0, max = 100,style=1)
 
     start.proc.time <- Sys.time()
 if(!is.null(downsample)){
@@ -264,10 +264,13 @@ if(!is.null(downsample)){
 }
 
 if (test){
-close(binfile)
+close(pb)
+close(fc2)
 Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
 if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
-return(list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) ))
+cat("Test loaded", length(Fulldat), "records at", freq, "Hz (Will take up approx ", round(56 * as.double(length(Fulldat))/1000000) ,"MB of RAM)\n")
+cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1))), "\n")
+return(invisible(list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1))))
 }
 
 for (blocknumber in 1: numblocks){
@@ -275,7 +278,7 @@ index = Fullindex[1:min(blocksize, length(Fullindex))]
 Fullindex = Fullindex[-(1:blocksize)]
     proc.file <- NULL
 
-    tmpd <- readLines(binfile, n = ((max(index) - min(index)) +1) * reclength  )
+    tmpd <- readLines(fc2, n = ((max(index) - min(index)) +1) * reclength  )
 bseq = (index - min(index) ) * reclength
 	if (is.null(downsample)){
 	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
@@ -341,11 +344,13 @@ Fulldat= rbind(Fulldat, proc.file)
 close(pb)
 freq = freq * nrow(Fulldat) / (nobs *  nstreams)
    end.proc.time <- Sys.time()
-    cat("processing took:", format(round(as.difftime(end.proc.time - 
+    cat("Processing took:", format(round(as.difftime(end.proc.time - 
         start.proc.time), 3)), ".\n")
+#cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
+#cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
-close(binfile)
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq)
+close(fc2)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1))
 class(processedfile) = c("AccData", class(processedfile))
     if (is.null(outfile)) {
         return(processedfile)
@@ -355,3 +360,9 @@ class(processedfile) = c("AccData", class(processedfile))
     }
 }
 
+
+print.AccData <- function(x){
+cat("ReadGenea dataset: ", nrow(x$data.out), "records at", x$freq, "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
+cat(as.character(chron2((x$data.out[1,1])))," to ", as.character(chron2(tail(x$data.out[,1],1))), "\n")
+cat("[", x$filename, "]\n")
+}
