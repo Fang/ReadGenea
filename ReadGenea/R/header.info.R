@@ -2,7 +2,7 @@ header.info <-
 function (binfile) 
 {
     info <- vector("list", 15)
-    index <- c(2, 20:22, 26:29, 38:44)
+    index <- c(2, 20:22, 26:29, 38:44, 58)
     nm <- NULL
     for (i in 1:length(index)) {
         line <- scan(binfile, what = "", skip = index[i] - 1, 

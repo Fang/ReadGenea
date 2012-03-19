@@ -2,9 +2,32 @@
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, gain = NULL, 
-    offset = NULL, luxv = NULL, voltv = NULL, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE) 
+    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE, ...) 
 {
+
+ 
+ # optional argument initialization as NULL. Arguments assigned
+ # if they appear in the function call.
+ 
+ opt.args<-c("gain","offset","luxv","voltv", "warn")
+ 
+ warn <- FALSE
+ gain<-offset<-NULL
+ luxv<-voltv<-NULL
+ 
+ argl<-as.list(match.call())
+ 
+ argind<-pmatch(names(argl),opt.args)
+ argind<-which(!is.na(argind))
+ 
+ if(length(argind)>0){
+ 	called.args<-match.arg(names(argl),opt.args,several.ok=TRUE)
+ 	for(i in 1:length(called.args)){
+ 		assign(called.args[i],eval(argl[[argind[i]]]))
+ 	}
+ }
+ 
+
 #variables for positions and record lengths in file
     nobs <- 300
     headlines <- 59
@@ -228,7 +251,10 @@ Fulldat = NULL
 Fullindex = index#matrix(index, ncol = numblocks)
 index.orig = index
 
+	    cat("Processing...\n")
+pb <- txtProgressBar(min = 0, max = 100,style=3)
 
+    start.proc.time <- Sys.time()
 if(!is.null(downsample)){
 	downsampleoffset = 1
 		if (length(downsample) == 2){
@@ -248,11 +274,9 @@ for (blocknumber in 1: numblocks){
 index = Fullindex[1:min(blocksize, length(Fullindex))]
 Fullindex = Fullindex[-(1:blocksize)]
     proc.file <- NULL
-    start.proc.time <- Sys.time()
 
     tmpd <- readLines(binfile, n = ((max(index) - min(index)) +1) * reclength  )
 bseq = (index - min(index) ) * reclength
-	    cat("done file reading.  Processing...\n")
 	if (is.null(downsample)){
 	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
 
@@ -289,6 +313,7 @@ bseq = (index - min(index) ) * reclength
 	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
 	}	
 
+	setTxtProgressBar(pb, 100 *  (blocknumber-0.5) / numblocks )
 
     if (calibrate) {
         proc.file[1, ] <- (proc.file[1, ] * 100 - xoffset)/xgain
@@ -308,14 +333,16 @@ bseq = (index - min(index) ) * reclength
     else {
         colnames(proc.file) <- cnames
     }
-    end.proc.time <- Sys.time()
-    cat("processing took:", format(round(as.difftime(end.proc.time - 
-        start.proc.time), 3)), ".\n")
+ 
 
 Fulldat= rbind(Fulldat, proc.file)
+	setTxtProgressBar(pb, 100 *  blocknumber / numblocks)
 }
-
+close(pb)
 freq = freq * nrow(Fulldat) / (nobs *  nstreams)
+   end.proc.time <- Sys.time()
+    cat("processing took:", format(round(as.difftime(end.proc.time - 
+        start.proc.time), 3)), ".\n")
 
 close(binfile)
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq)
