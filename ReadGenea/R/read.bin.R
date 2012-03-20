@@ -363,6 +363,24 @@ class(processedfile) = c("AccData", class(processedfile))
 
 print.AccData <- function(x){
 cat("ReadGenea dataset: ", nrow(x$data.out), "records at", x$freq, "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
+#if (getOption("chron.year.abb")){
+#st = paste("(20", substring( as.character(chron2((x$data.out[1,1]))), 2), sep="")
+#en =  paste("(20", substring( as.character(chron2(tail(x$data.out[,1],1))), 2), sep="")
+#cat(st," to ", en, "\n")
+#} else {
 cat(as.character(chron2((x$data.out[1,1])))," to ", as.character(chron2(tail(x$data.out[,1],1))), "\n")
+#}
 cat("[", x$filename, "]\n")
+}
+
+
+
+"[.AccData"    <- function (x, i=1:dim(x$data.out)[1], j=NULL, drop=T) {
+if (is.null(j)){
+x$page.timestamps = x$page.timestamps[ unique(ceiling(i/300))]
+x$data.out = x$data.out[i,]
+return(x)
+} else {
+return(x$data.out[i,j, drop=drop])
+}
 }

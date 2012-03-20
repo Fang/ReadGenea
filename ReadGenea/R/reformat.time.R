@@ -10,6 +10,16 @@ function (t, format = "julian")
     }
     else {
         startdate <- t[1]
+#reprocess d/m/y
+tmpdate = unlist(strsplit(startdate, split = "/"))
+if (length(tmpdate) == 2){
+tmpdate = c(tmpdate,  format(Sys.time(), "%Y"))
+}
+if (length(tmpdate) == 3){
+startdate = paste( tmpdate[3], tmpdate[2], tmpdate[1], sep="-")
+}
+tmpdate = unlist(strsplit(startdate, split= "-"))
+if (nchar(tmpdate[1]) < 4) startdate = paste("20", startdate , sep="")
         starttime <- t[2]
     }
     tmp <- unlist(strsplit(starttime, split = ":"))
