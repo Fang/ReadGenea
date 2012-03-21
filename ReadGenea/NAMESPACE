@@ -6,7 +6,7 @@
 #
 
 
-export(read.bin, stft, plot.stft, cv.GFLasso, GFLasso, FLasso, cv.FLasso, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.mv, get.intervals, positionals, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%", header.info, print.AccData)
+export(read.bin, stft, plot.stft, cv.GFLasso, GFLasso, FLasso, cv.FLasso, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.mv, get.intervals, positionals, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%", header.info, print.AccData, "[.AccData", c.AccData, nrow.AccData, length.AccData, correctpages)
 
 # Import all packages listed as Imports or Depends
 import(

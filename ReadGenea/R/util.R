@@ -104,7 +104,7 @@ conv01 <- function(x){
 
 
 #convert time intervals
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), incl.date = F){
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), incl.date = F, simplify = T){
 
 sampling.freq = 100
 time.format = match.arg(time.format)
@@ -138,7 +138,10 @@ times = times2(x$data.out[,1])
 }
 
 sampling.freq = x$freq
- x = x$data.out[,(2- incl.date):4]
+if (simplify) {
+x = x$data.out[,(2- incl.date):4]
+}
+
 } else {
 if (ncol(x) == 3) x =cbind (1:nrow(x)/sampling.freq, x)
 
@@ -148,7 +151,11 @@ times = times2(x[,1])
 if (!incl.date)  x = x[,-1]
 }
 
-n = nrow(x)
+if (simplify){
+ n = nrow(x)
+} else {
+n = nrow(x$data.out)
+}
 
 if (time.format == "time"){
 if (nchar(start) < 7) start = paste(start, ":00", sep = "")
@@ -211,6 +218,16 @@ if (incl.date) cat("Extracting time interval: ", format.times2(times2(x[start,1]
 
 return(x[start:end,])
 }
+
+c.AccData = function(x,y){
+x$data.out = rbind(x$data.out, y$data.out)
+x$page.timestamps = c(x$page.timestamps, y$page.timestamps)
+x
+}
+
+nrow.AccData <- function(x) nrow(x$data.out)
+
+length.AccData <- function(x) nrow(x$data.out)
 
 #quantile version of bt
 "%bq%" = function(X, y){
