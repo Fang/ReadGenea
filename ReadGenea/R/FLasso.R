@@ -98,7 +98,7 @@ beta = Matrix(apply(beta,2,diff))
 
 betasparse = as.matrix(matrix(apply(beta,2, removeZero), ncol=p))
 
-activeset = which(rowSums(abs(beta)) != 0)
+activeset = which(apply(abs(beta),1, sum) != 0)
 
 C = matrix(-apply(Y[1:(n-1),, drop = F], 2, cumsum) * d, ncol = p)
 
