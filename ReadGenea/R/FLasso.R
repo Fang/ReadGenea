@@ -54,7 +54,7 @@ invisible(res)
 }
 
 
-FLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf){
+FLasso <- function (Y, lambda, startpoint = NULL, trace = T, relative.lambdas = T,  mode = c("coefs", "fit"),huber = Inf, weights= 1){
 # relative - want lambda on relative scale
 # huber - threshold for huberisation as function of Y sd (Inf means no huberisation)
 
@@ -87,13 +87,13 @@ n = as.double(nrow(Y))
 Y = Y - rep(Ymeans, each = n)
 huberalpha = rep(0, length(Y))
 
-d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]#rep(1, n-1)
+d = sqrt(n / (as.double(1:n) * (n- as.double(1:n))))[-n]*weights#rep(1, n-1)
 
 beta = startpoint
 if (is.null(startpoint)) {
-beta = Matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
+beta = matrix(0, nrow(Y) - 1, ncol(Y))#rep(0, length(Y))
 } else if (nrow(beta) == n){
-beta = Matrix(apply(beta,2,diff))
+beta = matrix(apply(beta,2,diff))
 }
 
 betasparse = as.matrix(matrix(apply(beta,2, removeZero), ncol=p))
