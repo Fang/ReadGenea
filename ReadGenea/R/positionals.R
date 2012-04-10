@@ -24,7 +24,7 @@ tmp2 = apply(tmp2, 2, function(t) runmed(t, 501))
 
 ind = rep(T, nrow(tmp2))
 }
-plot(times2(tmp2[ind,1]), -acos(tmp2[ind,3] / sqrt(rowSums(tmp2[ind,-1]^2)) ) *180/pi +90, col =col[ floor( length(col)* (sign(-tmp2[ind,2]) * 180 *acos(-tmp2[ind,4] / sqrt(rowSums(tmp2[ind,-c(1,3)]^2)))/pi +180)/360   ) + 1 ], ylim = c(-90, 100), xlab = "Time", ylab="Up/Down", pch=".", cex= 2, yaxt = "n"); abline(h = c(-2:2) * 45, lty= 2); axis(2, at = 45 * -2:2)
+plot(times2(tmp2[ind,1]) -> x, -acos(tmp2[ind,3] / sqrt(rowSums(tmp2[ind,-1]^2)) ) *180/pi +90 ->y, col =col[ floor( length(col)* (sign(-tmp2[ind,2]) * 180 *acos(-tmp2[ind,4] / sqrt(rowSums(tmp2[ind,-c(1,3)]^2)))/pi +180)/360   ) + 1 ], ylim = c(-90, 100), xlab = "Time", ylab="Up/Down", pch=".", cex= 2, yaxt = "n"); abline(h = c(-2:2) * 45, lty= 2); axis(2, at = 45 * -2:2)
 
 if (legend){
 points(times2(seq(tmp2[1,1] , quantile(tmp2[,1], 0.2), len = 361) )-> tmp, rep(95, 361), col =col[ floor( length(col)* seq(0.999, 0 , len = 361)) +1 ] , pch = "|")
@@ -34,5 +34,5 @@ points(tmp[c( 90, 180, 270) +1], rep(95, 3), pch = "|")
 }
 
 
-invisible(tmp2)
+invisible(list(x = x, y=y))
 }

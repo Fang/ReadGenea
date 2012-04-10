@@ -158,6 +158,15 @@ n = nrow(x$data.out)
 }
 
 if (time.format == "time"){
+if (nchar(start) >= 11){
+tmp = strsplit(start, " ")
+tmp = tmp[[1]][which( nchar(tmp[[1]]) >= 5)]
+if (length(tmp) > 1){
+start = tmp[1]
+end = tmp[2]
+}
+}
+
 if (nchar(start) < 7) start = paste(start, ":00", sep = "")
 start = (times[min(which(abs((times - floor( times))- times(start)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
 if (is.character(end)){

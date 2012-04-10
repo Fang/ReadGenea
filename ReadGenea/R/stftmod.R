@@ -5,7 +5,7 @@
 
 
 #MV method wrapper
-stft.mv <- function(X, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), svm = F,date.col,...){
+stft.mv <- function(X, start=0, end=1, length=NULL,  time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), svm = F, mv.indices = 1:3, date.col,...){
 call <- match.call()
 if (inherits(X, "list")){
 X = get.intervals(X, start, end, length, time.format, incl.date=T)
@@ -30,19 +30,19 @@ obj1 = stft( sqrt(rowSums(X[,1:3]^2)), ...)
 }
 obj1$type = "svm"
 } else {
-ind = 1
+ind = mv.indices[1]
 if (date.col) ind = c(1,ind +1)
 
 obj1 = stft(X[,ind], ...) 
 
-if (ncol(X) > 1+date.col){
-for (ind in 2: (ncol(X) - date.col)) {
+if (length(mv.indices) > 1){
+for (ind in mv.indices[-1] ) {
 
 if (date.col) ind = c(1,ind +1)
 obj = stft(X[,ind], reassign = F, ...)
 obj1$va = pmax(obj1$va, obj$va)
-obj1$type = "mv"
 }
+obj1$type = c("mv", paste(mv.indices, collapse=""))
 }
 
 
@@ -84,6 +84,7 @@ pval = rep(0, numwin+1)
     y <- matrix(0, numwin+1, win)
     ydel <- matrix(0, numwin+1, win)
     st <- 1
+pb <- txtProgressBar(min = 0, max = 100,style=1)
     for (i in 0:numwin)
       {
 	z[i+1, 1:win] <- (X[st:(st+win-1)] - mean(X[st:(st+win - 1)])* center) * wincoef
@@ -99,6 +100,8 @@ temp = Mod(fft(temp))[1:coef]^2
 pval[i+1] = wilcox.test( (Mod(y[ i+1,])^2 - mean(Mod(y[ i+1,])^2))^2, (temp - mean(temp))^2)$p.value
 }
 	st <- st + inc
+
+setTxtProgressBar(pb, 90* i/(numwin ))
       }
 if (reassign){
 yfreqdel = cbind(y[, win],y[, 2: win - 1])# t(apply(y, 1, function(t) shift(t, 1, fill = "loop")))
@@ -120,6 +123,7 @@ tmpdat = stft(sample(X), win = win,
 null.logmean = log(sqrt(mean((tmpdat$values)^2)))
 #null.logsd = sd(tmpdat$values))
 }
+setTxtProgressBar(pb, 100)
 if (is.null(start.time)){
     Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef] )
@@ -128,6 +132,7 @@ times = (start.time + 946684800 + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef]  )
 }
+close(pb)
 Y$call = call
     class(Y) <- "stft"
     if (plot.it) plot.stft(Y)
@@ -342,5 +347,18 @@ frequencies = frequencies[which(frequencies != n+1)]
 fftobj = replace(fftobj, (1:n)[ - frequencies], 0)
 
 return(Re(fft(fftobj, inverse=T))/n)
+}
+
+
+print.stft = function(x){
+cat("STFT object:\n")
+cat(as.character(chron2((x$times[1])))," to ", as.character(chron2(tail(x$times,1))), "\n")
+cat(nrow(x$values), "increments of" , round(x$increment/x$sampling.freq, 3), "s \n")
+cat("Window size: " , x$windowsize, "(", round(x$windowsize/x$sampling.frequency, 3), "s ) -> f resolution: ", round(x$frequency[2],3), "Hz\n")
+if ("svm" %in% x$type) cat("[SVM]")
+if ("mv" %in% x$type) cat("[MV-", x$type[2], "]")
+if (!is.null(x$LGD)) cat ("[Reassign]")
+cat("\n------ \n")
+cat("{" ,format(x$call), "}\n")
 }
 
