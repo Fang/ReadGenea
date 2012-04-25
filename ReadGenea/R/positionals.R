@@ -6,8 +6,14 @@
 
 
 
-positionals = function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), filter=T, col = hcl(0:360), legend = T){ 
-
+positionals = function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), filter=T,bw = F, col , legend = T){ 
+if (missing(col)){
+if (bw){
+col = 1:5
+} else {
+col = hcl(0:360)
+}
+}
 tmp2 = get.intervals(x, start, end, length, time.format , incl.date=T)
 
 if (filter==0){
@@ -24,6 +30,8 @@ tmp2 = apply(tmp2, 2, function(t) runmed(t, 501))
 
 ind = rep(T, nrow(tmp2))
 }
+
+if (!bw){
 plot(times2(tmp2[ind,1]) -> x, -acos(tmp2[ind,3] / sqrt(rowSums(tmp2[ind,-1]^2)) ) *180/pi +90 ->y, col =col[ floor( length(col)* (sign(-tmp2[ind,2]) * 180 *acos(-tmp2[ind,4] / sqrt(rowSums(tmp2[ind,-c(1,3)]^2)))/pi +180)/360   ) + 1 ], ylim = c(-90, 100), xlab = "Time", ylab="Up/Down", pch=".", cex= 2, yaxt = "n"); abline(h = c(-2:2) * 45, lty= 2); axis(2, at = 45 * -2:2)
 
 if (legend){
@@ -32,7 +40,31 @@ text(tmp[1], 95, "CCW")
 text(tmp[361], 95, "CW")
 points(tmp[c( 90, 180, 270) +1], rep(95, 3), pch = "|")
 }
+} else {
+plot(times2(tmp2[ind,1]) -> x, -acos(tmp2[ind,3] / sqrt(rowSums(tmp2[ind,-1]^2)) ) *180/pi +90 ->y, ylim = c(-90, 100), xlab = "Time", ylab="Up/Down", pch=".", cex= 2, yaxt = "n"); abline(h = c(-2:2) * 45, lty= 2); axis(2, at = 45 * -2:2)
+
+degs = (floor( length(col)* (sign(-tmp2[ind,2]) * 180 *acos(-tmp2[ind,4] / sqrt(rowSums(tmp2[ind,-c(1,3)]^2)))/pi +180)/360   ) + 1 )
+shade = bapply.basic(degs, floor(length(degs)/100), function(t) round(median(t))) / length(col)
+beg =  bapply.basic(times2(tmp2[ind, 1]), floor(length(degs)/100), min)
+end =  bapply.basic(times2(tmp2[ind, 1])[-1], floor(length(degs)/100), max)
 
 
+for (i in 1:length(shade)){
+rect(beg[i], -120, end[i], 120, border= NA,  col = rgb(0,0,0, alpha =0.5 * shade[i]))
+}
+
+
+if (legend){
+
+tmp = times2(seq(tmp2[1,1] , quantile(tmp2[,1], 0.2), len = 361) )
+
+#rect(tmp[1] - (tmp[361] - tmp[1])* 0.05 , 91, tmp[361]+(tmp[361] - tmp[1])* 0.05, 98, col="white")
+points(tmp, rep(95, 361), col =grey( 1- 0.5* (floor( length(col)* seq(0.999, 0 , len = 361)) +1)/length(col))  , pch = "|")
+
+text(tmp[1], 95, "CCW")
+text(tmp[361], 95, "CW")
+points(tmp[c( 90, 180, 270) +1], rep(95, 3), pch = "|")
+}
+}
 invisible(list(x = x, y=y))
 }
