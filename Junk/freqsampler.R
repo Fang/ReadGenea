@@ -89,4 +89,10 @@ res2 = rbind(res2, cbind(log(thresh), log(rowSums(obj2$va[,]^2)), log(rowSums(ob
 tmp = rowSums(obj2$va[,obj2$freq < thresh]^2)
 }
  tmp = locator(2)$x * 60*60*24 ; a = which.max(obj2$times > tmp[1]) ; b = which.max(obj2$times > tmp[2]) ; ind = 1 + 1:length(obj2$times) %bt% c(a,b) + 2*(ind == 2)+ 3*(ind == 3); times2(obj2$times[c(a, b)]); restmp = res2; plot3d(restmp ,   ,col=ind , size=7, alpha = 0.1) ; bundleplot3d(restmp, ind, alpha = 0.5, lwd = 3)
+#######################
+
+ind= rep(1, length(stftobjlatersub$times))
+
+ tmp = locator(2)$x * 60*60*24 ; a = which.max(stftobjlatersub$times > tmp[1]) ; b = which.max(stftobjlatersub$times > tmp[2]) ; ind = 1 + 1:length(stftobjlatersub$times) %bt% c(a,b) + 2*(ind == 2)+ 3*(ind == 3); times2(stftobjlatersub$times[c(a, b)]); plot3d((prcomp(t(apply(stftobjlatersub$va, 1, scale)))$x)[,1:3], col=ind)  # plot3d(restmp ,   ,col=ind , size=7, alpha = 0.1) ; bundleplot3d(restmp, ind, alpha = 0.5, lwd = 3)
+
 
