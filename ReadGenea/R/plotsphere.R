@@ -3,7 +3,10 @@
 
 
 #start,end: specify by time in seconds, days, or proportion
-plotsphere <- function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), density = F, col, alpha, arrow = T, levels, ...){
+plotsphere <- function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), density = F, col, alpha, arrow = T, levels, add= F,...){
+if (add){
+arrow = FALSE
+}
 
 require(rgl)
 
@@ -63,7 +66,7 @@ sampling.freq = x$freq
 #
 if (!density){ 
 
-plot3d( tmp3)
+plot3d( tmp3, add = add)
 
 if (missing(col)) col = heat.colors(nrow(tmp3))
 lines3d(tmp3, col=col)
@@ -85,12 +88,13 @@ for (il in levels){
 
 if (missing(col)) col = heat.colors(5)
 if (missing(alpha)) alpha = c(0.03, 0.05, 0.1, 0.2, 0.3)
- contour3d(d$d, lev,  d$x, d$y, d$z, color = col , alpha = alpha, scale = F)
+ contour3d(d$d, lev,  d$x, d$y, d$z, color = col , alpha = alpha, scale = F, add=add)
 
 
 }
+if (!add){
  aspect3d("iso");  spheres3d(0,0,0,1, alpha = 0.5, front="line", back = "line");grid3d(side = c("x","y","z"),at = c(0,0,0))#; plot(1:nrow(tmps)/nrow(tmps), tmps[,3], type="l");  abline(v = offset+c(0, leng), col=2) 
-
+}
 if (arrow){
 #add a placeholder arrow
 
