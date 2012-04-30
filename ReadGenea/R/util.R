@@ -158,14 +158,23 @@ n = nrow(x$data.out)
 }
 
 if (time.format == "time"){
-if (nchar(start) >= 11){
-tmp = strsplit(start, " ")
-tmp = tmp[[1]][which( nchar(tmp[[1]]) >= 5)]
-if (length(tmp) > 1){
-start = tmp[1]
-end = tmp[2]
-}
-}
+#if (nchar(start) >= 11){
+#tmp = strsplit(start, " ")
+#tmp = tmp[[1]][which( nchar(tmp[[1]]) >= 5)]
+#if (length(tmp) > 1){
+#start = tmp[1]
+#end = tmp[2]
+#}
+#}
+  tmp = strsplit(start, " ")
+  tmp = tmp[[1]][which( nchar(tmp[[1]]) > 0)]
+  if (length(tmp)>1){
+    day = tmp[1]
+    start = tmp[2]
+  } else {
+    start = tmp[1]
+  }
+ 
 
 if (nchar(start) < 7) start = paste(start, ":00", sep = "")
 start = (times[min(which(abs((times - floor( times))- times(start)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
@@ -313,15 +322,6 @@ bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, di
 
 expand <- function(X, length = (length(X)*100)){
 c(rep(X, each = floor(length / length(X))), rep(tail(X,1), length - length(X) * floor(length/length(X))))
-}
-
-
-#compile bapply and so on if we have a compiler
-require(compiler)
-if (exists("cmpfun")){
-bapply.basic <- cmpfun(bapply.basic)
-bapply <- cmpfun(bapply)
-expand <- cmpfun(expand)
 }
 
 
