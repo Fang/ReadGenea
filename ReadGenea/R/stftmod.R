@@ -52,7 +52,7 @@ obj1
 }
 
 
-stft <- function(X, win=min(80,floor(length(X)/10)), 
+stft <- function(X, win=10, 
                  inc= max(1, floor(win/2)), coef=floor(win/2), 
 		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T )
   {
@@ -65,6 +65,8 @@ X = X[,2]
 }
 
 if (missing(freq) ) freq = 100
+
+win = round(win * freq)
 
 Xdel = shift(X, c(1,0), fill = "edge")
     numcoef <- 2*coef

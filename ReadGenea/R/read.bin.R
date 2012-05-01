@@ -381,3 +381,19 @@ return(x)
 return(x$data.out[i,j, drop=drop])
 }
 }
+
+
+c.AccData <- function(..., recursive=FALSE){
+tmp = list(...)
+out = list()
+out$data.out = NULL
+out$page.timestamps = NULL
+for (i in 1:length(tmp)){
+  out$data.out = rbind(out$data.out, tmp[[i]]$data.out)
+  out$page.timestamps = c(out$page.timestamps, tmp[[i]]$page.timestamps)
+}
+out$freq = tmp[[1]]$freq
+out$filename = tmp[[1]]$filename
+class(out) = class(tmp[[1]])
+out
+}
