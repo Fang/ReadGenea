@@ -2,7 +2,7 @@
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, tformat = "seconds",warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE, ...) 
+    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE, ...) 
 {
 
  
@@ -73,7 +73,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     t1 <- t1[2:length(t1)]
     t1[1] <- substr(t1[1], 6, nchar(t1[1]))
     t1c <- reformat.time(t1, format = "POSIX")
-    t1 <- reformat.time(t1, format = tformat)
+    t1 <- reformat.time(t1, format = "seconds")
     timestampsc <- seq(t1c, by = timespan, length = npages)
     timestamps <- seq(t1, by = timespan, length = npages)
     tnc <- timestampsc[npages]
@@ -97,10 +97,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         }
     }
     if (is.numeric(end)) {
-        if ((end < 1)) {
-#            stop(cat("Please input valid start and end times between ", 
-#                t1c, " and ", tnc, " or pages between 1 and ", 
-#                npages, ".\n\n"), call. = FALSE)
+        if ((end <= 1)) {
 #specify a proportional point to end
 		end= ceiling(end * npages)
 		end = timestamps[end]
@@ -111,10 +108,10 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         }
     }
     if (is.character(start)) {
-        start <- reformat.time(start, format = tformat)
+        start <- reformat.time(start, format = "seconds")
     }
     if (is.character(end)) {
-        end <- reformat.time(end, format = tformat)
+        end <- reformat.time(end, format = "seconds")
     }
     if (end < start) {
         cat("Warning, specified end time is before specified start time.  Reordering.\n")
