@@ -1,3 +1,27 @@
+
+#internal function for read.bin
+convert.hexstream <-function (stream) 
+{
+
+maxint <- 2^(12 - 1)
+
+#packet <- as.integer(paste("0x",stream,sep = "")) #strtoi is faster
+packet <-bitShiftL(strtoi(stream, 16),4*(2:0))
+packet<-rowSums(matrix(packet,ncol=3,byrow=TRUE))
+
+packet[packet>=maxint] <- -(maxint - (packet[packet>=maxint] - maxint))
+
+packet<-matrix(packet,nrow=4)
+
+light <- bitShiftR(packet[4,],2)
+button <-bitShiftR(bitAnd(packet[4,],2),1)
+
+packet<-rbind(packet[1:3,],light,button)
+
+packet
+}
+
+
 #reads binary accelerometer data
 #blocksize = number of pages to read at a time
 read.bin <-
@@ -63,8 +87,8 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         quiet = TRUE)[2])
 #stop reading freq from file, calculate from page times instead (if possible)
     t1c <- parse.time(t1, format = "POSIX", tzone = tzone)
-    t1 <- parse.time(t1, format = "seconds")
     t1midnight = floor(parse.time(t1, format = "day")) * 60*60*24
+    t1 <- parse.time(t1, format = "seconds")
 if (npages > 1){
 t2 =  parse.time(substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11), format = "seconds")
 freq = nobs/(t2 - t1)
@@ -121,7 +145,7 @@ freq = nobs/(t2 - t1)
         start <- parse.time(start, format = "seconds")
 	if (start < t1midnight)	start = start + t1midnight
 	if (start < t1) start = start + 60*60*24
-	start = which(timestamps>= start)[1]
+	start = which(timestamps >= start-(0.5))[1]
 	t1 = timestamps[start+1]
     }
     if (is.character(end)) {
@@ -134,7 +158,7 @@ freq = nobs/(t2 - t1)
 			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
 		}
 	}
-	end = max(which(timestamps<= end))
+	end = max(which(timestamps<= (end+0.5) ))
     }
 
     index <-  NULL
@@ -274,15 +298,16 @@ if(!is.null(downsample)){
 }
 
 if (virtual){
+if (is.null(downsample)) downsample = 1
 close(pb)
 close(fc2)
 #todo...
-
+Fulldat = timestamps[index]
 #Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
-if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
-cat("Virtually loaded", length(Fulldat), "records at", round(freq,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat))/1000000) ,"MB of RAM)\n")
-cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1))), "\n")
-output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl)
+#if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
+cat("Virtually loaded", length(Fulldat)*length(freqseq)/downsample, "records at", round(freq/downsample,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat) * length(freqseq)/downsample )/1000000) ,"MB of RAM)\n")
+cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1) + nobs /freq)), "\n")
+output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) )
 class(output) = "VirtAccData"
 return(invisible( output  ))
 }
@@ -377,8 +402,8 @@ class(processedfile) = "AccData"
 }
 
 print.VirtAccData <- function(x){
-cat("[Virtual ReadGenea dataset]: ", length(x$data.out), "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
-cat(as.character(chron2((x$data.out[1,1])))," to ", as.character(chron2(tail(x$data.out[,1],1))), "\n")
+cat("[Virtual ReadGenea dataset]: ", length(x$data.out)*x$nobs, "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
+cat(as.character(chron2((x$data.out[1])))," to ", as.character(chron2(tail(x$data.out,1) + x$nobs /x$freq)), "\n")
 cat("[", x$filename, "]\n")
 }
 print.AccData <- function(x){

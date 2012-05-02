@@ -104,7 +104,7 @@ conv01 <- function(x){
 
 
 #convert time intervals
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), incl.date = F, simplify = T){
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T){
 
 sampling.freq = 100
 time.format = match.arg(time.format)
@@ -118,9 +118,6 @@ start = (start)[1]
 if (time.format == "auto"){
 if (is.character(start)){
 time.format = "time"
-
-} else if (inherits(start, "times2")){
-time.format = "date"
 }else if (start <1){
  time.format = "proportion"
 }else if (floor(start) == start) {
@@ -133,8 +130,8 @@ time.format = "days"
 
 if (is.list(x)){
 
-if ((time.format == "time") || (time.format == "date")){
-times = times2(x$data.out[,1])
+if (time.format == "time"){
+times = x[,1]
 }
 
 sampling.freq = x$freq
@@ -145,8 +142,8 @@ x = x$data.out[,(2- incl.date):4]
 } else {
 if (ncol(x) == 3) x =cbind (1:nrow(x)/sampling.freq, x)
 
-if ((time.format == "time") || (time.format == "date")){
-times = times2(x[,1])
+if ((time.format == "time") ){
+times =x[,1]
 }
 if (!incl.date)  x = x[,-1]
 }
@@ -166,29 +163,34 @@ if (time.format == "time"){
 #end = tmp[2]
 #}
 #}
-  tmp = strsplit(start, " ")
-  tmp = tmp[[1]][which( nchar(tmp[[1]]) > 0)]
-  if (length(tmp)>1){
-    day = tmp[1]
-    start = tmp[2]
-  } else {
-    start = tmp[1]
-  }
+#todo: make this work
+
+start = parse.time(start, format = "seconds")
+t1midnight = floor(times[1] / (60*60*24)) * 60*60*24
+t1 = times[1]
+	if (start < t1midnight)	start = start + t1midnight
+	if (start < t1) start = start + 60*60*24
+	start = which(times >= start-(0.5))[1]
+	t1 = times[start+1]
  
-
-if (nchar(start) < 7) start = paste(start, ":00", sep = "")
-start = (times[min(which(abs((times - floor( times))- times(start)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
 if (is.character(end)){
-if (nchar(end) < 7) end = paste(end, ":00", sep = "")
-end = (times[min(which(abs((times - floor( times))- times(end)) < 1/(60*60*24)))] - times[1]) * 60*60*24 
+end = parse.time(end, format = "seconds")
+if (end < t1midnight){
+		if (end >= 24*60*60){
+			end = end + t1midnight
+		} else {
+			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
+		}
+	}
+	end = max(which(times<= (end+0.5) ))
 
-if (end < start) end = end + 24*60*60
+
 } else {
-length = end
+length = end * sampling.freq
 end = NULL
 }
 
-time.format = "seconds"
+time.format = "measurements"
 
 }
 
@@ -243,9 +245,22 @@ x$page.timestamps = c(x$page.timestamps, y$page.timestamps)
 x
 }
 
-nrow.AccData <- function(x) nrow(x$data.out)
+svm <- function(x){
+rowSums(x[,-2:0 + min(ncol(x), 4)]^2)
+}
 
-length.AccData <- function(x) nrow(x$data.out)
+dim.AccData <- function(x) c(nrow(x$data.out), 7)
+
+plot.AccData <- function(x, y=NULL, ...){
+if (is.null(y)){
+epoch = floor(nrow(x)/200 + 1)
+plot(bapply.basic(x[,1], epoch, function(t) t[1]) , bapply.basic(svm(x), epoch, function(t) t[1]),  type = "l", xlab = "Time", ylab = "SVM")
+} else {
+plot(x[,1], y, ...)
+}
+}
+
+
 
 #quantile version of bt
 "%bq%" = function(X, y){

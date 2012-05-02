@@ -1,5 +1,6 @@
-convert.hexstream <-
-function (stream) 
+
+#internal function for read.bin
+convert.hexstream <-function (stream) 
 {
 
 maxint <- 2^(12 - 1)

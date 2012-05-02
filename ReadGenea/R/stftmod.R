@@ -53,7 +53,7 @@ obj1
 
 
 stft <- function(X, win=10, 
-                 inc= max(1, floor(win/2)), coef=floor(win/2), 
+                 inc=  win/2, coef=Inf, 
 		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T )
   {
 call = match.call()
@@ -65,8 +65,12 @@ X = X[,2]
 }
 
 if (missing(freq) ) freq = 100
-
+inc0 = inc
+win0 = win
+coef0 = coef
 win = round(win * freq)
+inc = max(round(inc * freq),1)
+coef = min(coef, floor(win/2))
 
 Xdel = shift(X, c(1,0), fill = "edge")
     numcoef <- 2*coef
@@ -119,8 +123,8 @@ yfreqdel = NULL
 null.logmean = NULL
 null.logsd = NULL
 if (calc.null){
-tmpdat = stft(sample(X), win = win, 
-                 inc= inc, coef=coef, 
+tmpdat = stft(sample(X), win = win0, 
+                 inc= inc0, coef=coef0, 
 		 wtype=wtype, freq = freq, center = T, plot.it = F, calc.null = F )
 null.logmean = log(sqrt(mean((tmpdat$values)^2)))
 #null.logsd = sd(tmpdat$values))
