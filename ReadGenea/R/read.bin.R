@@ -2,7 +2,7 @@
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, warn=FALSE, downsample = NULL, blocksize = Inf, test = FALSE, ...) 
+    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, warn=FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
 {
 
  
@@ -39,7 +39,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     tmp <- substring(scan(fc, skip = 22, what = "", n = 3, sep = " ", 
         quiet = TRUE)[3], c(1,2,5),c(1, 3, 6))
 #time zone offset from UTC in seconds
-	tzone = ifelse(tmp[1] == "-", -1, 1) * (as.numeric(tmp[3]) + 60* as.numeric(tmp[2])) *  60
+	tzone = ifelse(tmp[1] == "-", -1, 1) * (as.numeric(tmp[3]) + 60* as.numeric(tmp[2])) /60
     xgain <- as.integer(scan(fc, skip = 24, what = "", n = 2, 
         sep = ":", quiet = TRUE)[2])
     xoffset <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
@@ -64,6 +64,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 #stop reading freq from file, calculate from page times instead (if possible)
     t1c <- parse.time(t1, format = "POSIX", tzone = tzone)
     t1 <- parse.time(t1, format = "seconds")
+    t1midnight = floor(parse.time(t1, format = "day")) * 60*60*24
 if (npages > 1){
 t2 =  parse.time(substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11), format = "seconds")
 freq = nobs/(t2 - t1)
@@ -73,6 +74,7 @@ freq = nobs/(t2 - t1)
 	if (!is.null(downsample)) {
 		cat("Downsampling to ", round(freq/downsample[1],2) , " Hz \n")
 		if (nobs %% downsample[1] != 0) cat("Warning, downsample divisor not factor of ", nobs, "!\n")
+		if ( downsample[1] != floor( downsample[1]) ) cat("Warning, downsample divisor not integer!\n")
 	}
     if (verbose) {
         cat("Number of pages in binary file:", npages, "\n")
@@ -92,60 +94,63 @@ freq = nobs/(t2 - t1)
     if (is.null(end)) {
         end <- npages
     }
+
+
+#goal is to end up with start, end as page refs
     if (is.numeric(start)) {
-        if ((start > npages)) {
+        if ((start[1] > npages)) {
             stop(cat("Please input valid start and end times between ", 
                 t1c, " and ", tnc, " or pages between 1 and ", 
                 npages, ".\n\n"), call. = FALSE)
-        } else if (start < 1) {
+        } else if (start[1] < 1) {
 #specify a proportional point to start
-		start = timestamps[max(floor( start * npages),1)]
-	} else {
-            start <- timestamps[start]
+		start = pmax(floor( start * npages),1)
         }
     }
     if (is.numeric(end)) {
-        if ((end <= 1)) {
+        if ((end[1] <= 1)) {
 #specify a proportional point to end
 		end= ceiling(end * npages)
-		end = timestamps[end]
         }
         else {
-            end <- min(end, npages)
-            end <- timestamps[end]
+            end <- pmin(end, npages)
         }
     }
+#parse times, including partial times, and times with day offsets
     if (is.character(start)) {
         start <- parse.time(start, format = "seconds")
+	if (start < t1midnight)	start = start + t1midnight
+	if (start < t1) start = start + 60*60*24
+	start = which(timestamps>= start)[1]
+	t1 = timestamps[start+1]
     }
     if (is.character(end)) {
         end <- parse.time(end, format = "seconds")
+	
+	if (end < t1midnight){
+		if (end >= 24*60*60){
+			end = end + t1midnight
+		} else {
+			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
+		}
+	}
+	end = max(which(timestamps<= end))
     }
-    if (end < start) {
-        cat("Warning, specified end time is before specified start time.  Reordering.\n")
-        tmp <- end
-        end <- start
-        start <- tmp
-    }
-    if ((start > tn) | (end < t1)) {
-        stop(cat("Please input valid start and end times between ", 
-            t1c, " and ", tnc, " or pages between 1 and ", npages, 
-            ".\n\n"), call. = FALSE)
-    }
-    start <- max(start, t1)
-    end <- min(end, tn)
-    index <- which((timestamps >= start) & (timestamps <= end))
-    d1 <- max(which((timestamps - start) <= 0))
-    index <- unique(c(d1, index))
+
+    index <-  NULL
+	for (i in 1:length(start)){
+		index = c(index, start[i]:end[i])
+	}
+
+#    d1 <- max(which((timestamps - start) <= 0))
+ #   index <- unique(c(d1, index))
     if (length(index) == 0) {
-        d1 <- timestampsc[max(which((timestamps - start) < 0))]
-        d2 <- timestampsc[min(which((timestamps - end) > 0))]
         if (npages > 15) {
             stop("No pages to process with specified timestamps.  Please try again.\n", 
                 call. = FALSE)
         }
         else {
-            stop("No pages to process with specified timestamps.  Please try again.Timestamps in binfile are:\n\n", 
+            stop("No pages to process with specified timestamps.  Please try again. Timestamps in binfile are:\n\n", 
                 paste(timestampsc, collapse = " \n"), " \n\n", 
                 call. = FALSE)
         }
@@ -268,25 +273,29 @@ if(!is.null(downsample)){
 		}
 }
 
-if (test){
+if (virtual){
 close(pb)
 close(fc2)
-Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
+#todo...
+
+#Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
 if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
-cat("Test loaded", length(Fulldat), "records at", freq, "Hz (Will take up approx ", round(56 * as.double(length(Fulldat))/1000000) ,"MB of RAM)\n")
+cat("Virtually loaded", length(Fulldat), "records at", round(freq,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat))/1000000) ,"MB of RAM)\n")
 cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1))), "\n")
-output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1))
-class(output) = "TestAccData"
+output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl)
+class(output) = "VirtAccData"
 return(invisible( output  ))
 }
 
+lastread = min(index) -1
 for (blocknumber in 1: numblocks){
 index = Fullindex[1:min(blocksize, length(Fullindex))]
 Fullindex = Fullindex[-(1:blocksize)]
     proc.file <- NULL
 
-    tmpd <- readLines(fc2, n = ((max(index) - min(index)) +1) * reclength  )
-bseq = (index - min(index) ) * reclength
+    tmpd <- readLines(fc2, n = (max(index) -lastread) * reclength  )
+bseq = (index - lastread -1 ) * reclength
+	lastread = max(index)
 	if (is.null(downsample)){
 	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
 
@@ -357,7 +366,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
 close(fc2)
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1))
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
@@ -367,9 +376,13 @@ class(processedfile) = "AccData"
     }
 }
 
-
+print.VirtAccData <- function(x){
+cat("[Virtual ReadGenea dataset]: ", length(x$data.out), "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
+cat(as.character(chron2((x$data.out[1,1])))," to ", as.character(chron2(tail(x$data.out[,1],1))), "\n")
+cat("[", x$filename, "]\n")
+}
 print.AccData <- function(x){
-cat("ReadGenea dataset: ", nrow(x$data.out), "records at", x$freq, "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
+cat("ReadGenea dataset: ", nrow(x$data.out), "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
 #if (getOption("chron.year.abb")){
 #st = paste("(20", substring( as.character(chron2((x$data.out[1,1]))), 2), sep="")
 #en =  paste("(20", substring( as.character(chron2(tail(x$data.out[,1],1))), 2), sep="")
