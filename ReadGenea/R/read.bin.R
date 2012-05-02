@@ -36,10 +36,11 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     position.temperature <- 6
     orig.opt <- options(digits.secs = 3)
     fc <- file(binfile, "rt")
-    freq <- scan(fc, skip = 19, what = "", n = 2, sep = ":", 
-        quiet = TRUE)[2]
-    freq <- as.numeric(strsplit(freq, " ")[[1]][1])
-    xgain <- as.integer(scan(fc, skip = 27, what = "", n = 2, 
+    tmp <- substring(scan(fc, skip = 22, what = "", n = 3, sep = " ", 
+        quiet = TRUE)[3], c(1,2,5),c(1, 3, 6))
+#time zone offset from UTC in seconds
+	tzone = ifelse(tmp[1] == "-", -1, 1) * (as.numeric(tmp[3]) + 60* as.numeric(tmp[2])) *  60
+    xgain <- as.integer(scan(fc, skip = 24, what = "", n = 2, 
         sep = ":", quiet = TRUE)[2])
     xoffset <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
         sep = ":", quiet = TRUE)[2])
@@ -57,11 +58,20 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         quiet = TRUE)[2])
     npages <- as.integer(scan(fc, skip = 2, what = "", n = 2, 
         sep = ":", quiet = TRUE)[2])
-    t1 <- scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1)
-    freq <- as.integer(scan(fc, skip = 4, what = "", n = 2, sep = ":", 
+    t1 <- substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11)
+    freq <- as.numeric(scan(fc, skip = 4, what = "", n = 2, sep = ":", 
         quiet = TRUE)[2])
+#stop reading freq from file, calculate from page times instead (if possible)
+    t1c <- parse.time(t1, format = "POSIX", tzone = tzone)
+    t1 <- parse.time(t1, format = "seconds")
+if (npages > 1){
+t2 =  parse.time(substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11), format = "seconds")
+freq = nobs/(t2 - t1)
+###################TODO
+}
+	freqint = round(freq)
 	if (!is.null(downsample)) {
-		cat("Downsampling to ", freq/downsample[1] , " Hz \n")
+		cat("Downsampling to ", round(freq/downsample[1],2) , " Hz \n")
 		if (nobs %% downsample[1] != 0) cat("Warning, downsample divisor not factor of ", nobs, "!\n")
 	}
     if (verbose) {
@@ -70,10 +80,8 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     close(fc)
     freqseq <- seq(0, by = 1/freq, length = nobs)
     timespan <- nobs/freq
-    t1 <- t1[2:length(t1)]
-    t1[1] <- substr(t1[1], 6, nchar(t1[1]))
-    t1c <- reformat.time(t1, format = "POSIX")
-    t1 <- reformat.time(t1, format = "seconds")
+#    t1 <- t1[2:length(t1)]
+ #   t1[1] <- substr(t1[1], 6, nchar(t1[1]))
     timestampsc <- seq(t1c, by = timespan, length = npages)
     timestamps <- seq(t1, by = timespan, length = npages)
     tnc <- timestampsc[npages]
@@ -108,10 +116,10 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
         }
     }
     if (is.character(start)) {
-        start <- reformat.time(start, format = "seconds")
+        start <- parse.time(start, format = "seconds")
     }
     if (is.character(end)) {
-        end <- reformat.time(end, format = "seconds")
+        end <- parse.time(end, format = "seconds")
     }
     if (end < start) {
         cat("Warning, specified end time is before specified start time.  Reordering.\n")
@@ -267,7 +275,9 @@ Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
 if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
 cat("Test loaded", length(Fulldat), "records at", freq, "Hz (Will take up approx ", round(56 * as.double(length(Fulldat))/1000000) ,"MB of RAM)\n")
 cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1))), "\n")
-return(invisible(list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1))))
+output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq=as.double(freq) * length(Fulldat) / (nobs *  nstreams) , filename =tail(strsplit(binfile, "/")[[1]],1))
+class(output) = "TestAccData"
+return(invisible( output  ))
 }
 
 for (blocknumber in 1: numblocks){
@@ -348,7 +358,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 
 close(fc2)
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1))
-class(processedfile) = c("AccData", class(processedfile))
+class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
     }

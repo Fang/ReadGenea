@@ -131,7 +131,7 @@ time.format = "days"
 }
 
 
-if (inherits(x, "list")){
+if (is.list(x)){
 
 if ((time.format == "time") || (time.format == "date")){
 times = times2(x$data.out[,1])
