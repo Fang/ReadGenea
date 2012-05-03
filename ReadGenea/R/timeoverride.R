@@ -1,12 +1,13 @@
 #extends time display from package chron to use h:m:s for >1 day times.
 
-times2 = function(x, units = c("seconds", "days"),...){
+times2 = function(x, ...){
 require(chron)
-units = match.arg(units)
-#convert to days
-if (units == "seconds") x = x /(60*60*24)
-#this bit might trigger a y2k style bug, remove when time formats are rationalised or we go to a class based system
-if (x[1] < (946684800/(60*60*24))) x = x + 946684800/(60*60*24)
+#units = match.arg(units)
+##convert to days
+#if (units == "seconds") x = x /(60*60*24)
+
+##this bit might trigger a y2k style bug, remove when time formats are rationalised or we go to a class based system
+#if (x[1] < (946684800/(60*60*24))) x = x + 946684800/(60*60*24)
 out = times(x,...)
 class(out) = c("times2",class(out))
 out
@@ -17,7 +18,7 @@ chron2 = function(x, units = c("seconds", "days"), out.format = list(dates= "d/m
 require(chron)
 units = match.arg(units)
 if (units == "seconds") x = x/(60 *60*24)
-if (x[1] < (946684800/(60*60*24)) & (x[1] > 365 ) ) x = x + 946684800/(60*60*24)
+#if (x[1] < (946684800/(60*60*24)) & (x[1] > 365 ) ) x = x + 946684800/(60*60*24)
 chron(x,out.format = out.format, ...)
 }
 
@@ -44,7 +45,8 @@ print(x, quote = quote)
 
 "format.times2"<-
 function(x, format. = "h:m:s", simplify = FALSE, ...)
-{
+{ 
+	x = x /(60*60*24)
     if(!as.logical(length(x)))
         return("")
     if(all(is.na(x)))

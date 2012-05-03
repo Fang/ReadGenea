@@ -6,7 +6,7 @@
  \itemize{
 	\item BUGFIX: Changed handing of timezones, times and dates should be more reasonable now
 	\item Allowed 'day time' references to periods
-	\item Implemented virtual object reads - read data in as and when it is required
+	\item Implemented 'read from file' for virtual reads
 }
 }
 

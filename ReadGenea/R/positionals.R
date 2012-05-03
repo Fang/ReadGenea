@@ -6,7 +6,7 @@
 
 
 
-positionals = function(x, start, end= NULL, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time", "date"), filter=T,bw = F, col , legend = T){ 
+positionals = function(x, start=0, end= 1, length = NULL, filter=T,bw = F, col , legend = T, ...){ 
 if (missing(col)){
 if (bw){
 col = 1:5
@@ -14,7 +14,7 @@ col = 1:5
 col = hcl(0:360)
 }
 }
-tmp2 = get.intervals(x, start, end, length, time.format , incl.date=T)
+tmp2 = get.intervals(x, start, end, length,, incl.date=T, ...)
 
 if (filter==0){
 ind = rep(T, nrow(tmp2))

@@ -26,7 +26,7 @@ packet
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, warn=FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
+    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
 {
 
  
@@ -145,7 +145,7 @@ freq = nobs/(t2 - t1)
         start <- parse.time(start, format = "seconds")
 	if (start < t1midnight)	start = start + t1midnight
 	if (start < t1) start = start + 60*60*24
-	start = which(timestamps >= start-(0.5))[1]
+	start = findInterval(start-0.5, timestamps, all.inside = T)#which(timestamps >= start-(0.5))[1]
 	t1 = timestamps[start+1]
     }
     if (is.character(end)) {
@@ -158,7 +158,7 @@ freq = nobs/(t2 - t1)
 			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
 		}
 	}
-	end = max(which(timestamps<= (end+0.5) ))
+	end = findInterval(end, timestamps, all.inside = T) +1#max(which(timestamps<= (end+0.5) ))
     }
 
     index <-  NULL
@@ -227,45 +227,7 @@ freq = nobs/(t2 - t1)
         	scan(, quiet = TRUE)
     	}
     }
-##break up processing if too long?
-#
-##choose a memory limit
-#sizelim = floor(min(memory.limit(), 2000) * 1e6 /(300*12*20))
-#
-##read blocks of pages at a time as memory allows
-#
-#
-#tempchunk = list(data.out = NULL, page.timestamps = NULL, freq = freq)
-#if (!is.null(downsample)){
-#	downsampleoffset = 1
-#	if (length(downsample) == 2) downsampleoffset = downsample[2]
-#	downsample = downsample[1]
-#}
-#	
-#while(length(index) > 0){
-#if (is.null(downsample)){
-#	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
-#	    verbose , do.temp, calibrate, gain, 
-#	    offset, luxv, voltv, tformat,warn, downsample = NULL, blocksize = Inf)
-#} else {
-#	tempobj = read.bin(binfile, outfile = NULL, start = index[1], end = index[min(blocksize, length(index))], 
-#	    verbose , do.temp, calibrate, gain, 
-#	    offset, luxv, voltv, tformat,warn, downsample = c(downsample, downsampleoffset), blocksize = Inf)
-#	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
-#}
-#
-#tempchunk$data.out = rbind(tempchunk$data.out, tempobj$data.out)
-#tempchunk$page.timestamps = c(tempchunk$page.timestamps, tempobj$page.timestamps)
-#index = index[- (1: min(blocksize, length(index)))]
-#
-#}
-#tempchunk$freq  = freq * nrow(tempchunk$data.out)/ (nstreams*nobs)
-#    if (!(is.null(outfile))) {
-#        save(tempchunk, file = outfile)
-#    }
-#return(tempchunk)
-#}
-#
+
     data <- NULL
 #skip to start of data blocks
 fc2 = file(binfile, "rt")
@@ -425,6 +387,8 @@ if (is.null(j)){
 x$page.timestamps = x$page.timestamps[ unique(ceiling(i/300))]
 x$data.out = x$data.out[i,]
 return(x)
+} else if (identical(j, 1)){
+return(times2(x$data.out[i,j, drop = drop]))
 } else {
 return(x$data.out[i,j, drop=drop])
 }

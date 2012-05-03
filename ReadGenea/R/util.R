@@ -104,7 +104,33 @@ conv01 <- function(x){
 
 
 #convert time intervals
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T){
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T ,read.from.file=F, ...){
+
+if (inherits(x, "VirtAccData")) read.from.file = TRUE
+#virtual database, go get the relevant period first
+
+if (read.from.file){
+#rerun read.bin to grab the relevant part of the data
+#note: only time-like or proportion addresses of start and end work at this point....
+argorig = x$call
+readargs = c("gain", "offset", "luxv", "voltv","warn", "verbose", "do.temp", "calibrate", "downsample", "blocksize")
+
+argl<-as.list(match.call())
+ argind<-pmatch(names(argl),readargs)
+ readargs = readargs[na.omit(argind)]
+ argind<-which(!is.na(argind))
+argorig = c( argl[argind], argorig)
+argorig = argorig[which((!duplicated(names(argorig))) & (names(argorig)!= ""))]
+argorig$virtual = F
+argorig$start= start
+argorig$end = end
+
+x = do.call(read.bin, args = argorig)
+
+start = 0
+end = 1
+time.format = "proportion"
+}
 
 sampling.freq = 100
 time.format = match.arg(time.format)
@@ -130,7 +156,7 @@ time.format = "days"
 
 if (is.list(x)){
 
-if (time.format == "time"){
+if ((time.format == "time")||(time.format =="seconds")){
 times = x[,1]
 }
 
@@ -170,7 +196,7 @@ t1midnight = floor(times[1] / (60*60*24)) * 60*60*24
 t1 = times[1]
 	if (start < t1midnight)	start = start + t1midnight
 	if (start < t1) start = start + 60*60*24
-	start = which(times >= start-(0.5))[1]
+	start = findInterval ( start, times, all.inside = T)
 	t1 = times[start+1]
  
 if (is.character(end)){
@@ -182,7 +208,7 @@ if (end < t1midnight){
 			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
 		}
 	}
-	end = max(which(times<= (end+0.5) ))
+	end = findInterval(end, times, all.inside = T) + 1
 
 
 } else {
@@ -194,13 +220,13 @@ time.format = "measurements"
 
 }
 
-if (time.format == "date"){
-start = (start - times[1]) * 60*60*24
-if (inherits(end, "times2")){
-end =(end - times[1]) * 60*60*24
-}
-time.format = "seconds"
-}
+#if (time.format == "date"){
+#start = (start - times[1]) * 60*60*24
+#if (inherits(end, "times2")){
+#end =(end - times[1]) * 60*60*24
+#}
+#time.format = "seconds"
+#}
 
 
 if (is.null(length)){
@@ -224,8 +250,13 @@ if (time.format == "proportion"){
 start = ceiling(start * n)
 end  = floor(end * n)
 } else if (time.format == "seconds") {
+if (exists("times") && (start > times[1])){
+start = findInterval(start, times)
+end = findInterval(end+0.01, times)
+} else {
 start = ceiling(start * sampling.freq)
 end = floor(end * sampling.freq)
+}
 } else if (time.format == "days"){
 start = ceiling(start * sampling.freq*60*60*24)
 end = floor(end * sampling.freq*60*60*24)
@@ -239,11 +270,11 @@ if (incl.date) cat("Extracting time interval: ", format.times2(times2(x[start,1]
 return(x[start:end,])
 }
 
-c.AccData = function(x,y){
-x$data.out = rbind(x$data.out, y$data.out)
-x$page.timestamps = c(x$page.timestamps, y$page.timestamps)
-x
-}
+#c.AccData = function(x,y){
+#x$data.out = rbind(x$data.out, y$data.out)
+#x$page.timestamps = c(x$page.timestamps, y$page.timestamps)
+#x
+#}
 
 svm <- function(x){
 rowSums(x[,-2:0 + min(ncol(x), 4)]^2)
@@ -254,9 +285,9 @@ dim.AccData <- function(x) c(nrow(x$data.out), 7)
 plot.AccData <- function(x, y=NULL, ...){
 if (is.null(y)){
 epoch = floor(nrow(x)/200 + 1)
-plot(bapply.basic(x[,1], epoch, function(t) t[1]) , bapply.basic(svm(x), epoch, function(t) t[1]),  type = "l", xlab = "Time", ylab = "SVM")
+plot(times2(bapply.basic(x$data.out[,1], epoch, function(t) (t[1]))) , bapply.basic(svm(x), epoch, function(t) t[1]),  type = "l", xlab = "Time", ylab = "SVM")
 } else {
-plot(x[,1], y, ...)
+plot(times2(x[,1]), y, ...)
 }
 }
 
