@@ -26,7 +26,7 @@ packet
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE, calibrate = FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
+    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
 {
 
  
@@ -58,6 +58,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     reclength <- 10
     position.data <- 10
     position.temperature <- 6
+    position.volts <- 7
     orig.opt <- options(digits.secs = 3)
     fc <- file(binfile, "rt")
     tmp <- substring(scan(fc, skip = 22, what = "", n = 3, sep = " ", 
@@ -274,6 +275,7 @@ class(output) = "VirtAccData"
 return(invisible( output  ))
 }
 
+voltages = NULL
 lastread = min(index) -1
 for (blocknumber in 1: numblocks){
 index = Fullindex[1:min(blocksize, length(Fullindex))]
@@ -283,6 +285,10 @@ Fullindex = Fullindex[-(1:blocksize)]
     tmpd <- readLines(fc2, n = (max(index) -lastread) * reclength  )
 bseq = (index - lastread -1 ) * reclength
 	lastread = max(index)
+if (do.volt){
+vdata = tmpd[bseq + position.volts]
+voltages = c(voltages, as.numeric(substring(tdata, 17, nchar(tdata))))
+}
 	if (is.null(downsample)){
 	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
 
@@ -353,7 +359,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
 close(fc2)
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
