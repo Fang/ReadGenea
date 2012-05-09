@@ -21,15 +21,28 @@ packet<-rbind(packet[1:3,],light,button)
 packet
 }
 
+convert.intstream <- function(stream)
+{
+maxint <- 2^(12 - 1)
+stream = stream - 48 - 7 * (stream > 64)
+packet<- drop(matrix(stream, ncol = 3, byrow = T) %*% 16^(3: 1 - 1))
+packet[packet>=maxint] <- -2*maxint + (packet[packet>=maxint] )
+packet<-matrix(packet,nrow=4)
+light = floor(packet[4,] / 4 -> ltmp)
+rbind(packet[1:3,], light, (ltmp-light) >0.49)
+}
+
 
 #reads binary accelerometer data
+#mmap: use mmap to read - potentially much faster for large files.
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize = Inf, virtual = FALSE, ...) 
+    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap = FALSE, pagerefs = NULL, ...) 
 {
 
- 
+
+
  # optional argument initialization as NULL. Arguments assigned
  # if they appear in the function call.
  
@@ -84,12 +97,17 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
     npages <- as.integer(scan(fc, skip = 2, what = "", n = 2, 
         sep = ":", quiet = TRUE)[2])
     t1 <- substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11)
-    freq <- as.numeric(scan(fc, skip = 4, what = "", n = 2, sep = ":", 
-        quiet = TRUE)[2])
+freq = scan(fc, skip = 4, what = "", n = 2, sep = ":", quiet = TRUE)[2]
+freqchars = nchar(freq)
+    freq <- as.numeric(freq)
 #stop reading freq from file, calculate from page times instead (if possible)
     t1c <- parse.time(t1, format = "POSIX", tzone = tzone)
     t1midnight = floor(parse.time(t1, format = "day")) * 60*60*24
     t1 <- parse.time(t1, format = "seconds")
+if (missing(blocksize)){
+blocksize = Inf
+if (npages > 10000) blocksize = 10000
+}
 if (npages > 1){
 t2 =  parse.time(substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11), format = "seconds")
 freq = nobs/(t2 - t1)
@@ -230,13 +248,47 @@ freq = nobs/(t2 - t1)
     }
 
     data <- NULL
-#skip to start of data blocks
+
+if (mmap) {
+require(mmap)
+#function to get numbers from ascii codes
+numstrip <- function(dat, size = 4){
+apply(matrix(dat, size), 2, function(t) as.numeric(rawToChar(as.raw(t[t != 58]))))
+}
+
+
+mmapobj = mmap(binfile, uint8())
+offset =  findInterval(58,cumsum((mmapobj[1:3000] == 13)))+ 1
+if (is.null(pagerefs)){
+	digitstring = cumsum(c(offset,10*(3813 + freqchars - 4), 90 *( 3814 + freqchars - 4) , 900 *( 3815 + freqchars - 4), 9000*(3816 + freqchars - 4) , 90000*(3817 + freqchars - 4) , 900000*(3818 + freqchars - 4)))
+	digitstring[1] = digitstring[1] + 3813  + freqchars - 4 #offset a bit since 10^0 = 1
+	getindex = function(pagenumbers, raw = F){
+		digits = floor(log10(pagenumbers))
+	if (raw){
+		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(3813+digits  + freqchars - 4))
+	} else {
+		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(3813+digits  + freqchars - 4),each =  nobs * 12)  -((nobs*12):1))
+	}
+	}
+	} else {
+		getindex = function(pagenumbers, raw = F){
+		if (raw){
+		 return(pageref[pagenumbers+1]) 
+		}else{
+		 return(rep(pageref[pagenumbers+1], nobs * 12 ) + -((nobs*12):1))
+		}
+	}
+	}
+} else {
+
 fc2 = file(binfile, "rt")
+#skip to start of data blocks
 #skip header
 tmpd <- readLines(fc2, n = headlines)
+
 #skip unneeded pages
 replicate ( min( index - 1 ), is.character(readLines(fc2, n=reclength)))
-
+}
 
 numblocks = 1
 blocksize = min(blocksize, nstreams)
@@ -244,6 +296,7 @@ if (nstreams > blocksize ){
 cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n") 
 numblocks = ceiling(nstreams/blocksize)
 }
+
 Fulldat = NULL
 Fullindex = index#matrix(index, ncol = numblocks)
 index.orig = index
@@ -281,13 +334,13 @@ for (blocknumber in 1: numblocks){
 index = Fullindex[1:min(blocksize, length(Fullindex))]
 Fullindex = Fullindex[-(1:blocksize)]
     proc.file <- NULL
-
+if (!mmap){
     tmpd <- readLines(fc2, n = (max(index) -lastread) * reclength  )
 bseq = (index - lastread -1 ) * reclength
 	lastread = max(index)
 if (do.volt){
 vdata = tmpd[bseq + position.volts]
-voltages = c(voltages, as.numeric(substring(tdata, 17, nchar(tdata))))
+voltages = c(voltages, as.numeric(substring(vdata, 17, nchar(vdata))))
 }
 	if (is.null(downsample)){
 	    data <- strsplit(paste(tmpd[ bseq + position.data], collapse = ""), "")[[1]]
@@ -319,11 +372,42 @@ voltages = c(voltages, as.numeric(substring(tdata, 17, nchar(tdata))))
     		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
 		positions = downsampleoffset + (0: floor(( nobs * length(index)  - downsampleoffset )/downsample)) * downsample
 		proc.file = proc.file[, positions]
+if (do.temp){
 		temperature = temperature[positions]
+}
 		nn  = nn[positions]
 	#	freq = freq * ncol(proc.file)/ (nobs * (length(index)))
 	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
 	}	
+
+} else {
+#mmap reads
+####################
+#read from file
+tmp = mmapobj[getindex(index)]
+proc.file = convert.intstream(tmp)
+
+if (do.temp){
+temperature = rep(numstrip(mmapobj[rep(getindex(index, raw  = T), each = 4)- 3672 - 12:9], 4), each = nobs)
+}
+    		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
+	if (!is.null(downsample)){
+		positions = downsampleoffset + (0: floor(( nobs * length(index)  - downsampleoffset )/downsample)) * downsample
+		proc.file = proc.file[, positions]
+		nn  = nn[positions]
+if (do.temp){
+		temperature = temperature[positions]
+}
+	#	freq = freq * ncol(proc.file)/ (nobs * (length(index)))
+	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
+}
+if (do.volt){
+voltages = c(voltages, numstrip(mmapobj[rep(getindex(index, raw  = T), each = 6)- 3650 - 11:6], 6) )
+}
+
+
+
+}
 
 	setTxtProgressBar(pb, 100 *  (blocknumber-0.5) / numblocks )
 
@@ -349,8 +433,10 @@ voltages = c(voltages, as.numeric(substring(tdata, 17, nchar(tdata))))
 
 Fulldat= rbind(Fulldat, proc.file)
 	setTxtProgressBar(pb, 100 *  blocknumber / numblocks)
+
 }
 close(pb)
+
 freq = freq * nrow(Fulldat) / (nobs *  nstreams)
    end.proc.time <- Sys.time()
     cat("Processing took:", format(round(as.difftime(end.proc.time - 
@@ -358,7 +444,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 #cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
-close(fc2)
+if (!mmap) close(fc2)
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
