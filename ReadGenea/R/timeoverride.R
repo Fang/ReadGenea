@@ -121,6 +121,90 @@ style = list(periods = c("h", "m", "s"), sep = ":")
     out
 }
 
+"plot.times2" <-
+function(x, y, ...,
+         xlab = deparse(substitute(x)), ylab = deparse(substitute(y)),
+         simplify)
+{
+    if(missing(simplify))
+        if(is.null(simplify <- getOption("chron.simplify")))
+            simplify <- TRUE
+    x.times <- inherits(x, "times")	# is x a times?
+    if(missing(y)) {
+        x <- sort(x)                    # NA's will be ignored
+        y <- seq_along(as.vector(x))
+        if(missing(ylab))
+            ylab <- "Counts"
+    }
+    y.times <- inherits(y, "times")	# is y a times?
+    dots <- list(...)
+    if(is.null(axes <- dots$axes)) axes <- TRUE # do we draw axes? 
+    ## only xaxt="n" or yaxt="n" requests in ... are honored!
+    if(is.null(req.xaxt <- dots$xaxt) || req.xaxt != "n")
+        req.xaxt <- "s"
+    if(is.null(req.yaxt <- dots$yaxt) || req.yaxt != "n")
+        req.yaxt <- "s"
+    old <- par("xaxt", "yaxt")
+    on.exit(par(old))
+    ## trap graphical pars in ... that affect axis() in addition to plot()
+    if(is.null(adj <- dots$adj))
+        adj <- par("adj")
+    if(is.null(cex <- dots$cex.axis))
+        cex <- par("cex")
+    if(is.null(col <- dots$col.axis))
+        col <- par("col")
+    if(is.null(font <- dots$font.axis))
+        font <- par("font")
+    if(is.null(las <- dots$las))
+        las <- par("las")
+    if(is.null(lab <- dots$lab))
+        lab <- par("lab")
+    if(is.null(mgp <- dots$mgp))
+        mgp <- par("mgp")
+    if(is.null(tcl <- dots$tcl)) tcl <- par("tcl")	
+    ## for some plot types we need to sort according to x
+    if(!is.null(type <- dots$type))
+        if(any(type == c("l", "b", "o"))) {
+            xlab; ylab                  # force promises
+            nas <- is.na(x)
+            o <- order(x[!nas])
+            x <- x[!nas][o]
+            y <- y[!nas][o]
+        }
+    xx <- unclass(x)
+    yy <- unclass(y)
+    if(x.times)
+        xaxt <- "n"
+    else xaxt <- req.xaxt
+    if(y.times)
+        yaxt <- "n"
+    else yaxt <- req.yaxt
+    if(!is.null(l <- dots$log)) {
+        if(inherits(x, "dates") && any(l == c("x", "xy", "yx")))
+            stop("cannot do logarithmic plot of a dates object")
+        if(inherits(y, "dates") && any(l == c("y", "xy", "yx")))
+            stop("cannot do logarithmic plot of a chron object")
+    }
+    ## unfortunately we can't use (easily) NextMethod when y is missing!
+    plot.default(xx, yy, xlab = xlab, ylab = ylab, ...,
+                 xaxt = xaxt, yaxt = yaxt)
+    if(axes) {
+        if(req.xaxt == "n")
+            par(xaxt = "n")
+        else if(x.times)
+            axis.times2(1, x, simplify = simplify, labels = TRUE,
+                       adj = adj, col = col, cex = cex, font = font,
+                       las = las, lab = lab, mgp = mgp, tcl = tcl)
+        if(req.yaxt == "n")
+            par(yaxt = "n")
+        else if(y.times)
+            axis.times2(2, y, simplify = simplify, srt = 90, labels
+                       = TRUE, adj = adj, col = col, cex = cex,
+                       font = font, las = las, lab = lab, mgp = mgp,
+                       tcl = tcl)
+    }
+    invisible(list(x = x, y = y))
+}
 
 "axis.times2"<-
 function(n, x, add = TRUE, labels, simplify = TRUE, ...)
@@ -130,6 +214,7 @@ function(n, x, add = TRUE, labels, simplify = TRUE, ...)
     bad <- is.na(x) | abs(as.vector(x)) == Inf
     rng <- if(n == 1 || n == 3) par("usr")[1:2] else par("usr")[3:4]
     tmp <- c(rng, as.numeric(x[!bad]))
+tmp = tmp/(60*60*24)
     rng1 <- diff(range(tmp))
     if (rng1 > 1) fctr <- 1
     else if (rng1 > 1/24) fctr <- 24
@@ -141,7 +226,7 @@ function(n, x, add = TRUE, labels, simplify = TRUE, ...)
     	simplify <- step >= 1/1440
     #	if (inherits(x, "chron") && step >= 1) class(x) <- class(x)[-1]
     }
-    
+    tmp = tmp * 60*60*24
     att <- attributes(x)
     at.x <- structure(tmp[tmp >= rng[1] & tmp <= rng[2]], format = att$
                       format, origin = att$origin, class = att$class)

@@ -42,6 +42,7 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 {
 
 
+if (mmap) require(mmap)
 
  # optional argument initialization as NULL. Arguments assigned
  # if they appear in the function call.
@@ -67,51 +68,22 @@ function (binfile, outfile = NULL, start = NULL, end = NULL,
 
 #variables for positions and record lengths in file
     nobs <- 300
-    headlines <- 59
     reclength <- 10
     position.data <- 10
     position.temperature <- 6
     position.volts <- 7
     orig.opt <- options(digits.secs = 3)
-    fc <- file(binfile, "rt")
-    tmp <- substring(scan(fc, skip = 22, what = "", n = 3, sep = " ", 
-        quiet = TRUE)[3], c(1,2,5),c(1, 3, 6))
-#time zone offset from UTC in seconds
-	tzone = ifelse(tmp[1] == "-", -1, 1) * (as.numeric(tmp[3]) + 60* as.numeric(tmp[2])) /60
-    xgain <- as.integer(scan(fc, skip = 24, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    xoffset <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    ygain <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    yoffset <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    zgain <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    zoffset <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    volts <- as.integer(scan(fc, skip = 0, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    lux <- as.integer(scan(fc, skip = 0, what = "", n = 2, sep = ":", 
-        quiet = TRUE)[2])
-    npages <- as.integer(scan(fc, skip = 2, what = "", n = 2, 
-        sep = ":", quiet = TRUE)[2])
-    t1 <- substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11)
-freq = scan(fc, skip = 4, what = "", n = 2, sep = ":", quiet = TRUE)[2]
-freqchars = nchar(freq)
-    freq <- as.numeric(freq)
-#stop reading freq from file, calculate from page times instead (if possible)
-    t1c <- parse.time(t1, format = "POSIX", tzone = tzone)
-    t1midnight = floor(parse.time(t1, format = "day")) * 60*60*24
-    t1 <- parse.time(t1, format = "seconds")
+#get header and calibration info using header.info.
+H = attr(header.info(binfile, more = T), "calibration")
+#attach(attr(H, "calibration"))
+for (i in 1:length(H)) assign(names(H)[i], H[[i]])
+
+#temporary workaround....
+if (firstpage != 0) mmap = FALSE
+
 if (missing(blocksize)){
 blocksize = Inf
 if (npages > 10000) blocksize = 10000
-}
-if (npages > 1){
-t2 =  parse.time(substring(scan(fc, skip = 4, what = "", quiet = TRUE, nlines = 1, sep = "\n"), 11), format = "seconds")
-freq = nobs/(t2 - t1)
-###################TODO
 }
 	freqint = round(freq)
 	if (!is.null(downsample)) {
@@ -122,7 +94,6 @@ freq = nobs/(t2 - t1)
     if (verbose) {
         cat("Number of pages in binary file:", npages, "\n")
     }
-    close(fc)
     freqseq <- seq(0, by = 1/freq, length = nobs)
     timespan <- nobs/freq
 #    t1 <- t1[2:length(t1)]
@@ -250,26 +221,52 @@ freq = nobs/(t2 - t1)
     data <- NULL
 
 if (mmap) {
-require(mmap)
 #function to get numbers from ascii codes
 numstrip <- function(dat, size = 4){
 apply(matrix(dat, size), 2, function(t) as.numeric(rawToChar(as.raw(t[t != 58]))))
 }
 
 
+##############################################freqchars = nchar(freq)
 mmapobj = mmap(binfile, uint8())
-offset =  findInterval(58,cumsum((mmapobj[1:3000] == 13)))+ 1
+offset =  pos.rec1 - 2#findInterval(58,cumsum((mmapobj[1:3000] == 13)))+ 1 #TODO
+rec2 = offset + pos.inc
+
+if (firstpage != 0) pos.inc = pos.inc - floor(log10(firstpage))
+
+#getindex gives either the datavector, or the pos after the tail of the record
 if (is.null(pagerefs)){
-	digitstring = cumsum(c(offset,10*(3813 + freqchars - 4), 90 *( 3814 + freqchars - 4) , 900 *( 3815 + freqchars - 4), 9000*(3816 + freqchars - 4) , 90000*(3817 + freqchars - 4) , 900000*(3818 + freqchars - 4)))
-	digitstring[1] = digitstring[1] + 3813  + freqchars - 4 #offset a bit since 10^0 = 1
-	getindex = function(pagenumbers, raw = F){
+	digitstring = cumsum(c(offset,10*(pos.inc), 90 *(pos.inc + 1) , 900 *( pos.inc +2 ), 9000*(pos.inc +3) , 90000*(pos.inc +4) , 900000*(pos.inc +5), 9000000 * (pos.inc + 6)))
+	digitstring[1] = digitstring[1] + pos.inc #offset a bit since 10^0 = 1
+	getindex = function(pagenumbers, raw = F   ){
 		digits = floor(log10(pagenumbers))
 	if (raw){
-		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(3813+digits  + freqchars - 4))
+		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits  ))
 	} else {
-		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(3813+digits  + freqchars - 4),each =  nobs * 12)  -((nobs*12):1))
+		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits),each =  nobs * 12)  -((nobs*12):1))
 	}
 	}
+
+if (firstpage != 0){
+#where offset must have been to give page at the right place
+	offset = offset - (getindex(firstpage+1, raw = T) - rec2)
+#redefine new getindex
+	digitstring = cumsum(c(offset,10*(pos.inc), 90 *(pos.inc + 1) , 900 *( pos.inc +2 ), 9000*(pos.inc +3) , 90000*(pos.inc +4) , 900000*(pos.inc +5), 9000000 * (pos.inc + 6)))
+	digitstring[1] = digitstring[1] + pos.inc #offset a bit since 10^0 = 1
+	getindex = function(pagenumbers, raw = F   ){
+pagenumbers = pagenumbers + firstpage
+		digits = floor(log10(pagenumbers))
+	if (raw){
+		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits  ))
+	} else {
+		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits),each =  nobs * 12)  -((nobs*12):1))
+	}
+	}
+
+
+}
+
+
 	} else {
 		getindex = function(pagenumbers, raw = F){
 		if (raw){
@@ -279,6 +276,7 @@ if (is.null(pagerefs)){
 		}
 	}
 	}
+
 } else {
 
 fc2 = file(binfile, "rt")
@@ -316,7 +314,7 @@ if(!is.null(downsample)){
 if (virtual){
 if (is.null(downsample)) downsample = 1
 close(pb)
-close(fc2)
+if (exists("fc2")) close(fc2)
 #todo...
 Fulldat = timestamps[index]
 #Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
