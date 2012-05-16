@@ -228,10 +228,29 @@ apply(matrix(dat, size), 2, function(t) as.numeric(rawToChar(as.raw(t[t != 58]))
 
 
 ##############################################freqchars = nchar(freq)
-mmapobj = mmap(binfile, uint8())
 offset =  pos.rec1 - 2#findInterval(58,cumsum((mmapobj[1:3000] == 13)))+ 1 #TODO
 rec2 = offset + pos.inc
 
+#calculate pagerefs!
+if (identical(pagerefs , TRUE)){
+textobj = mmap(binfile, char())
+pagerefs = NULL
+numblocks2 = 1
+blocksize2 = min(blocksize, max(index+1))*3600
+if ( length(textobj) > blocksize2 ){
+numblocks2 = ceiling(length(textobj)/blocksize2)
+}
+curr = 0
+for (i in 1:numblocks2){
+pagerefs = c(pagerefs, grepRaw("Recorded Data", textobj[curr + 1: min(blocksize2, length(textobj) - curr)], all = T)+ curr)
+curr = curr + blocksize2
+if (length(pagerefs) > max(index+1)) break
+}
+pagerefs = c(pagerefs[-1], length(textobj) +1) - 2
+print("Calculated page references...")
+munmap(textobj)
+}
+mmapobj = mmap(binfile, uint8())
 if (firstpage != 0) pos.inc = pos.inc - floor(log10(firstpage))
 
 #getindex gives either the datavector, or the pos after the tail of the record
@@ -270,9 +289,9 @@ pagenumbers = pagenumbers + firstpage
 	} else {
 		getindex = function(pagenumbers, raw = F){
 		if (raw){
-		 return(pageref[pagenumbers+1]) 
+		 return(pagerefs[pagenumbers]) 
 		}else{
-		 return(rep(pageref[pagenumbers+1], nobs * 12 ) + -((nobs*12):1))
+		 return(rep(pagerefs[pagenumbers], each = nobs * 12 )  -((nobs*12):1))
 		}
 	}
 	}
@@ -321,7 +340,7 @@ Fulldat = timestamps[index]
 #if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
 cat("Virtually loaded", length(Fulldat)*length(freqseq)/downsample, "records at", round(freq/downsample,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat) * length(freqseq)/downsample )/1000000) ,"MB of RAM)\n")
 cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1) + nobs /freq)), "\n")
-output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) )
+output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) , pagerefs = pagerefs)
 class(output) = "VirtAccData"
 return(invisible( output  ))
 }
@@ -443,7 +462,7 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
 if (!mmap) close(fc2)
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages, pagerefs = pagerefs)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
