@@ -2390,3 +2390,23 @@ return (x[floor(a*len) : floor(b*len)])
 }
 }
 
+#add a line to a plot, rescaling to current axis extents
+linesadd = function(x, y=NULL, axis = F,...){
+ylimits = par("usr")[3:4]
+if (is.null(y)){
+y = x
+x = 1:length(y)
+}
+
+aty = pretty(y) 
+yrng = range(y)
+y = (y - mean(yrng) ) * 0.95*(ylimits[2]- ylimits[1])/(yrng[2] - yrng[1]) + mean(ylimits)
+
+
+#add an axis on the right
+if (axis){
+axis(4, (aty - mean(yrng) ) * 0.95*(ylimits[2]- ylimits[1])/(yrng[2] - yrng[1]) + mean(ylimits), label = aty)
+}
+
+lines(x, y, ...)
+}

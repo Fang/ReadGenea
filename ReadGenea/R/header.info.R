@@ -80,10 +80,18 @@ close(fc)
 if (exists("mmap", mode = "function")){
 #mmap: find start offset and shift
 tmpd = mmap(binfile, char())
-tmpd = tmpd[1:min(length(tmpd), 20000)]
-tmp = grepRaw("Memory Status", tmpd)
-calibration$pos.rec1 = grepRaw("Recorded Data", tmpd, offset = tmp)
-calibration$pos.inc = grepRaw("Recorded Data", tmpd, offset = calibration$pos.rec1+1) - calibration$pos.rec1
+#did we mmap successfully?
+if (is.mmap(tmpd)){
+tmpd2 = tmpd[1:min(length(tmpd), 20000)]
+tmp = grepRaw("Memory Status", tmpd2)
+calibration$pos.rec1 = grepRaw("Recorded Data", tmpd2, offset = tmp)
+calibration$pos.inc = grepRaw("Recorded Data", tmpd2, offset = calibration$pos.rec1+1) - calibration$pos.rec1
+munmap(tmpd) # clean up
+} else {
+warning("MMAP failed! (Not enough address space?)")
+calibration$pos.rec1 = NA
+calibration$pos.inc = NA
+}
 }
 attr(info, "calibration") = calibration
 

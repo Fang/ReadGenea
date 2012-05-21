@@ -34,15 +34,16 @@ rbind(packet[1:3,], light, (ltmp-light) >0.49)
 
 
 #reads binary accelerometer data
-#mmap: use mmap to read - potentially much faster for large files.
+#mmap: use mmap to read - potentially much faster for large files - by default only for 64 bit
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap = FALSE, pagerefs = NULL, ...) 
+    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = NULL, ...) 
 {
 
+invisible(gc()) # garbage collect
 
-if (mmap) require(mmap)
+if (mmap.load) require(mmap)
 
  # optional argument initialization as NULL. Arguments assigned
  # if they appear in the function call.
@@ -78,8 +79,10 @@ H = attr(header.info(binfile, more = T), "calibration")
 #attach(attr(H, "calibration"))
 for (i in 1:length(H)) assign(names(H)[i], H[[i]])
 
-#temporary workaround....
-if (firstpage != 0) mmap = FALSE
+if (is.na(pos.rec1)) mmap.load = FALSE
+
+#temporary workaround.... calculate pagerefs
+if ((firstpage != 0) && (mmap.load == T) && (length(pagerefs) < 2) ) pagerefs = TRUE
 
 if (missing(blocksize)){
 blocksize = Inf
@@ -220,7 +223,9 @@ if (npages > 10000) blocksize = 10000
 
     data <- NULL
 
-if (mmap) {
+
+invisible(gc()) # garbage collect
+if (mmap.load) {
 #function to get numbers from ascii codes
 numstrip <- function(dat, size = 4){
 apply(matrix(dat, size), 2, function(t) as.numeric(rawToChar(as.raw(t[t != 58]))))
@@ -231,27 +236,42 @@ apply(matrix(dat, size), 2, function(t) as.numeric(rawToChar(as.raw(t[t != 58]))
 offset =  pos.rec1 - 2#findInterval(58,cumsum((mmapobj[1:3000] == 13)))+ 1 #TODO
 rec2 = offset + pos.inc
 
+if ((identical(pagerefs , FALSE)) || is.null(pagerefs)){
+ pagerefs = NULL
+} else if (length(pagerefs) < max(index)){
 #calculate pagerefs!
-if (identical(pagerefs , TRUE)){
 textobj = mmap(binfile, char())
-pagerefs = NULL
+if (is.mmap(textobj)){
+startoffset = max(pagerefs, offset) + pos.inc
+if (identical(pagerefs, TRUE)) pagerefs = NULL
 numblocks2 = 1
 blocksize2 = min(blocksize, max(index+1))*3600
-if ( length(textobj) > blocksize2 ){
-numblocks2 = ceiling(length(textobj)/blocksize2)
+if ( (length(textobj) -startoffset) > blocksize2 ){
+numblocks2 = ceiling((length(textobj) - startoffset) /blocksize2)
 }
-curr = 0
+curr = startoffset
 for (i in 1:numblocks2){
-pagerefs = c(pagerefs, grepRaw("Recorded Data", textobj[curr + 1: min(blocksize2, length(textobj) - curr)], all = T)+ curr)
+pagerefs = c(pagerefs, grepRaw("Recorded Data", textobj[curr + 1: min(blocksize2, length(textobj) - curr)], all = T)+ curr-2)
 curr = curr + blocksize2
-if (length(pagerefs) > max(index+1)) break
+if (length(pagerefs) >= max(index)) break
 }
-pagerefs = c(pagerefs[-1], length(textobj) +1) - 2
+if (curr >= length(textobj)) pagerefs = c(pagerefs, length(textobj)  -1)
 print("Calculated page references...")
 munmap(textobj)
+invisible(gc()) # garbage collect
+} else {
+pagerefs = NULL
+warning("Failed to compute page refs")
+}
 }
 mmapobj = mmap(binfile, uint8())
-if (firstpage != 0) pos.inc = pos.inc - floor(log10(firstpage))
+if (!is.mmap(mmapobj)){
+warning("MMAP failed, switching to ReadLine. (Likely insufficient address space)")
+mmap.load = FALSE
+}
+
+
+#if (firstpage != 0) pos.inc = pos.inc - floor(log10(firstpage))
 
 #getindex gives either the datavector, or the pos after the tail of the record
 if (is.null(pagerefs)){
@@ -266,25 +286,25 @@ if (is.null(pagerefs)){
 	}
 	}
 
-if (firstpage != 0){
-#where offset must have been to give page at the right place
-	offset = offset - (getindex(firstpage+1, raw = T) - rec2)
-#redefine new getindex
-	digitstring = cumsum(c(offset,10*(pos.inc), 90 *(pos.inc + 1) , 900 *( pos.inc +2 ), 9000*(pos.inc +3) , 90000*(pos.inc +4) , 900000*(pos.inc +5), 9000000 * (pos.inc + 6)))
-	digitstring[1] = digitstring[1] + pos.inc #offset a bit since 10^0 = 1
-	getindex = function(pagenumbers, raw = F   ){
-pagenumbers = pagenumbers + firstpage
-		digits = floor(log10(pagenumbers))
-	if (raw){
-		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits  ))
-	} else {
-		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits),each =  nobs * 12)  -((nobs*12):1))
-	}
-	}
-
-
-}
-
+#if (firstpage != 0){
+##where offset must have been to give page at the right place
+#	offset = offset - (getindex(firstpage+1, raw = T) - rec2)
+##redefine new getindex
+#	digitstring = cumsum(c(offset,10*(pos.inc), 90 *(pos.inc + 1) , 900 *( pos.inc +2 ), 9000*(pos.inc +3) , 90000*(pos.inc +4) , 900000*(pos.inc +5), 9000000 * (pos.inc + 6)))
+#	digitstring[1] = digitstring[1] + pos.inc #offset a bit since 10^0 = 1
+#	getindex = function(pagenumbers, raw = F   ){
+#pagenumbers = pagenumbers + firstpage
+#		digits = floor(log10(pagenumbers))
+#	if (raw){
+#		return(   digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits  ))
+#	} else {
+#		return( rep(digitstring[digits+1]+(pagenumbers - 10^digits)*(pos.inc+digits),each =  nobs * 12)  -((nobs*12):1))
+#	}
+#	}
+#
+#
+#}
+#
 
 	} else {
 		getindex = function(pagenumbers, raw = F){
@@ -296,7 +316,9 @@ pagenumbers = pagenumbers + firstpage
 	}
 	}
 
-} else {
+} 
+
+if (mmap.load != TRUE) {
 
 fc2 = file(binfile, "rt")
 #skip to start of data blocks
@@ -334,6 +356,7 @@ if (virtual){
 if (is.null(downsample)) downsample = 1
 close(pb)
 if (exists("fc2")) close(fc2)
+if (exists("mmapobj")) munmap(mmapobj)
 #todo...
 Fulldat = timestamps[index]
 #Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
@@ -351,7 +374,7 @@ for (blocknumber in 1: numblocks){
 index = Fullindex[1:min(blocksize, length(Fullindex))]
 Fullindex = Fullindex[-(1:blocksize)]
     proc.file <- NULL
-if (!mmap){
+if (!mmap.load){
     tmpd <- readLines(fc2, n = (max(index) -lastread) * reclength  )
 bseq = (index - lastread -1 ) * reclength
 	lastread = max(index)
@@ -405,7 +428,7 @@ tmp = mmapobj[getindex(index)]
 proc.file = convert.intstream(tmp)
 
 if (do.temp){
-temperature = rep(numstrip(mmapobj[rep(getindex(index, raw  = T), each = 4)- 3672 - 12:9], 4), each = nobs)
+temperature = rep(numstrip(mmapobj[rep(getindex(index, raw  = T), each = 4)- 3680 - 4:1], 4), each = nobs)
 }
     		nn <- rep(timestamps[index], each = length(freqseq)) + freqseq
 	if (!is.null(downsample)){
@@ -419,7 +442,7 @@ if (do.temp){
 	downsampleoffset = downsample - (nobs*blocksize - downsampleoffset  )%% downsample 
 }
 if (do.volt){
-voltages = c(voltages, numstrip(mmapobj[rep(getindex(index, raw  = T), each = 6)- 3650 - 11:6], 6) )
+voltages = c(voltages, numstrip(mmapobj[rep(getindex(index, raw  = T), each = 6)- 3656 - 6:1 ], 6) )
 }
 
 
@@ -461,7 +484,11 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
 #cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
 
-if (!mmap) close(fc2)
+if (!mmap.load){
+ close(fc2)
+} else {
+munmap(mmapobj)
+}
     processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages, pagerefs = pagerefs)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {

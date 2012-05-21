@@ -104,7 +104,9 @@ conv01 <- function(x){
 
 
 #convert time intervals
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T ,read.from.file=F, ...){
+#size <- desired number of measurements
+
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T ,read.from.file=F, size=Inf, ...){
 
 if (inherits(x, "VirtAccData")) read.from.file = TRUE
 #virtual database, go get the relevant period first
@@ -266,8 +268,16 @@ start = max(start,1)
 end = min(end, n)
 
 if (incl.date) cat("Extracting time interval: ", format.times2(times2(x[start,1])), " to " , format.times2(times2(x[end,1])), "\n")
+ind = start:end
+if (length(ind) > size){
+tmp = ceiling(length(ind) / size)
+ind = ind[(ind %% tmp == 0)]
+}
 
-return(x[start:end,])
+x = x[ind,]
+if (is.list(x)) x$freq = x$freq /tmp
+
+return(x)
 }
 
 #c.AccData = function(x,y){

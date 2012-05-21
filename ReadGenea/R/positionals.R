@@ -6,7 +6,7 @@
 
 
 
-positionals = function(x, start=0, end= 1, length = NULL, filter=T,bw = F, col , legend = T, ...){ 
+positionals = function(x, start=0, end= 1, length = NULL, filter=T,bw = F, col , legend = T, max.points = 1e6, density = F,...){ 
 if (missing(col)){
 if (bw){
 col = 1:5
@@ -14,7 +14,7 @@ col = 1:5
 col = hcl(0:360)
 }
 }
-tmp2 = get.intervals(x, start, end, length,, incl.date=T, ...)
+tmp2 = get.intervals(x, start, end, length,, incl.date=T, size = max.points,...)
 
 if (filter==0){
 ind = rep(T, nrow(tmp2))
@@ -66,5 +66,12 @@ text(tmp[361], 95, "CW")
 points(tmp[c( 90, 180, 270) +1], rep(95, 3), pch = "|")
 }
 }
+
+if (density){
+#these bandwidth settings seem to be fine
+kde2dplot(as.numeric(x), y, xaxt = "n", h.relative= c(0.05,0.3), add = T, yaxt = "n", n = 200, shade = T, breaks = c(0.1,0.25,0.5), col=1)
+}
+
+
 invisible(list(x = x, y=y))
 }
