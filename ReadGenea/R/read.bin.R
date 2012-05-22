@@ -79,7 +79,7 @@ H = attr(header.info(binfile, more = T), "calibration")
 #attach(attr(H, "calibration"))
 for (i in 1:length(H)) assign(names(H)[i], H[[i]])
 
-if (is.na(pos.rec1)) mmap.load = FALSE
+if ((!exists("pos.rec1")) || (is.na(pos.rec1))) mmap.load = FALSE
 
 #temporary workaround.... calculate pagerefs
 if ((firstpage != 0) && (mmap.load == T) && (length(pagerefs) < 2) ) pagerefs = TRUE
