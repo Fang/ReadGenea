@@ -8,8 +8,9 @@ nobs = 300
 tmpd = readLines(binfile, 300)
 
 #try to find index positions - so will accomodate multiple lines in the notes sections
-ind.subinfo = min(which(tmpd == "Subject Info"))
-ind.memstatus = min(which(tmpd == "Memory Status"))
+#change when new version of binfile is produced.
+ind.subinfo = min(which((tmpd == "Subject Info" )& (1:length(tmpd) >= 37)))
+ind.memstatus = max(which(tmpd == "Memory Status"))
 ind.recdata = (which(tmpd == "Recorded Data"))
 ind.recdata = ind.recdata[ind.recdata > ind.memstatus][1:2]
 ind.calibdata = max(which(tmpd == "Calibration Data"))
@@ -83,12 +84,18 @@ tmpd = mmap(binfile, char())
 #did we mmap successfully?
 if (is.mmap(tmpd)){
 tmpd2 = tmpd[1:min(length(tmpd), 20000)]
-tmp = grepRaw("Memory Status", tmpd2)
+tmp = grepRaw("Memory Status", tmpd2, all = T)
+if (length(tmp) > 1) tmp = max(tmp)
 calibration$pos.rec1 = grepRaw("Recorded Data", tmpd2, offset = tmp)
 calibration$pos.inc = grepRaw("Recorded Data", tmpd2, offset = calibration$pos.rec1+1) - calibration$pos.rec1
 munmap(tmpd) # clean up
 } else {
 warning("MMAP failed! (Not enough address space?)")
+calibration$pos.rec1 = NA
+calibration$pos.inc = NA
+}
+if (length(calibration$pos.inc) == 0){
+warning("MMAP failed! Data corrupt or compressed?")
 calibration$pos.rec1 = NA
 calibration$pos.inc = NA
 }
