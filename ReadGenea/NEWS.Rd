@@ -2,6 +2,11 @@
 \title{News for Package \pkg{ReadGenea}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
 
+\section{Changes in version 2.5}{
+\itemize{
+	\item BUGFIX: Software should deal with multi-line comments correctly now.
+}
+
 \section{Changes in version 2.4}{
  \itemize{
 	\item Implemented mmap-based reading of data - reading with mmap enabled should be much faster - note glitch exists with data recorded at very cold temperatures on existing firmware.
