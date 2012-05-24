@@ -1,0 +1,251 @@
+\nonstopmode{}
+\documentclass[a4paper]{book}
+\usepackage[times,inconsolata,hyper]{Rd}
+\usepackage{makeidx}
+\usepackage[utf8,latin1]{inputenc}
+% \usepackage{graphicx} % @USE GRAPHICX@
+\makeindex{}
+\begin{document}
+\chapter*{}
+\begin{center}
+{\textbf{\huge Package `ReadGenea'}}
+\par\bigskip{\large \today}
+\end{center}
+\begin{description}
+\raggedright{}
+\item[Type]\AsIs{Package}
+\item[Title]\AsIs{Package For Reading Binary files}
+\item[Version]\AsIs{2.5}
+\item[Date]\AsIs{23/05/2012}
+\item[Author]\AsIs{ActivInsights Ltd. }\email{joss.langford@activinsights.co.uk}\AsIs{}
+\item[Maintainer]\AsIs{ActivInsights Ltd. }\email{joss.langford@activinsights.co.uk}\AsIs{}
+\item[Description]\AsIs{Functions and analytics for Genea accelerometer data into R objects}
+\item[License]\AsIs{GPL}
+\item[LazyLoad]\AsIs{yes}
+\item[Depends]\AsIs{bitops, chron}
+\item[Suggests]\AsIs{mmap, MASS}
+\end{description}
+\Rdcontents{\R{} topics documented:}
+\inputencoding{utf8}
+\HeaderA{ReadGenea-package}{ReadGenea: a package to process binary accelerometer output files.}{ReadGenea.Rdash.package}
+\aliasA{ReadGenea}{ReadGenea-package}{ReadGenea}
+\keyword{package}{ReadGenea-package}
+%
+\begin{Description}\relax
+This is a package to process binary output files from the Genea accelerometer data.  The main function is:\\{}\\{}
+
+read.bin\\{}
+\end{Description}
+%
+\begin{Details}\relax
+
+\Tabular{ll}{
+Package: & ReadGenea\\{}
+Type: & Package\\{}
+Version: & 2.0-1\\{}
+Date: & 12/10/2011\\{}
+License: & GPL\\{}
+LazyLoad: & yes\\{}
+}
+
+\end{Details}
+%
+\begin{Author}\relax
+ActivInsights Ltd. <joss.langford@activinsights.co.uk>
+\end{Author}
+\inputencoding{utf8}
+\HeaderA{header.info}{Get header info from Genea output (.bin) file}{header.info}
+\keyword{manip}{header.info}
+%
+\begin{Description}\relax
+Function to extract relevant header fields and values from a file.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+header.info(binfile, more=TRUE)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{binfile}] The file from which to extract the header
+\item[\code{more}] logical. If TRUE, extract additional data from file useful for calibration and data reading.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}\relax
+The function extracts useful information from a .bin file, such as information about the Genea device used to produce the output, and characteristics of the subject who wore the device. The function also accepts data that has been compressed in `gzip', `bzip2' or `xz' formats. See \code{file}.
+With \code{more} set to TRUE, additional data is extracted, mainly for internal use in \code{read.bin}.
+\end{Details}
+%
+\begin{Value}
+A \code{data.frame} with extracted header information, each row a particular header field with its value. 
+If \code{more} is TRUE, an attribute "calibration" is attached to the object, consisting of a list with measurement offsets, sampling frequency estimates, start times and time zones, data position offsets, and if mmap is detected, byte locations and increments for mmap reading.
+\end{Value}
+%
+\begin{Section}{Warning}
+This function is specific to header structure in Geneactiv output files. By design, it should be compatible with all firmware and software versions to date (as of version of current release). If order or field names are changed in future .bin files, this function may have to be updated appropriately.
+The function works by looking for appropriate section headings in the .bin files.
+\end{Section}
+%
+\begin{Examples}
+\begin{ExampleCode}
+
+fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)
+print(fileheader)
+attr(fileheader, "calibration")
+\end{ExampleCode}
+\end{Examples}
+\inputencoding{utf8}
+\HeaderA{read.bin}{File processing function for binary files.}{read.bin}
+\keyword{manip}{read.bin}
+%
+\begin{Description}\relax
+A function to process binary accelerometer files and convert the information into R objects.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+read.bin(binfile, outfile = NULL, start = NULL, end = NULL, 
+verbose = FALSE, do.temp = TRUE, calibrate = FALSE, tformat="seconds", 
+warn=FALSE,...)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{binfile}] 
+A filename of a binary file to process.
+
+\item[\code{outfile}] 
+An optional filename specifying where to save the processed data object.
+
+\item[\code{start}] Either:
+A time representation of when the processing is to occur, see \code{\LinkA{reformat.time}{reformat.time}} for possible representations, or 
+a page number corresponding to the start of the time window, or
+a proportional point (between 0 and 1) to begin reading at.
+
+\item[\code{end}] Either:
+A time representation of when to end processing, see \code{\LinkA{reformat.time}{reformat.time}} for possible representations, or 
+a page number corresponding to the end of the time window, or
+a proportional point (between 0 and 1) to begin reading at.
+
+\item[\code{verbose}] 
+A boolean variable indicating whether information should be printed.
+
+\item[\code{do.temp}] 
+A boolean variable indicating whether the temperature signal should be extracted.
+
+\item[\code{calibrate}] 
+A boolean variable indicating whether the raw accelerometer values and the light variable should be calibrated.
+
+\item[\code{tformat}] 
+A character string indicating which (numerical) format the timestamps should be saved in.  See \code{\LinkA{reformat.time}{reformat.time}} for more details.
+
+\item[\code{warn}] 
+A boolean variable indicating whether the function should warn you before reading in a large number of pages (>=500).  Defaults to \code{FALSE}.
+
+\item[\code{...}] Any other optional arguments can be supplied that affect manual calibration and data processing.  These are: \\{}\\{}
+\code{correct.z}: a boolean variable indicating whether to systematic correction of the z-axis accelerometer values.  See Details for more information.  Defaults to FALSE.\\{}
+
+\code{gainfactor}: an initial value for the multiplication factor for z-axis gain correction (used if \code{correct.z==TRUE}).  Defaults to 1.1.\\{}
+
+\code{gain}: a vector of 3 values for manual gain calibration of the raw (x,y,z) axes.  If \code{gain=NULL}, the gain calibration values are taken from within the output file itself.\\{}
+
+\code{offset}: a vector of 3 value for manual offset calibration of the raw (x,y,z) axes.  If \code{offset=NULL}, the offset calibration values are taken from within the output file itself.\\{}
+
+\code{luxv}: a value for manual lux calibration of the light meter.  If \code{luxv=NULL}, the lux calibration value is taken from within the output file itself.\\{}
+
+\code{voltv}: a value for manual volts calibration of the light meter.  If \code{voltv=NULL}, the volts calibration value is taken from within the output file itself.\\{}
+
+\code{nchunks}: the number of chunks in which to do processing of the data pages.  If not specified, this is calculated given a \code{chunksize} of 500 pages.\\{}
+
+\code{chunksize}: the size (pages) of each data processing step.  See details for more information.
+
+\item[\code{blocksize}] 
+Integer value giving maximum number of data pages to read in each pass. Defaults to infinite - smaller sizes will split very large data files to read chunk by chunk, reducing memory requirements. \code{blocksize = 1e4} seems often reasonable.
+
+
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}\relax
+The function reads in the desired analysis time window specified by start and end.  These can either be numeric pages, or character timestamps.  The \code{start} and \code{end} variables are checked for consistency.  They are then converted to POSIXct objects and compared to the timestamps within \code{binfile}.  \\{} Accordingly, the relevant pages between \code{start} and \code{end} are processed from binary format using \code{\LinkA{convert.hexstream}{convert.hexstream}}.  The processing is done in "chunks" (optionally specified by \code{nchunks} or \code{chunksize}), which can provide both speed and memory benefits for processing big files or a large number of pages.  By default, this is set at 1000-page chunks, which seems to be a suitable choice for the present binary file structure. Note that the processing is conservative, meaning that if a specified timestamp falls within the span of a page, that (whole) page is processed.  \\{} After processing, the data is then (optionally) adjusted, first with the systematic correction for the z-axis specified by \code{correct.z}.  For this correction, the observations 2-300 in the z direction are corrected with a rolling multiplication factor set according to the ratio of the first and second x-axis measurements on a page.  The second calibration is then either performed using values from the binary file, or using manually inputted values (using the \code{gain}, \code{offset},\code{luxv} and \code{voltv} arguments).  \\{} Note also that the function assumes a header in the binary file of a certain format, 59 lines long.  It also assumes the format of the header is of a standard format so that the calibration data can be extracted correctly.  The processed data object list is optionally saved to a file specified by \code{outfile}.
+\end{Details}
+%
+\begin{Value}
+A list of three components:
+\begin{ldescription}
+\item[\code{data.out}] A 6 or 7 column matrix of the processed pages, the rows of which are the processed observations in order of processed pages.  The matrix has columns (timestamp,x-axis,y-axis,z-axis,light,button) or (timestamp,x-axis,y-axis,z-axis,light,button,temperature) if \code{do.temp=TRUE}.
+\item[\code{page.timestamps}] The timestamps as POSIXct representations (as opposed to those within the \code{proc.file} array.
+\item[\code{freq}] The effective sampling frequency (in Hz).
+\end{ldescription}
+\end{Value}
+%
+\begin{Section}{Warning}
+\strong{Reading in an entire .bin file will take a long time if the file contains a lot of datasets.}
+\end{Section}
+%
+\begin{SeeAlso}\relax
+\code{\LinkA{convert.hexstream}{convert.hexstream}}, \code{\LinkA{reformat.time}{reformat.time}} 
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+
+#Not run: Examples of binary file processing:
+
+#procfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE)
+
+#procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
+
+#procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
+
+#processedfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE,calibrate=TRUE)
+
+#processedfile2<-read.bin("binfile2.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11",do.temp=TRUE,calibrate=TRUE)
+\end{ExampleCode}
+\end{Examples}
+\inputencoding{utf8}
+\HeaderA{reformat.time}{Reformats a character time representation to a POSIXct object. }{reformat.time}
+\keyword{manip}{reformat.time}
+%
+\begin{Description}\relax
+A function to reformat a time representation to a POSIXct object.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+reformat.time(t,format="julian")
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{t}] A character string representation of a date-time expression, for example colon-separated.
+\item[\code{format}] A character string indicating which date-time representation to output.  Can be either \code{POSIX}, \code{julian} or \code{seconds}.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}\relax
+The function separates individual components in a date-time representation, adding enough components if necessary so that the representation has seconds.
+Note that the representation should either be colon-separated, or as a space-separated date-time string of the form: Y-m-d h:m.  Once this is done the time
+is converted to the required format: \code{POSIX} is the usual R POSIXct format; \code{julian} is the julian date-time representation, modified so that the origin is midnight, 1st January, 2000; \code{seconds} is the number of seconds (including subseconds) since 1st January, 2000.  Note that this is similar to the usual Unix \code{date '+\%s'} function, which is the number of seconds since 1st January, 1970.
+\end{Details}
+%
+\begin{Value}
+A converted date-time string in the specified format.
+\end{Value}
+%
+\begin{Examples}
+\begin{ExampleCode}
+
+#reformat.time("2011:02:11:12:34:02","julian")
+
+#reformat.time("2010-07-19 13:04:01","POSIX")
+
+\end{ExampleCode}
+\end{Examples}
+\printindex{}
+\end{document}

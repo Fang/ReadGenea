@@ -29,7 +29,7 @@ The function works by looking for appropriate section headings in the .bin files
 
 \examples{
 
-fileheader <- header.info(system.file("binfile/TESTSubject_left wrist_011073_2012-05-23 16-53-20.bin", package = "ReadGenea")[1], more = T)
+fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)
 print(fileheader)
 attr(fileheader, "calibration")
 }

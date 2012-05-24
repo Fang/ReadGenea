@@ -1,0 +1,6 @@
+ReadGenea-package       ReadGenea: a package to process binary
+                        accelerometer output files.
+header.info             Get header info from Genea output (.bin) file
+read.bin                File processing function for binary files.
+reformat.time           Reformats a character time representation to a
+                        POSIXct object.

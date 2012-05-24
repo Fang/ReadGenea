@@ -24,9 +24,9 @@ A converted date-time string in the specified format.
 }
 \examples{
 
-reformat.time("2011:02:11:12:34:02","julian")
+#reformat.time("2011:02:11:12:34:02","julian")
 
-reformat.time("2010-07-19 13:04:01","POSIX")
+#reformat.time("2010-07-19 13:04:01","POSIX")
 
 }
 \keyword{manip}

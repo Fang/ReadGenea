@@ -1,0 +1,181 @@
+
+R version 2.14.1 (2011-12-22)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: i386-pc-mingw32/i386 (32-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> pkgname <- "ReadGenea"
+> source(file.path(R.home("share"), "R", "examples-header.R"))
+> options(warn = 1)
+> options(pager = "console")
+> library('ReadGenea')
+Loading required package: bitops
+Loading required package: chron
+ReadGenea 2.5 loaded
+Loading required package: compiler
+> 
+> assign(".oldSearch", search(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("header.info")
+> ### * header.info
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: header.info
+> ### Title: Get header info from Genea output (.bin) file
+> ### Aliases: header.info
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)
+> print(fileheader)
+                                            Value
+Device_Unique_Serial_Code                  011073
+Measurement_Frequency                      100 Hz
+Measurement_Period                      168 Hours
+Start_Time                0000-00-00 00:00:00:000
+Study_Centre                 TESTCenter          
+Study_Code                   TESTCode            
+Investigator_ID              TESTID              
+Exercise_Type                Sample Code         
+Device_Location_Code                   left wrist
+Subject_Code                 TESTSubject         
+Date_of_Birth                            1900-1-1
+Sex                                          male
+Height                                        160
+Weight                                        100
+Handedness_Code                             right
+Number_of_Pages                               104
+> attr(fileheader, "calibration")
+$tzone
+[1] 1
+
+$xgain
+[1] 25344
+
+$xoffset
+[1] 1104
+
+$ygain
+[1] 25870
+
+$yoffset
+[1] 454
+
+$zgain
+[1] 25470
+
+$zoffset
+[1] -1433
+
+$volts
+[1] 300
+
+$lux
+[1] 800
+
+$npages
+[1] 104
+
+$firstpage
+[1] 0
+
+$freq
+[1] 100
+
+$t1
+[1] 1337791670
+
+$t1c
+[1] "2012-05-23 16:47:50 BST"
+
+$inc
+[1] 0.01
+
+$t1midnight
+[1] 1337731200
+
+$headlines
+[1] 59
+
+> 
+> 
+> 
+> cleanEx()
+> nameEx("parse.time")
+> ### * parse.time
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: reformat.time
+> ### Title: Reformats a character time representation to a POSIXct object.
+> ### Aliases: reformat.time
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> #reformat.time("2011:02:11:12:34:02","julian")
+> 
+> #reformat.time("2010-07-19 13:04:01","POSIX")
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("read.bin")
+> ### * read.bin
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: read.bin
+> ### Title: File processing function for binary files.
+> ### Aliases: read.bin
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> #Not run: Examples of binary file processing:
+> 
+> #procfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE)
+> 
+> #procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
+> 
+> #procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
+> 
+> #processedfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE,calibrate=TRUE)
+> 
+> #processedfile2<-read.bin("binfile2.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11",do.temp=TRUE,calibrate=TRUE)
+> 
+> 
+> 
+> ### * <FOOTER>
+> ###
+> cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  0.14 0.01 0.16 NA NA 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')
