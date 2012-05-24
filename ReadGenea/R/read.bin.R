@@ -38,7 +38,7 @@ rbind(packet[1:3,], light, (ltmp-light) >0.49)
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = FALSE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = NULL, ...) 
+    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...) 
 {
 
 invisible(gc()) # garbage collect
@@ -75,7 +75,8 @@ if (mmap.load) require(mmap)
     position.volts <- 7
     orig.opt <- options(digits.secs = 3)
 #get header and calibration info using header.info.
-H = attr(header.info(binfile, more = T), "calibration")
+header = header.info(binfile, more = T)
+H = attr(header, "calibration")
 #attach(attr(H, "calibration"))
 for (i in 1:length(H)) assign(names(H)[i], H[[i]])
 
@@ -90,9 +91,11 @@ if (npages > 10000) blocksize = 10000
 }
 	freqint = round(freq)
 	if (!is.null(downsample)) {
+		if (verbose) {
 		cat("Downsampling to ", round(freq/downsample[1],2) , " Hz \n")
 		if (nobs %% downsample[1] != 0) cat("Warning, downsample divisor not factor of ", nobs, "!\n")
 		if ( downsample[1] != floor( downsample[1]) ) cat("Warning, downsample divisor not integer!\n")
+		}
 	}
     if (verbose) {
         cat("Number of pages in binary file:", npages, "\n")
@@ -256,7 +259,7 @@ curr = curr + blocksize2
 if (length(pagerefs) >= max(index)) break
 }
 if (curr >= length(textobj)) pagerefs = c(pagerefs, length(textobj)  -1)
-print("Calculated page references...")
+if (verbose) cat("Calculated page references... \n")
 munmap(textobj)
 invisible(gc()) # garbage collect
 } else {
@@ -332,7 +335,7 @@ replicate ( min( index - 1 ), is.character(readLines(fc2, n=reclength)))
 numblocks = 1
 blocksize = min(blocksize, nstreams)
 if (nstreams > blocksize ){
-cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n") 
+if (verbose) cat("Splitting into ", ceiling(nstreams/blocksize), " chunks.\n") 
 numblocks = ceiling(nstreams/blocksize)
 }
 
@@ -340,9 +343,10 @@ Fulldat = NULL
 Fullindex = index#matrix(index, ncol = numblocks)
 index.orig = index
 
-	    cat("Processing...\n")
+if (verbose)	    {
+cat("Processing...\n")
 pb <- txtProgressBar(min = 0, max = 100,style=1)
-
+}
     start.proc.time <- Sys.time()
 if(!is.null(downsample)){
 	downsampleoffset = 1
@@ -354,16 +358,16 @@ if(!is.null(downsample)){
 
 if (virtual){
 if (is.null(downsample)) downsample = 1
-close(pb)
+if (verbose) close(pb)
 if (exists("fc2")) close(fc2)
 if (exists("mmapobj")) munmap(mmapobj)
 #todo...
 Fulldat = timestamps[index]
 #Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
 #if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
-cat("Virtually loaded", length(Fulldat)*length(freqseq)/downsample, "records at", round(freq/downsample,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat) * length(freqseq)/downsample )/1000000) ,"MB of RAM)\n")
-cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1) + nobs /freq)), "\n")
-output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) , pagerefs = pagerefs)
+if (verbose) cat("Virtually loaded", length(Fulldat)*length(freqseq)/downsample, "records at", round(freq/downsample,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat) * length(freqseq)/downsample )/1000000) ,"MB of RAM)\n")
+if (verbose) cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1) + nobs /freq)), "\n")
+output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) , pagerefs = pagerefs, header = header)
 class(output) = "VirtAccData"
 return(invisible( output  ))
 }
@@ -449,7 +453,7 @@ voltages = c(voltages, numstrip(mmapobj[rep(getindex(index, raw  = T), each = 6)
 
 }
 
-	setTxtProgressBar(pb, 100 *  (blocknumber-0.5) / numblocks )
+if (verbose)	setTxtProgressBar(pb, 100 *  (blocknumber-0.5) / numblocks )
 
     if (calibrate) {
         proc.file[1, ] <- (proc.file[1, ] * 100 - xoffset)/xgain
@@ -472,14 +476,14 @@ voltages = c(voltages, numstrip(mmapobj[rep(getindex(index, raw  = T), each = 6)
  
 
 Fulldat= rbind(Fulldat, proc.file)
-	setTxtProgressBar(pb, 100 *  blocknumber / numblocks)
+if (verbose)	setTxtProgressBar(pb, 100 *  blocknumber / numblocks)
 
 }
-close(pb)
+if (verbose) close(pb)
 
 freq = freq * nrow(Fulldat) / (nobs *  nstreams)
    end.proc.time <- Sys.time()
-    cat("Processing took:", format(round(as.difftime(end.proc.time - 
+   cat("Processing took:", format(round(as.difftime(end.proc.time - 
         start.proc.time), 3)), ".\n")
 #cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
 #cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
@@ -489,7 +493,7 @@ if (!mmap.load){
 } else {
 munmap(mmapobj)
 }
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages, pagerefs = pagerefs)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages, pagerefs = pagerefs, header = header)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)

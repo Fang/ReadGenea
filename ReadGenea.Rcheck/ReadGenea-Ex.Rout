@@ -154,8 +154,43 @@ $headlines
 > 
 > #Not run: Examples of binary file processing:
 > 
-> #procfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE)
+> binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+> procfile<-read.bin(binfile)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.14 secs .
 > 
+> print(procfile)
+ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
+(23/05/12 16:47:50)  to  (23/05/12 16:53:02) 
+[ TESTfile.bin ]
+> procfile$data.out[1:5,]
+         timestamp  x    y   z light button temperature
+[1,] 1337791670.00 17 -225 -40     0      0        25.8
+[2,] 1337791670.01 11 -277 -38     0      0        25.8
+[3,] 1337791670.02 17 -265 -33     0      0        25.8
+[4,] 1337791670.03 14 -271 -31     0      0        25.8
+[5,] 1337791670.04 19 -283 -50     0      0        25.8
+> 
+> procfile2<-read.bin(binfile, calibrate = TRUE)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.109 secs .
+> procfile2$data.out[1:5,]
+         timestamp                  x              y                z light
+[1,] 1337791670.00  0.023516414141414 -0.88728256668 -0.1007852375344     0
+[2,] 1337791670.01 -0.000157828282828 -1.08828759181 -0.0929328621908     0
+[3,] 1337791670.02  0.023516414141414 -1.04190181678 -0.0733019238320     0
+[4,] 1337791670.03  0.011679292929293 -1.06509470429 -0.0654495484884     0
+[5,] 1337791670.04  0.031407828282828 -1.11148047932 -0.1400471142521     0
+     button temperature
+[1,]      0        25.8
+[2,]      0        25.8
+[3,]      0        25.8
+[4,]      0        25.8
+[5,]      0        25.8
 > #procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 > 
 > #procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
@@ -169,7 +204,7 @@ $headlines
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  0.14 0.01 0.16 NA NA 
+Time elapsed:  0.42 0.05 0.48 NA NA 
 > grDevices::dev.off()
 null device 
           1 

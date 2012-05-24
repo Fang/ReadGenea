@@ -8,45 +8,65 @@ A function to process binary accelerometer files and convert the information int
 }
 \usage{
 read.bin(binfile, outfile = NULL, start = NULL, end = NULL, 
-verbose = FALSE, do.temp = TRUE, calibrate = FALSE, tformat="seconds", 
-warn=FALSE,...)
+    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...)
 }
 \arguments{
   \item{binfile}{
-A filename of a binary file to process.
+A filename of a file to process.
 }
   \item{outfile}{
 An optional filename specifying where to save the processed data object.
 }
   \item{start}{Either:
-A time representation of when the processing is to occur, see \code{\link{reformat.time}} for possible representations, or 
-a page number corresponding to the start of the time window, or
-a proportional point (between 0 and 1) to begin reading at.
+A representation of when in the file to begin processing, see Details.
 }
   \item{end}{Either:
-A time representation of when to end processing, see \code{\link{reformat.time}} for possible representations, or 
-a page number corresponding to the end of the time window, or
-a proportional point (between 0 and 1) to begin reading at.
+A representation of when in the file to end processing, see Details.
 }
   \item{verbose}{
-	A boolean variable indicating whether information should be printed.
+	A boolean variable indicating whether some information should be printed during processing should be printed.
 }
   \item{do.temp}{
 	A boolean variable indicating whether the temperature signal should be extracted.
 }
+ \item{do.volt}{
+	A boolean variable indicating whether the voltage signal should be extracted.
+}
   \item{calibrate}{
-	A boolean variable indicating whether the raw accelerometer values and the light variable should be calibrated.
+	A boolean variable indicating whether the raw accelerometer values and the light variable should be calibrated according to the calibration data in the headers.
 }
- \item{tformat}{
-        A character string indicating which (numerical) format the timestamps should be saved in.  See \code{\link{reformat.time}} for more details.
-}
-\item{warn}{
-        A boolean variable indicating whether the function should warn you before reading in a large number of pages (>=500).  Defaults to \code{FALSE}.
-}
-\item{...}{Any other optional arguments can be supplied that affect manual calibration and data processing.  These are: \cr\cr
-  \code{correct.z}: a boolean variable indicating whether to systematic correction of the z-axis accelerometer values.  See Details for more information.  Defaults to FALSE.\cr
+\item{downsample}{
+        A variable indicating the type of downsampling to apply to the data as it is loaded. Can take values:\cr\cr
+	\code{NULL}: (Default) No downsampling\cr
+	Single numeric: Reads every \code{downsample}-th value, starting from the first.\cr
+	Length two numeric vector: Reads every \code{downsample[1]}-th value, starting from the \code{downsample[2]}-th.\cr\cr
 
-  \code{gainfactor}: an initial value for the multiplication factor for z-axis gain correction (used if \code{correct.z==TRUE}).  Defaults to 1.1.\cr
+Non-integer, or non-divisor of 300 downsampling factors are allowed, but will lead to imprecise frequency calculations, leap seconds being introduced, and generally potential problems with other methods. Use with care.
+}
+
+\item{blocksize}{
+	Integer value giving maximum number of data pages to read in each pass. Defaults to 10000 for larger data files. Sufficiently small sizes will split very large data files to read chunk by chunk, reducing memory requirements for the read.bin function (without affecting the final object), but conversely possibly increasing processing time. Can be set to Inf for no splitting.
+}
+
+\item{virtual}{
+	logical. If set TRUE, do not do any actual data reading. Instead construct a VirtualAccData object containing header information to allow use with \code{\link{get.intervals}}.
+}
+
+\item{mmap.load}{
+	logical. If TRUE (Default on 64bit R), use the \code{\link{mmap}} package to process the binfile.
+}
+
+\item{pagerefs}{
+	A variable that can take two forms, and is considered only for \code{mmap.load = TRUE}\cr\cr
+	NULL or FALSE, in which case pagerefs are dynamically calculated for each record. (Default) \cr
+	A vector giving sorted byte offsets for each record for mmap reading of data files.\cr
+	TRUE, in which case a full page reference table is computed before any processing occurs.\cr\cr
+
+Computing pagerefs takes a little time and so is a little slower. However, it is safer than dynamic computations in the case of missing pages and high temperature variations. Further, once page references are calculated, future reads are much faster, so long as the previously computed references are supplied.
+}
+
+
+\item{...}{Any other optional arguments can be supplied that affect manual calibration and data processing.  These are: \cr\cr
 
   \code{gain}: a vector of 3 values for manual gain calibration of the raw (x,y,z) axes.  If \code{gain=NULL}, the gain calibration values are taken from within the output file itself.\cr
 
@@ -56,12 +76,7 @@ a proportional point (between 0 and 1) to begin reading at.
 
   \code{voltv}: a value for manual volts calibration of the light meter.  If \code{voltv=NULL}, the volts calibration value is taken from within the output file itself.\cr
 
-  \code{nchunks}: the number of chunks in which to do processing of the data pages.  If not specified, this is calculated given a \code{chunksize} of 500 pages.\cr
-
-  \code{chunksize}: the size (pages) of each data processing step.  See details for more information.
-}
-\item{blocksize}{
-	Integer value giving maximum number of data pages to read in each pass. Defaults to infinite - smaller sizes will split very large data files to read chunk by chunk, reducing memory requirements. \code{blocksize = 1e4} seems often reasonable.
+  \code{warn}: if set to true, give a warning if input file is large, and require user confirmation.
 }
 
 }
@@ -74,17 +89,24 @@ The function reads in the desired analysis time window specified by start and en
 \item{freq}{The effective sampling frequency (in Hz).}
 }
 \section{Warning}{
-	\strong{Reading in an entire .bin file will take a long time if the file contains a lot of datasets.}
+	\strong{Reading in an entire .bin file will take a long time if the file contains a lot of datasets. Reading in such files without downsampling can use up all available memory. See \code{\link{memory.limits}}.
+}
 }
 \seealso{
-\code{\link{convert.hexstream}}, \code{\link{reformat.time}} 
+\code{\link{print.AccData}} 
 }
 \examples{
 
 #Not run: Examples of binary file processing:
 
-#procfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE)
+binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+procfile<-read.bin(binfile)
 
+print(procfile)
+procfile$data.out[1:5,]
+
+procfile2<-read.bin(binfile, calibrate = TRUE)
+procfile2$data.out[1:5,]
 #procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 
 #procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)

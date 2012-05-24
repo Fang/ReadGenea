@@ -70,7 +70,8 @@ read.bin: no visible binding for global variable 'headlines'
 * checking Rd metadata ... OK
 * checking Rd cross-references ... WARNING
 Missing link(s) in documentation object 'C:/Users/zhou/PortableGit/ReadGenea/ReadGenea/man/read.bin.Rd':
-  'convert.hexstream'
+  'get.intervals' 'mmap' 'convert.hexstream' 'memory.limits'
+  'print.AccData'
 
 See the information in section 'Cross-references' of the 'Writing R
 Extensions' manual.
@@ -96,28 +97,11 @@ header.info
   Mismatches in argument default values:
     Name: 'more' Code: T Docs: TRUE
 
-Codoc mismatches from documentation object 'read.bin':
-read.bin
-  Code: function(binfile, outfile = NULL, start = NULL, end = NULL,
-                 verbose = FALSE, do.temp = TRUE, do.volt = TRUE,
-                 calibrate = FALSE, downsample = NULL, blocksize,
-                 virtual = FALSE, mmap.load = (.Machine$sizeof.pointer
-                 >= 8), pagerefs = NULL, ...)
-  Docs: function(binfile, outfile = NULL, start = NULL, end = NULL,
-                 verbose = FALSE, do.temp = TRUE, calibrate = FALSE,
-                 tformat = "seconds", warn = FALSE, ...)
-  Argument names in code not in docs:
-    do.volt downsample blocksize virtual mmap.load pagerefs
-  Argument names in docs not in code:
-    tformat warn
-  Mismatches in argument names (first 3):
-    Position: 7 Code: do.volt Docs: calibrate
-    Position: 8 Code: calibrate Docs: tformat
-    Position: 9 Code: downsample Docs: warn
-
 * checking Rd \usage sections ... WARNING
-Documented arguments not in \usage in documentation object 'read.bin':
-  'blocksize'
+Undocumented arguments in documentation object 'read.bin'
+  'do.volt'
+Duplicated \argument entries in documentation object 'read.bin':
+  'do.temp'
 
 Functions with \usage entries need to have the appropriate \alias
 entries, and all their arguments documented.

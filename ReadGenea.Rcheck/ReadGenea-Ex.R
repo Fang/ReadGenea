@@ -62,8 +62,14 @@ flush(stderr()); flush(stdout())
 
 #Not run: Examples of binary file processing:
 
-#procfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE)
+binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+procfile<-read.bin(binfile)
 
+print(procfile)
+procfile$data.out[1:5,]
+
+procfile2<-read.bin(binfile, calibrate = TRUE)
+procfile2$data.out[1:5,]
 #procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 
 #procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
