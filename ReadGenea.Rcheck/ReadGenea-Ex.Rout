@@ -26,7 +26,7 @@ Type 'q()' to quit R.
 Loading required package: bitops
 Loading required package: chron
 ReadGenea 2.5 loaded
-Loading required package: compiler
+
 > 
 > assign(".oldSearch", search(), pos = 'CheckExEnv')
 > cleanEx()
@@ -152,33 +152,19 @@ $headlines
 > ### ** Examples
 > 
 > 
-> #Not run: Examples of binary file processing:
-> 
 > binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+> 
+> #Read in the entire file, calibrated
 > procfile<-read.bin(binfile)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.14 secs .
-> 
+Processing took: 0.149 secs .
 > print(procfile)
 ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 (23/05/12 16:47:50)  to  (23/05/12 16:53:02) 
 [ TESTfile.bin ]
 > procfile$data.out[1:5,]
-         timestamp  x    y   z light button temperature
-[1,] 1337791670.00 17 -225 -40     0      0        25.8
-[2,] 1337791670.01 11 -277 -38     0      0        25.8
-[3,] 1337791670.02 17 -265 -33     0      0        25.8
-[4,] 1337791670.03 14 -271 -31     0      0        25.8
-[5,] 1337791670.04 19 -283 -50     0      0        25.8
-> 
-> procfile2<-read.bin(binfile, calibrate = TRUE)
-Number of pages in binary file: 104 
-Processing...
-================================================================================
-Processing took: 0.109 secs .
-> procfile2$data.out[1:5,]
          timestamp                  x              y                z light
 [1,] 1337791670.00  0.023516414141414 -0.88728256668 -0.1007852375344     0
 [2,] 1337791670.01 -0.000157828282828 -1.08828759181 -0.0929328621908     0
@@ -191,20 +177,66 @@ Processing took: 0.109 secs .
 [3,]      0        25.8
 [4,]      0        25.8
 [5,]      0        25.8
-> #procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 > 
-> #procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
+> #Uncalibrated, mmap off
+> procfile2<-read.bin(binfile, calibrate = FALSE)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.105 secs .
+> procfile2$data.out[1:5,]
+         timestamp  x    y   z light button temperature
+[1,] 1337791670.00 17 -225 -40     0      0        25.8
+[2,] 1337791670.01 11 -277 -38     0      0        25.8
+[3,] 1337791670.02 17 -265 -33     0      0        25.8
+[4,] 1337791670.03 14 -271 -31     0      0        25.8
+[5,] 1337791670.04 19 -283 -50     0      0        25.8
 > 
-> #processedfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE,calibrate=TRUE)
+> #Read in again, reusing already computed mmap pagerefs
+> procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.133 secs .
 > 
-> #processedfile2<-read.bin("binfile2.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11",do.temp=TRUE,calibrate=TRUE)
+> #Downsample by a factor of 10
+> procfilelo<-read.bin(binfile, downsample = 10)
+Downsampling to  10  Hz 
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.1 secs .
+> print(procfilelo)
+ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
+(23/05/12 16:47:50)  to  (23/05/12 16:53:02) 
+[ TESTfile.bin ]
+> object.size(procfilelo) / object.size(procfile)
+0.103882662970629 bytes
+> 
+> #Read in a 1 minute interval
+> procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.018 secs .
+> print(procfileshort)
+ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
+(23/05/12 16:49:59)  to  (23/05/12 16:51:05) 
+[ TESTfile.bin ]
+> 
+> ##NOT RUN: Read, and save as a R workspace
+> #read.bin(binfile, outfile="tmp.Rdata")
+> #print(load("tmp.Rdata"))
+> #print(processedfile)
+> 
+> 
 > 
 > 
 > 
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  0.42 0.05 0.48 NA NA 
+Time elapsed:  0.78 0.03 0.81 NA NA 
 > grDevices::dev.off()
 null device 
           1 

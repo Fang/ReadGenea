@@ -26,7 +26,9 @@ If \code{more} is TRUE, an attribute "calibration" is attached to the object, co
 This function is specific to header structure in Geneactiv output files. By design, it should be compatible with all firmware and software versions to date (as of version of current release). If order or field names are changed in future .bin files, this function may have to be updated appropriately.
 The function works by looking for appropriate section headings in the .bin files.
 } 
-
+\seealso{
+\code{\link{read.bin}}
+}
 \examples{
 
 fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)

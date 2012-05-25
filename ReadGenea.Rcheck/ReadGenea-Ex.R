@@ -60,23 +60,35 @@ flush(stderr()); flush(stdout())
 ### ** Examples
 
 
-#Not run: Examples of binary file processing:
-
 binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
-procfile<-read.bin(binfile)
 
+#Read in the entire file, calibrated
+procfile<-read.bin(binfile)
 print(procfile)
 procfile$data.out[1:5,]
 
-procfile2<-read.bin(binfile, calibrate = TRUE)
+#Uncalibrated, mmap off
+procfile2<-read.bin(binfile, calibrate = FALSE)
 procfile2$data.out[1:5,]
-#procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 
-#procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
+#Read in again, reusing already computed mmap pagerefs
+procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
 
-#processedfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE,calibrate=TRUE)
+#Downsample by a factor of 10
+procfilelo<-read.bin(binfile, downsample = 10)
+print(procfilelo)
+object.size(procfilelo) / object.size(procfile)
 
-#processedfile2<-read.bin("binfile2.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11",do.temp=TRUE,calibrate=TRUE)
+#Read in a 1 minute interval
+procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
+print(procfileshort)
+
+##NOT RUN: Read, and save as a R workspace
+#read.bin(binfile, outfile="tmp.Rdata")
+#print(load("tmp.Rdata"))
+#print(processedfile)
+
+
 
 
 

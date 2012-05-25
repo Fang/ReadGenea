@@ -4,14 +4,15 @@ ver <- read.dcf(file.path(lib, pkg, "DESCRIPTION"), "Version")
      ver <- as.character(ver)	
 
 options(digits=12)
-cat("ReadGenea", ver, "loaded\n")
+text = paste("ReadGenea", ver, "loaded\n")
+packageStartupMessage(text)
 
-#compile bapply and so on if we have a compiler
-require(compiler)
-if (exists("cmpfun")){
-bapply.basic <- cmpfun(bapply.basic)
-bapply <- cmpfun(bapply)
-expand <- cmpfun(expand)
-}
+##compile bapply and so on if we have a compiler
+#require(compiler)
+#if (exists("cmpfun")){
+#bapply.basic <- cmpfun(bapply.basic)
+#bapply <- cmpfun(bapply)
+#expand <- cmpfun(expand)
+#}
 
 }

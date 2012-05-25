@@ -8,7 +8,7 @@ A function to process binary accelerometer files and convert the information int
 }
 \usage{
 read.bin(binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...)
+    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = TRUE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...)
 }
 \arguments{
   \item{binfile}{
@@ -53,7 +53,7 @@ Non-integer, or non-divisor of 300 downsampling factors are allowed, but will le
 }
 
 \item{mmap.load}{
-	logical. If TRUE (Default on 64bit R), use the \code{\link{mmap}} package to process the binfile.
+	logical. If TRUE (Default on 64bit R), use the \code{\link[mmap]{mmap}} package to process the binfile.
 }
 
 \item{pagerefs}{
@@ -81,38 +81,79 @@ Computing pagerefs takes a little time and so is a little slower. However, it is
 
 }
 \details{
-The function reads in the desired analysis time window specified by start and end.  These can either be numeric pages, or character timestamps.  The \code{start} and \code{end} variables are checked for consistency.  They are then converted to POSIXct objects and compared to the timestamps within \code{binfile}.  \cr Accordingly, the relevant pages between \code{start} and \code{end} are processed from binary format using \code{\link{convert.hexstream}}.  The processing is done in "chunks" (optionally specified by \code{nchunks} or \code{chunksize}), which can provide both speed and memory benefits for processing big files or a large number of pages.  By default, this is set at 1000-page chunks, which seems to be a suitable choice for the present binary file structure. Note that the processing is conservative, meaning that if a specified timestamp falls within the span of a page, that (whole) page is processed.  \cr After processing, the data is then (optionally) adjusted, first with the systematic correction for the z-axis specified by \code{correct.z}.  For this correction, the observations 2-300 in the z direction are corrected with a rolling multiplication factor set according to the ratio of the first and second x-axis measurements on a page.  The second calibration is then either performed using values from the binary file, or using manually inputted values (using the \code{gain}, \code{offset},\code{luxv} and \code{voltv} arguments).  \cr Note also that the function assumes a header in the binary file of a certain format, 59 lines long.  It also assumes the format of the header is of a standard format so that the calibration data can be extracted correctly.  The processed data object list is optionally saved to a file specified by \code{outfile}.
+The read.bin package reads in binary files compatible with the GeneActiv line of Accelerometers, for further processing by the other functions in this package. Most of the default options are those required in the most common cases, though users are advised to consider setting start and end to smaller intervals and/or choosing some level of downsampling when working with data files of longer than 24 hours in length.
+
+The function reads in the desired analysis time window specified by \code{start} and \code{end}. For convenience, a variety of time window formats are accepted:
+
+Large integers are read as page numbers in the dataset. Page numbers larger than that which is available in the file itself are constrained to what is available. Note that the first page is page 1.
+
+Small values (between 0 and 1) are taken as proportions of the data. For example, `start = 0.5` would specify that reading should begin at the midpoint of the data.
+
+Strings are interpreted as dates and times using \code{\link{parse.time}}. In particular, times specified as "HH:MM" or "HH:MM:SS" are taken as the earliest time interval containing these times in the file. Strings with an integer prepended, using a space seperator, as interpreted as that time after the appropriate number of midnights have passed. In these, the time is interpreted in the same time zone as the data recording itself.
+
+Actual data reading proceeds by two methods, depending on whether \code{mmap} is true or false. With \code{mmap = FALSE}, data is read in line by line using \code{readLine} until blocksize is filled, and then processed. With \code{mmap = TRUE}, the \code{\link{mmap}} package is used to map the entire data file into an address file, byte locations are calculated (depending on the setting of \code{pagerefs}), \code{blocksize} chunks of data are loaded, and then processed as raw vectors. 
+
+There are advantages and disadvantages to both methods: the mmap method is usually much faster, especially when we are only loading the final parts of the data. ReadLine will have to process the entire file in such a case. On the other hand, mmap requires a large amount of memory address space, and so can fail in 32 bit systems. Finally, reading of compressed bin files can only be done with the readLine method. Generally, if mmap reading fails, the function will attempt to catch the failure, and reprocess the file with the readLine method, giving a warning.
+
+Once data is loaded, calibration is then either performed using values from the binary file, or using manually inputted values (using the \code{gain}, \code{offset},\code{luxv} and \code{voltv} arguments).
+
 }
-\value{A list of three components:
-\item{data.out}{A 6 or 7 column matrix of the processed pages, the rows of which are the processed observations in order of processed pages.  The matrix has columns (timestamp,x-axis,y-axis,z-axis,light,button) or (timestamp,x-axis,y-axis,z-axis,light,button,temperature) if \code{do.temp=TRUE}.}
-\item{page.timestamps}{The timestamps as POSIXct representations (as opposed to those within the \code{proc.file} array.}
+\value{
+With \code{virtual = FALSE}, an "AccData" S3 object with 9 components:
+\item{data.out}{A 6 or 7 column matrix of the processed pages, the rows of which are the processed observations in order of processed pages.  The matrix has columns (timestamp,x-axis,y-axis,z-axis,light,button) or (timestamp,x-axis,y-axis,z-axis,light,button,temperature) if \code{do.temp=TRUE}. The timestamp is stored as seconds since 1 Jan 1970, in the timezone that the data is recorded in.}
+\item{page.timestamps}{The timestamps as POSIXct representations (as opposed to those within the \code{data.out} array.)}
 \item{freq}{The effective sampling frequency (in Hz).}
+\item{filename}{The file name of the bin file.}
+\item{page.numbers}{The pages that were loaded.}
+\item{call}{The function call that the object was created with.}
+\item{volt}{The battery voltage associated with each loaded page, if \code{do.volt} is TRUE.}
+\item{pagerefs}{The page byte offsets that were computed.}
+\item{header}{File header output, as given by \code{\link{header.info}}.}
+
+Various processing methods are implemented so that \code{AccData} objects can be treated as an ordinary matrix in many cases. See \code{\link{print.AccData}} for info.
+
+With \code{virtual = TRUE}, a "VirtAccData" S3 object with page.timestamps, freq, filename, page.numbers, call, pagerefs, header as in the earlier case, but also,
+\item{data.out}{A vector containing the timestamps of each page, using local seconds since 1970.}
+\item{nobs}{Number of observations per page, after downsampling.}
 }
 \section{Warning}{
-	\strong{Reading in an entire .bin file will take a long time if the file contains a lot of datasets. Reading in such files without downsampling can use up all available memory. See \code{\link{memory.limits}}.
-}
+Reading in an entire .bin file will take a long time if the file contains a lot of datasets. Reading in such files without downsampling can use up all available memory. See \code{\link{memory.limit}}.
+
+This function is specific to header structure in Geneactiv output files. By design, it should be compatible with all firmware and software versions to date (as of version of current release). If order or field names are changed in future .bin files, this function may have to be updated appropriately.
 }
 \seealso{
-\code{\link{print.AccData}} 
+\code{\link{header.info}}, \code{\link{print.AccData}}, \code{\link{get.intervals}}
 }
 \examples{
 
-#Not run: Examples of binary file processing:
-
 binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
-procfile<-read.bin(binfile)
 
+#Read in the entire file, calibrated
+procfile<-read.bin(binfile)
 print(procfile)
 procfile$data.out[1:5,]
 
-procfile2<-read.bin(binfile, calibrate = TRUE)
+#Uncalibrated, mmap off
+procfile2<-read.bin(binfile, calibrate = FALSE)
 procfile2$data.out[1:5,]
-#procfile2<-read.bin("binfile.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11")
 
-#procfile3<-read.bin("binfile.txt",correct.z=TRUE,calibrate=TRUE)
+#Read in again, reusing already computed mmap pagerefs
+procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
 
-#processedfile<-read.bin("binfile.txt","myprocessedfile",start=1,end=10,do.temp=TRUE,calibrate=TRUE)
+#Downsample by a factor of 10
+procfilelo<-read.bin(binfile, downsample = 10)
+print(procfilelo)
+object.size(procfilelo) / object.size(procfile)
 
-#processedfile2<-read.bin("binfile2.txt",start="2010-10-02 12:32:01",end="2010-10-04 12:05:11",do.temp=TRUE,calibrate=TRUE)
+#Read in a 1 minute interval
+procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
+print(procfileshort)
+
+##NOT RUN: Read, and save as a R workspace
+#read.bin(binfile, outfile="tmp.Rdata")
+#print(load("tmp.Rdata"))
+#print(processedfile)
+
+
 }
 \keyword{manip}

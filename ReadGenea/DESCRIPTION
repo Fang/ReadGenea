@@ -8,6 +8,7 @@ Maintainer: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
 Description: Functions and analytics for Genea accelerometer data into R objects
 License: GPL
 LazyLoad: yes
+ByteCompile: yes
 Depends: bitops, chron
 Suggests: mmap, MASS
 Packaged: 2011-10-12 13:17:57 UTC; admin

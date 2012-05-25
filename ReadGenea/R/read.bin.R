@@ -38,7 +38,7 @@ rbind(packet[1:3,], light, (ltmp-light) >0.49)
 #blocksize = number of pages to read at a time
 read.bin <-
 function (binfile, outfile = NULL, start = NULL, end = NULL, 
-    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = FALSE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...) 
+    verbose = TRUE, do.temp = TRUE,do.volt = TRUE, calibrate = TRUE, downsample = NULL, blocksize , virtual = FALSE, mmap.load = (.Machine$sizeof.pointer >= 8), pagerefs = TRUE, ...) 
 {
 
 invisible(gc()) # garbage collect
@@ -74,10 +74,12 @@ if (mmap.load) require(mmap)
     position.temperature <- 6
     position.volts <- 7
     orig.opt <- options(digits.secs = 3)
+#initialise some variables
+pos.rec1 <- firstpage <- npages <- t1c <- t1midnight <- pos.inc<-headlines<- NA
+
 #get header and calibration info using header.info.
 header = header.info(binfile, more = T)
 H = attr(header, "calibration")
-#attach(attr(H, "calibration"))
 for (i in 1:length(H)) assign(names(H)[i], H[[i]])
 
 if ((!exists("pos.rec1")) || (is.na(pos.rec1))) mmap.load = FALSE
@@ -503,12 +505,12 @@ class(processedfile) = "AccData"
     }
 }
 
-print.VirtAccData <- function(x){
+print.VirtAccData <- function(x, ...){
 cat("[Virtual ReadGenea dataset]: ", length(x$data.out)*x$nobs, "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
 cat(as.character(chron2((x$data.out[1])))," to ", as.character(chron2(tail(x$data.out,1) + x$nobs /x$freq)), "\n")
 cat("[", x$filename, "]\n")
 }
-print.AccData <- function(x){
+print.AccData <- function(x, ...){
 cat("ReadGenea dataset: ", nrow(x$data.out), "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
 #if (getOption("chron.year.abb")){
 #st = paste("(20", substring( as.character(chron2((x$data.out[1,1]))), 2), sep="")

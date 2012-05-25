@@ -5,6 +5,7 @@
 \section{Changes in version 2.5}{
 \itemize{
 	\item BUGFIX: Software should deal with multi-line comments correctly now.
+	\item Package is now byte-compiled on installation - should lead to perfmance enhancement.
 }
 
 \section{Changes in version 2.4}{

@@ -5,7 +5,7 @@ Loading required package: utils
 * installing *source* package 'ReadGenea' ...
 ** R
 ** inst
-** preparing package for lazy loading
+** byte-compile and prepare package for lazy loading
 ** help
 *** installing help indices
 ** building package indices ...
@@ -15,6 +15,5 @@ Loading required package: graphics
 Loading required package: stats
 Loading required package: utils
 running .First.lib() for package 'ReadGenea' as .onLoad/.onAttach were not found
-ReadGenea 2.5 loaded
 
 * DONE (ReadGenea)

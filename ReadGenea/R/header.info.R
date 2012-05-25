@@ -1,5 +1,5 @@
 header.info <-
-function (binfile, more = T) 
+function (binfile, more = TRUE) 
 {
 nobs = 300
 
