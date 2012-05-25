@@ -356,7 +356,7 @@ return(Re(fft(fftobj, inverse=T))/n)
 }
 
 
-print.stft = function(x){
+print.stft = function(x,...){
 cat("STFT object:\n")
 cat(as.character(chron2((x$times[1])))," to ", as.character(chron2(tail(x$times,1))), "\n")
 cat(nrow(x$values), "increments of" , round(x$increment/x$sampling.freq, 3), "s \n")
