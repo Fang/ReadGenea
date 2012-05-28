@@ -378,7 +378,7 @@ ind = 1:nrow(obj)
 if (inherits(obj, "AccData")){
 sampling.freq = obj$freq
 times = obj[,1]
-obj = obj$data.out
+obj = obj$data.out[,2:4]
 } else {
 times = ind
 }
