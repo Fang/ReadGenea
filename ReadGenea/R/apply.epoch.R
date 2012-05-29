@@ -31,7 +31,7 @@ obj = bapply(ind, epoch.size, function(t) FUN(obj[t,]))
 obj = bapply.basic(ind, epoch.size, function(t) FUN(obj[t,]))
 }
 if (incl.date){
-obj = cbind(times[seq(1, length(times)-epoch.size+1, by = epoch.size) + ceiling(epoch.size/2)],obj)
+obj = data.frame(time = times[seq(1, length(times)-epoch.size+1, by = epoch.size) + ceiling(epoch.size/2)],value = obj)
 }
 obj
 
@@ -48,7 +48,7 @@ quantile.epoch <- function(obj, epoch.size = 10, quantiles= c(0.1, 0.25, 0.5, 0.
 
 bapply.basic <- function(X, k, FUN) { res = rep(0, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[i] = FUN(X[ (i-1)*k + 1:k]); return(res)}
 
-bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(res)}
+bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(t(res))}
 
 
 

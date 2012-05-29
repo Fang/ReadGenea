@@ -47,7 +47,7 @@ The remaining functions are wrappers that compute various commonly useful statis
 \code{svm} acts identically to 'mean.epoch', with the epoch set to the sampling period. In other words, it computes the instantaneous sum of vector magnitudes of the acceleration at each record point. The function takes "AccData", array and vector input. Note that if provided with an array with 4 or more columns, columns 2 to 4 are used -- the first column is regard as a timestamp and hence ignored.
 }
 \value{
-A vector or array giving the computed epochal summaries, with optionally a time column added.
+A vector or array giving the computed epochal summaries. With \code{incl.date = TRUE}, the result is given as a data.frame suitable for plotting.
 }
 
 \seealso{
@@ -82,7 +82,7 @@ plot(sd.epoch(dat), type="l")
 plot(median.epoch(dat), type= "l")
 plot(mad.epoch(dat), type= "l")
 plot(autocor.epoch(dat), type= "l")
-tmp = quantile.epoch(dat, quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9)); matplot(t(tmp), type = "l")
+tmp = quantile.epoch(dat, quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9)); matplot(tmp, type = "l")
 
 
 }
