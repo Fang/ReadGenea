@@ -8,7 +8,7 @@
 
 #export(read.bin, stft, plot.stft, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.mv, get.intervals, positionals, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%", header.info, print.AccData, "[.AccData", c.AccData, nrow.AccData, length.AccData, correctpages, print.stft)
 #export(read.bin, stft, plot.stft, plot.times2, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.AccData, get.intervals, positionals, header.info, print.AccData, "[.AccData", c.AccData, dim.AccData, plot.AccData, svm, print.VirtAccData, correctpages, print.stft, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%" )
-export(read.bin,header.info,get.intervals, stft, plot.stft, plot.times2, times2, print.times2, format.times2, chron2, getfreqs, axis.times2, stft.AccData,  positionals,  print.AccData, "[.AccData", c.AccData, dim.AccData, plot.AccData, svm, print.VirtAccData, print.stft, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%" )
+export(read.bin,header.info,get.intervals, stft, plot.stft, plot.times2, times2, print.times2, format.times2, chron2, getfreqs, axis.times2, stft.AccData,  positionals,  print.AccData, "[.AccData", c.AccData, dim.AccData, plot.AccData, print.VirtAccData, print.stft, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%", epoch.apply, svm, epoch.mean, epoch.sd, epoch.median, epoch.mad, epoch.autocor, epoch.quantile)
 
 #export(read.bin, header.info, 
 ###################

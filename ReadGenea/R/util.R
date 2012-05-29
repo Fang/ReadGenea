@@ -292,7 +292,7 @@ dim.AccData <- function(x) dim(x$data.out)
 plot.AccData <- function(x, y=NULL, ...){
 if (is.null(y)){
 epoch = floor(nrow(x)/200 + 1)/x$freq
-obj = apply.epoch(x, epoch, TRUE, function(t) sd(svm(t)))
+obj = epoch.apply(x, epoch, TRUE, function(t) sd(svm(t)))
 plot(times2(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = "SVM SD", log = "y")
 } else {
 plot(times2(x[,1]), y, ...)

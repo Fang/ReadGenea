@@ -1,11 +1,11 @@
-\name{apply.epoch}
-\alias{apply.epoch}
-\alias{mean.epoch}
-\alias{sd.epoch}
-\alias{median.epoch}
-\alias{mad.epoch}
-\alias{autocor.epoch}
-\alias{quantile.epoch}
+\name{epoch.apply}
+\alias{epoch.apply}
+\alias{epoch.mean}
+\alias{epoch.sd}
+\alias{epoch.median}
+\alias{epoch.mad}
+\alias{epoch.autocor}
+\alias{epoch.quantile}
 \alias{svm}
 \title{
 Compute epochal summary statistics.
@@ -14,15 +14,15 @@ Compute epochal summary statistics.
 Computes epochal summary statistics for an "AccData" object, matrix, or vector, and collates into a matrix or vector.
 }
 \usage{
-apply.epoch(obj, epoch.size=10, FUN, incl.date = FALSE)
+epoch.apply(obj, epoch.size=10, incl.date = FALSE, FUN)
 
-mean.epoch(obj, epoch.size=10, incl.date = FALSE, sqrt )
-sd.epoch(obj, epoch.size=10, incl.date = FALSE, sqrt )
-median.epoch(obj, epoch.size=10, incl.date = FALSE, sqrt )
-mad.epoch(obj, epoch.size=10, incl.date = FALSE, sqrt )
-autocor.epoch(obj, epoch.size=10, lag = 1, type = 
+epoch.mean(obj, epoch.size=10, incl.date = FALSE, sqrt )
+epoch.sd(obj, epoch.size=10, incl.date = FALSE, sqrt )
+epoch.median(obj, epoch.size=10, incl.date = FALSE, sqrt )
+epoch.mad(obj, epoch.size=10, incl.date = FALSE, sqrt )
+epoch.autocor(obj, epoch.size=10, lag = 1, type = 
     c("correlation", "covariance", "partial"), incl.date = FALSE, sqrt)
-quantile.epoch(obj, epoch.size = 10, 
+epoch.quantile(obj, epoch.size = 10, 
     quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9), incl.date = FALSE, sqrt )
 
 svm(obj, sqrt )
@@ -40,11 +40,11 @@ svm(obj, sqrt )
 \details{
 These functions compute epochal summary statistics for "AccData" objects, matrices and vectors.
 
-\code{apply.epoch} is the general function - according to the size of \code{epoch.size}, it splits up the obj into collections of consecutive rows, each with the same size. These are then successively supplied to \code{FUN} as its first argument. If the result of FUN is a single value, then the results are concatenated into a vector output. Otherwise, an array is formed with each row corresponding to a single epochal group. For AccData, the sampling frequency of the dataset is used to interpret the epoch size in seconds. Otherwise, the raw record indices are used. If incl.date is set, the original timestamp vector of the data, or the original indices, are downsampled and included as the first column of the output.
+\code{epoch.apply} is the general function - according to the size of \code{epoch.size}, it splits up the obj into collections of consecutive rows, each with the same size. These are then successively supplied to \code{FUN} as its first argument. If the result of FUN is a single value, then the results are concatenated into a vector output. Otherwise, an array is formed with each row corresponding to a single epochal group. For AccData, the sampling frequency of the dataset is used to interpret the epoch size in seconds. Otherwise, the raw record indices are used. If incl.date is set, the original timestamp vector of the data, or the original indices, are downsampled and included as the first column of the output.
 
 The remaining functions are wrappers that compute various commonly useful statistics -- in particular, applied to "AccData" objects and arrays, they by default compute the epochal SVM mean, standard deviation, median, median absolute deviation, and autocorrelation, and sample quantiles respectively. (Arrays are treated as each column representing the x, y, and z components respectively.) Applied to vector input, processing will occur without the SVM calculation. This behaviour may be overridden by the sqrt setting, which will force the function to use the squared (default for arrays and "AccData") or original unit (default for vectors) values in the statistical analysis.
 
-\code{svm} acts identically to 'mean.epoch', with the epoch set to the sampling period. In other words, it computes the instantaneous sum of vector magnitudes of the acceleration at each record point. The function takes "AccData", array and vector input. Note that if provided with an array with 4 or more columns, columns 2 to 4 are used -- the first column is regard as a timestamp and hence ignored.
+\code{svm} acts identically to 'epoch.mean', with the epoch set to the sampling period. In other words, it computes the instantaneous sum of vector magnitudes of the acceleration at each record point. The function takes "AccData", array and vector input. Note that if provided with an array with 4 or more columns, columns 2 to 4 are used -- the first column is regard as a timestamp and hence ignored.
 }
 \value{
 A vector or array giving the computed epochal summaries. With \code{incl.date = TRUE}, the result is given as a data.frame suitable for plotting.
@@ -59,30 +59,30 @@ dat <- read.bin(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
     , calibrate = TRUE)
 
 #look for the epochs that exceed a certain threshold 50% of the time
-plot(apply.epoch( dat, epoch.size = 3 , 
+plot(epoch.apply( dat, epoch.size = 3 , 
     FUN = function(t) mean(abs(svm(t) -1)>0.2)> 0.5 ), type = "l")
 
 plot(dat[,1], svm(dat), log = "y", pch = ".")
-lines(mean.epoch(dat, incl.date = T), lwd = 2)
-lines(mean.epoch(dat, epoch.size = 30, incl.date = T), col = 2, lwd = 2)
+lines(epoch.mean(dat, incl.date = TRUE), lwd = 2)
+lines(epoch.mean(dat, epoch.size = 30, incl.date = TRUE), col = 2, lwd = 2)
 #this should give all the same results, but by a different way
-lines(apply.epoch(dat, epoch.size = 30, 
+lines(epoch.apply(dat, epoch.size = 30, 
     FUN = function(A) mean(svm(A, FALSE)), incl.date = TRUE), col = 3)
-epsize = 30; lines(apply.epoch(dat, epoch.size = epsize, 
-    FUN = function(t) median(t[,1])), apply.epoch(dat, epoch.size = epsize, 
+epsize = 30; lines(epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(t) median(t[,1])), epoch.apply(dat, epoch.size = epsize, 
     FUN = function(A) mean(svm(A, FALSE))), col = 4)
 #note this is different
-lines(apply.epoch(dat, epoch.size = epsize, 
-    FUN = function(t) median(t[,1])),apply.epoch(dat, epoch.size = epsize, 
+lines(epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(t) median(t[,1])),epoch.apply(dat, epoch.size = epsize, 
     FUN = function(A) mean(svm(A, sqrt = TRUE)))^2, col = 5)
 
 #plot some statistics
 par(mfrow = c(5,1), mar = c(1,4.5,1,1))
-plot(sd.epoch(dat), type="l")
-plot(median.epoch(dat), type= "l")
-plot(mad.epoch(dat), type= "l")
-plot(autocor.epoch(dat), type= "l")
-tmp = quantile.epoch(dat, quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9)); matplot(tmp, type = "l")
+plot(epoch.sd(dat), type="l")
+plot(epoch.median(dat), type= "l")
+plot(epoch.mad(dat), type= "l")
+plot(epoch.autocor(dat), type= "l")
+tmp = epoch.quantile(dat, quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9)); matplot(tmp, type = "l")
 
 
 }

@@ -1,5 +1,13 @@
 ReadGenea-package	ReadGenea-package
+epoch.apply	epoch.apply
+epoch.autocor	epoch.apply
+epoch.mad	epoch.apply
+epoch.mean	epoch.apply
+epoch.median	epoch.apply
+epoch.quantile	epoch.apply
+epoch.sd	epoch.apply
 header.info	header.info
 read.bin	read.bin
 ReadGenea	ReadGenea-package
 reformat.time	parse.time
+svm	epoch.apply

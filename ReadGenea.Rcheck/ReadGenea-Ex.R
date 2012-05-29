@@ -6,6 +6,55 @@ library('ReadGenea')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
 cleanEx()
+nameEx("epoch.apply")
+### * epoch.apply
+
+flush(stderr()); flush(stdout())
+
+### Name: epoch.apply
+### Title: Compute epochal summary statistics.
+### Aliases: epoch.apply epoch.mean epoch.sd epoch.median epoch.mad
+###   epoch.autocor epoch.quantile svm
+### Keywords: manip
+
+### ** Examples
+
+
+dat <- read.bin(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+    , calibrate = TRUE)
+
+#look for the epochs that exceed a certain threshold 50% of the time
+plot(epoch.apply( dat, epoch.size = 3 , 
+    FUN = function(t) mean(abs(svm(t) -1)>0.2)> 0.5 ), type = "l")
+
+plot(dat[,1], svm(dat), log = "y", pch = ".")
+lines(epoch.mean(dat, incl.date = TRUE), lwd = 2)
+lines(epoch.mean(dat, epoch.size = 30, incl.date = TRUE), col = 2, lwd = 2)
+#this should give all the same results, but by a different way
+lines(epoch.apply(dat, epoch.size = 30, 
+    FUN = function(A) mean(svm(A, FALSE)), incl.date = TRUE), col = 3)
+epsize = 30; lines(epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(t) median(t[,1])), epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(A) mean(svm(A, FALSE))), col = 4)
+#note this is different
+lines(epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(t) median(t[,1])),epoch.apply(dat, epoch.size = epsize, 
+    FUN = function(A) mean(svm(A, sqrt = TRUE)))^2, col = 5)
+
+#plot some statistics
+par(mfrow = c(5,1), mar = c(1,4.5,1,1))
+plot(epoch.sd(dat), type="l")
+plot(epoch.median(dat), type= "l")
+plot(epoch.mad(dat), type= "l")
+plot(epoch.autocor(dat), type= "l")
+tmp = epoch.quantile(dat, quantiles= c(0.1, 0.25, 0.5, 0.75, 0.9)); matplot(tmp, type = "l")
+
+
+
+
+
+graphics::par(get("par.postscript", pos = 'CheckExEnv'))
+cleanEx()
 nameEx("header.info")
 ### * header.info
 
