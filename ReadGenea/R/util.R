@@ -286,11 +286,8 @@ return(x)
 #x
 #}
 
-svm <- function(x){
-rowSums(x[,-2:0 + min(ncol(x), 4)]^2)
-}
 
-dim.AccData <- function(x) c(nrow(x$data.out), 7)
+dim.AccData <- function(x) dim(x$data.out)
 
 plot.AccData <- function(x, y=NULL, ...){
 if (is.null(y)){
@@ -370,35 +367,6 @@ seq.log <- function(from = 1, to = 1, length.out = 50, add.zero = FALSE, shiftin
   }
   res
 }
-
-#apply.epoch wrapper function for bapply.basic
-apply.epoch <- function(obj, epoch=10, incl.date = FALSE, FUN){
-sampling.freq = 1
-ind = 1:nrow(obj)
-if (inherits(obj, "AccData")){
-sampling.freq = obj$freq
-times = obj[,1]
-obj = obj$data.out[,2:4]
-} else {
-times = ind
-}
-epoch = floor(epoch* sampling.freq)
-if (length(FUN(obj[1:epoch,])) > 1){
-obj = bapply(ind, epoch, function(t) FUN(obj[t,]))
-} else {
-obj = bapply.basic(ind, epoch, function(t) FUN(obj[t,]))
-}
-if (incl.date){
-obj = cbind(times[seq(1, length(times)-epoch, by = epoch) + ceiling(epoch/2)],obj)
-}
-obj
-
-}
-
-bapply.basic <- function(X, k, FUN) { res = rep(0, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[i] = FUN(X[ (i-1)*k + 1:k]); return(res)}
-
-bapply <- function(X, k, FUN) { dimout = length(FUN(X[1:k])); res = matrix(0, dimout, floor(length(X) / k)); for (i in 1:floor(length(X)/k)) res[(i-1)* dimout + 1:dimout] = FUN(X[ (i-1)*k + 1:k]); return(res)}
-
 
 expand <- function(X, length = (length(X)*100)){
 c(rep(X, each = floor(length / length(X))), rep(tail(X,1), length - length(X) * floor(length/length(X))))
