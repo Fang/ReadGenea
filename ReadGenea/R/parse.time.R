@@ -86,7 +86,7 @@ if ((!is.null(start)) || (!is.null(startmidnight))){
 		startmidnight= as.POSIXct( floor(start/(60*60*24)) * 60*60*24 , origin = "1970-1-1")
 		next_week <- as.Date(startmidnight) + 0:6
 		dow = substr(tolower(dow), 1, min(nchar(dow)))
-		t = t + startmidnight + (match(target, substr(tolower(weekdays(next_week)), 1, min(nchar(target)))) - 1) * 24*60*60
+		t = t + startmidnight + (match(dow, substr(tolower(weekdays(next_week)), 1, min(nchar(dow)))) - 1) * 24*60*60
 #TODO
 
 	}

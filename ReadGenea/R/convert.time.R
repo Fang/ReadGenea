@@ -37,8 +37,7 @@ convert.time = function(x, format = NULL){
 ##this bit might trigger a y2k style bug, remove when time formats are rationalised or we go to a class based system
 #if (x[1] < (946684800/(60*60*24))) x = x + 946684800/(60*60*24)
 #out = times(x,...)
-
-class(x) = c("RGtime",class(x))
+if (!inherits(x, "RGtime")) class(x) = c("RGtime",class(x))
 attr(x, "format") = format
 x
 }
@@ -101,22 +100,6 @@ function (x, ..., drop = TRUE)
     class(val) <- cl
     val
 }
-`-.RGtime` <-
-function (e1, e2) 
-{
-    att <- attributes(e1)
-    res = unclass(e1) - unclass(e2)
-    attributes(res) = att
-    res
-}
-`+.RGtime` <-
-function (e1, e2) 
-{
-    att <- attributes(e1)
-    res = unclass(e1) + unclass(e2)
-    attributes(res) = att
-    res
-}
 
 
 
@@ -143,7 +126,7 @@ print(x, quote = quote)
 
 
 "format.RGtime"<-
-function(x, format = NULL)#format. = "h:m:s", simplify = FALSE, ...)
+function(x, format = NULL,...)#format. = "h:m:s", simplify = FALSE, ...)
 { 
 #	x = x /(60*60*24)
     if(!as.logical(length(x)))
@@ -208,7 +191,7 @@ function(x, format = NULL)#format. = "h:m:s", simplify = FALSE, ...)
     ## To change this (e.g., have times(1.5) format as 36:00:00), simply
     ## comment the code below, and make the corresponding change in
     ## print.times().
-	out = format(as.POSIXct(as.numeric(x), origin = "1970-1-1", tz = "UTC"), format)
+	out = format(as.POSIXct(as.numeric(x), origin = "1970-1-1", tz = "UTC"), format, ...)
 
 #    days <- abs(floor(x))
  #   if(any(days[!nas] > 0)) {
@@ -340,6 +323,7 @@ axis.RGtime(side = side, x = x, at = at, labels = labels, ...)
 
 pretty.RGtime <- function(x, n = 5, ...) {
 att = attributes(x)
+attributes(x) = NULL
 x = as.numeric(pretty(as.POSIXct(x, origin = "1970-1-1", tz = "UTC"), n,...))
 attributes(x) = att
 x

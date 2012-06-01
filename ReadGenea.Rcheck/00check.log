@@ -37,32 +37,22 @@ Missing link(s) in documentation object 'C:/Users/zhou/PortableGit/ReadGenea/Rea
   'plot.AccData' 'summary.AccData'
 
 Missing link(s) in documentation object 'C:/Users/zhou/PortableGit/ReadGenea/ReadGenea/man/read.bin.Rd':
-  'get.intervals' 'parse.time' 'mmap' 'print.AccData'
+  'get.intervals' 'parse.time' 'print.AccData'
 
 See the information in section 'Cross-references' of the 'Writing R
 Extensions' manual.
 
 * checking for missing documentation entries ... WARNING
 Undocumented code objects:
-  '%bq%' '%bt%' '[.AccData' 'axis.times2' 'bapply' 'bapply.basic'
-  'c.AccData' 'chron2' 'constrain' 'dim.AccData' 'expand'
-  'format.times2' 'get.intervals' 'getfreqs' 'plot.AccData' 'plot.stft'
-  'plot.times2' 'positionals' 'print.AccData' 'print.VirtAccData'
-  'print.stft' 'print.times2' 'stft' 'stft.AccData' 'times2'
+  'axis.RGtime' 'convert.time' 'format.RGtime' 'get.intervals'
+  'getfreqs' 'parse.time' 'plot.AccData' 'print.VirtAccData' 'stft'
+  'stft.AccData'
 All user-level objects in a package should have documentation entries.
 See the chapter 'Writing R documentation files' in the 'Writing R
 Extensions' manual.
 * checking for code/documentation mismatches ... WARNING
 Functions/methods with usage in documentation object 'reformat.time' but not in code:
   reformat.time
-
-Codoc mismatches from documentation object 'epoch.apply':
-epoch.apply
-  Code: function(obj, epoch.size = 10, incl.date = FALSE, FUN)
-  Docs: function(obj, epoch.size = 10, FUN, incl.date = FALSE)
-  Mismatches in argument names:
-    Position: 3 Code: incl.date Docs: FUN
-    Position: 4 Code: FUN Docs: incl.date
 
 * checking Rd \usage sections ... OK
 * checking Rd contents ... OK

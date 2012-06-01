@@ -358,7 +358,7 @@ Fulldat = timestamps[index]
 #Fulldat = rep(timestamps[index], each = length(freqseq)) + freqseq
 #if (!is.null(downsample)) Fulldat = bapply.basic( Fulldat, downsample, function(t) t[downsampleoffset])
 if (verbose) cat("Virtually loaded", length(Fulldat)*length(freqseq)/downsample, "records at", round(freq/downsample,2), "Hz (Will take up approx ", round(56 * as.double(length(Fulldat) * length(freqseq)/downsample )/1000000) ,"MB of RAM)\n")
-if (verbose) cat(as.character(chron2(Fulldat[1]))," to ", as.character(chron2(tail(Fulldat,1) + nobs /freq)), "\n")
+if (verbose) cat(format.RGtime(Fulldat[1], format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime(tail(Fulldat,1) + nobs /freq,format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 output = list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= as.double(freq)/downsample , filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, nobs = floor(length(freqseq)/downsample) , pagerefs = pagerefs, header = header)
 class(output) = "VirtAccData"
 return(invisible( output  ))
@@ -477,8 +477,8 @@ freq = freq * nrow(Fulldat) / (nobs *  nstreams)
    end.proc.time <- Sys.time()
    cat("Processing took:", format(round(as.difftime(end.proc.time - 
         start.proc.time), 3)), ".\n")
-#cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
-#cat(as.character(chron2((Fulldat[1,1])))," to ", as.character(chron2(tail(Fulldat[,1],1))), "\n")
+cat("Loaded", nrow(Fulldat), "records (Approx ", round(object.size(Fulldat)/1000000) ,"MB of RAM)\n")
+cat(format.RGtime( Fulldat[1,1], format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime(tail(Fulldat[,1],1) , format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 
 if (!mmap.load){
  close(fc2)
@@ -497,17 +497,12 @@ class(processedfile) = "AccData"
 
 print.VirtAccData <- function(x, ...){
 cat("[Virtual ReadGenea dataset]: ", length(x$data.out)*x$nobs, "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
-cat(as.character(chron2((x$data.out[1])))," to ", as.character(chron2(tail(x$data.out,1) + x$nobs /x$freq)), "\n")
+cat(  format.RGtime(x$data.out[1], format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime(tail(x$data.out,1) + x$nobs /x$freq, format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 cat("[", x$filename, "]\n")
 }
 print.AccData <- function(x, ...){
 cat("ReadGenea dataset: ", nrow(x$data.out), "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM)\n")
-#if (getOption("chron.year.abb")){
-#st = paste("(20", substring( as.character(chron2((x$data.out[1,1]))), 2), sep="")
-#en =  paste("(20", substring( as.character(chron2(tail(x$data.out[,1],1))), 2), sep="")
-#cat(st," to ", en, "\n")
-#} else {
-cat(as.character(chron2((x$data.out[1,1])))," to ", as.character(chron2(tail(x$data.out[,1],1))), "\n")
+cat(format.RGtime(x$data.out[1,1], format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime(tail(x$data.out[,1],1),format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 #}
 cat("[", x$filename, "]\n")
 }
@@ -519,8 +514,17 @@ if (is.null(j)){
 x$page.timestamps = x$page.timestamps[ unique(ceiling(i/300))]
 x$data.out = x$data.out[i,]
 return(x)
-} else if (identical(j, 1)){
-return(times2(x$data.out[i,j, drop = drop]))
+}
+if ((length(j) == ncol(x$data.out) )&& (max(j) <= 1)) j = which(j)
+if ( j[1] == 1 ){
+
+if (length(j) != 1){
+value = x$data.out[i, j[-1] , drop = F]
+
+return( data.frame( time = convert.time(x$data.out[i,1, drop = F]), value  ))
+} else{
+return (convert.time(x$data.out[i,1, drop = drop]))
+}
 } else {
 return(x$data.out[i,j, drop=drop])
 }

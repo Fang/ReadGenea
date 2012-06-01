@@ -5,6 +5,8 @@
 
 
 #MV method wrapper
+#maybe we should implement sums?
+
 stft.AccData <- function(X, start=0, end=1, length=NULL,  time.format = c("auto"), svm = F, mv.indices = 1:3, date.col,...){
 call <- match.call()
 if (is.list(X)){
@@ -229,9 +231,9 @@ ind = ceiling(ncol(xv) * 1:20/20)
 ylim =  c(0, quantile(sqrt(rowSums(res^2)), 0.95)*1.1)
 if (xaxis){
 
-plot(  times2(timegridtop), sqrt(rowSums(res^2)) , type="l", xaxt = "n", ylim =ylim, ...)
-axis.times2( 1, times2(timegridtop), labels = F)
-timegridtop = times2(timegridtop)
+plot(  convert.time(timegridtop), sqrt(rowSums(res^2)) , type="l", xaxt = "n", ylim =ylim, ...)
+axis( 1, convert.time(timegridtop), labels = F)
+timegridtop = convert.time(timegridtop)
 } else {
 
 plot(  (timegridtop), sqrt(rowSums(res^2))  , type="l", xaxt="n", ylim = ylim,...)
@@ -277,18 +279,18 @@ if (is.numeric(col)){
 }
 if (xaxis){
 	if (reassign){
-		time = times2(rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
+		time = convert.time(rep(x$times, ncol(xv) )+ as.vector(x$LGD[,1:ncol(xv)] ))
 		if (new){
-			plot( time, frequency,pch= ".", cex = cex , col = colours , log = log,ylim = ylim , xlim = times2(xlim), ...)
+			plot( time, frequency,pch= ".", cex = cex , col = colours , log = log,ylim = ylim , xlim = convert.time(xlim), ...)
 		}else{
 			points ( time, frequency,pch= ".", cex = cex , col = colours , ylim = ylim ,  ...)
 		}
 #####
 	}else {
 	time = timegrid
-	plot(times2(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "time", ylab = "frequency", ylim = ylim, xlim = times2(xlim), xpd = NA, log =log)
+	plot(convert.time(  seq(min(time), max(time), len = 20) ), rep(1,20), col=0, xlab = "time", ylab = "frequency", ylim = ylim, xlim = convert.time(xlim), xpd = NA, log =log)
 #	par(new = T)
-		image( x = times2(time) , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = times2(xlim), add= T,...)
+		image( x = convert.time(time) , y = frequency[1:ncol(xv) ],   z=xv, col=col, log = log, xaxt = "n", ylim = ylim,xlim = convert.time(xlim), add= T,...)
 	}
 } else {
 	if (reassign){
@@ -358,7 +360,7 @@ return(Re(fft(fftobj, inverse=T))/n)
 
 print.stft = function(x,...){
 cat("STFT object:\n")
-cat(as.character(chron2((x$times[1])))," to ", as.character(chron2(tail(x$times,1))), "\n")
+cat(format.RGtime(x$times[1],  format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime((tail(x$times,1)), format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 cat(nrow(x$values), "increments of" , round(x$increment/x$sampling.freq, 3), "s \n")
 cat("Window size: " , x$windowsize, "(", round(x$windowsize/x$sampling.frequency, 3), "s ) -> f resolution: ", round(x$frequency[2],3), "Hz\n")
 if ("svm" %in% x$type) cat("[SVM]")
