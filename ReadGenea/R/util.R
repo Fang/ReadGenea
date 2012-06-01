@@ -1,4 +1,6 @@
 #utility functions for ReadGenea
+#many of these are invisible by default, change to exportPattern(".") in
+#NAMESPACE if you want to make use of them in your own code!
 
 
 constrain <- function(x, minimum, maximum){
@@ -267,7 +269,7 @@ end = floor(end * sampling.freq*60*60*24)
 start = max(start,1)
 end = min(end, n)
 
-if (incl.date) cat("Extracting time interval: ", format.times2(times2(x[start,1])), " to " , format.times2(times2(x[end,1])), "\n")
+if (incl.date) cat("Extracting time interval: ", format(convert.time(c(x[start,1], x[end,1]))) , "\n")
 ind = start:end
 if (length(ind) > size){
 tmp = ceiling(length(ind) / size)
@@ -293,9 +295,9 @@ plot.AccData <- function(x, y=NULL, ...){
 if (is.null(y)){
 epoch = floor(nrow(x)/200 + 1)/x$freq
 obj = epoch.apply(x, epoch, TRUE, function(t) sd(svm(t)))
-plot(times2(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = "SVM SD", log = "y")
+plot(convert.time(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = "SVM SD", log = "y")
 } else {
-plot(times2(x[,1]), y, ...)
+plot(convert.time(x[,1]), y, ...)
 }
 }
 
