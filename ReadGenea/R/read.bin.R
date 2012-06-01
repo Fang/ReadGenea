@@ -140,22 +140,12 @@ if (npages > 10000) blocksize = 10000
     }
 #parse times, including partial times, and times with day offsets
     if (is.character(start)) {
-        start <- parse.time(start, format = "seconds")
-	if (start < t1midnight)	start = start + t1midnight
-	if (start < t1) start = start + 60*60*24
+        start <- parse.time(start, format = "seconds", start = t1, startmidnight = t1midnight)
 	start = findInterval(start-0.5, timestamps, all.inside = T)#which(timestamps >= start-(0.5))[1]
 	t1 = timestamps[start+1]
     }
     if (is.character(end)) {
-        end <- parse.time(end, format = "seconds")
-	
-	if (end < t1midnight){
-		if (end >= 24*60*60){
-			end = end + t1midnight
-		} else {
-			end = end +ceiling((t1 - end)/(60*60*24)) * 60*60*24
-		}
-	}
+        end <- parse.time(end, format = "seconds", start = t1, startmidnight = t1midnight)
 	end = findInterval(end, timestamps, all.inside = T) +1#max(which(timestamps<= (end+0.5) ))
     }
 
