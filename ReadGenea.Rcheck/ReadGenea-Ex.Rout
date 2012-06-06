@@ -24,7 +24,6 @@ Type 'q()' to quit R.
 > options(pager = "console")
 > library('ReadGenea')
 Loading required package: bitops
-Loading required package: chron
 ReadGenea 2.5 loaded
 
 > 
@@ -49,7 +48,7 @@ ReadGenea 2.5 loaded
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.151 secs .
+Processing took: 0.156 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -214,7 +213,7 @@ $headlines
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.133 secs .
+Processing took: 0.125 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -240,7 +239,7 @@ ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.103 secs .
+Processing took: 0.094 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -256,7 +255,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.129 secs .
+Processing took: 0.125 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -266,7 +265,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.086 secs .
+Processing took: 0.078 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -281,7 +280,7 @@ ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.018 secs .
+Processing took: 0.016 secs .
 Loaded 6600 records (Approx  0 MB of RAM)
 12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
 > print(procfileshort)
@@ -301,7 +300,7 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  1.1 0.07 1.2 NA NA 
+Time elapsed:  1.03 0.09 1.12 NA NA 
 > grDevices::dev.off()
 null device 
           1 

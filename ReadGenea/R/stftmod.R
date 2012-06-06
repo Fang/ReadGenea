@@ -7,10 +7,13 @@
 #MV method wrapper
 #maybe we should implement sums?
 
-stft.AccData <- function(X, start=0, end=1, length=NULL,  time.format = c("auto"), svm = F, mv.indices = 1:3, date.col,...){
+stft <- function(X, start=0, end=1, length=NULL,  time.format = c("auto"), type = c("svm", "mv", "sum"), mv.indices = 1:3, date.col,...){
+type = match.arg(type)
 call <- match.call()
 if (is.list(X)){
-X = get.intervals(X, start, end, length, time.format, incl.date=T)
+if (!is.null(X$freq)) freq = X$freq
+
+X = get.intervals(X, start, end, length, time.format, incl.date=TRUE, simplify  = TRUE)
 }
 
 #is first col date-like?
@@ -24,7 +27,7 @@ date.col = F
 }
 }
 
-if (svm){
+if (type == "svm"){
 if (date.col){
 obj1 = stft(cbind(X[,1], sqrt(rowSums(X[,2:4]^2))), ...)
 } else {
@@ -38,13 +41,25 @@ if (date.col) ind = c(1,ind +1)
 obj1 = stft(X[,ind], ...) 
 
 if (length(mv.indices) > 1){
+
+if (type == "mv"){
 for (ind in mv.indices[-1] ) {
 
 if (date.col) ind = c(1,ind +1)
 obj = stft(X[,ind], reassign = F, ...)
-obj1$va = pmax(obj1$va, obj$va)
+obj1$values = pmax(obj1$values, obj$values)
 }
 obj1$type = c("mv", paste(mv.indices, collapse=""))
+} else {
+for (ind in mv.indices[-1] ) {
+
+if (date.col) ind = c(1,ind +1)
+obj = stft(X[,ind], reassign = F, ...)
+obj1$values = sqrt(obj1$values^2 + obj$values^2)
+}
+obj1$type = c("sum", paste(mv.indices, collapse=""))
+
+}
 }
 
 
@@ -54,14 +69,15 @@ obj1
 }
 
 
-stft <- function(X, win=10, 
+stftcalc <- function(X, win=10, 
                  inc=  win/2, coef=Inf, 
-		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = T , pvalues = F, start.time = NULL, reassign = T , quiet = F)
+		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = F , pvalues = F, start.time = NULL, reassign = T , quiet = F)
   {
 call = match.call()
 if (length(dim(X)) ==2) {
 start.time = X[1,1]
 if (missing(freq)) freq =1/(X[2,1] -  X[1,1] )
+
 X = X[,2]
 
 }

@@ -485,7 +485,7 @@ if (!mmap.load){
 } else {
 munmap(mmapobj)
 }
-    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, volt = voltages, pagerefs = pagerefs, header = header)
+    processedfile <- list(data.out = Fulldat, page.timestamps = timestampsc[index.orig], freq= freq, filename =tail(strsplit(binfile, "/")[[1]],1), page.numbers = index.orig, call = argl, page.volts = voltages, pagerefs = pagerefs, header = header)
 class(processedfile) = "AccData"
     if (is.null(outfile)) {
         return(processedfile)
@@ -529,6 +529,27 @@ return (convert.time(x$data.out[i,1, drop = drop]))
 return(x$data.out[i,j, drop=drop])
 }
 }
+
+#dollar operator: accept some keywords, in addition to the usual
+"$.AccData" <- function(x, name){
+nmatch <- try(match.arg(name, c("time", "x", "y", "z", "xyz", "temperature", "button", "voltage", "light", "svm")), silent = TRUE)
+if (inherits(nmatch, "try-error")){
+class(x) <- NULL
+return(x[[name, exact = FALSE]])
+}else { 
+#	x = unclass(x)
+	ind = switch(nmatch, time = 1, x = 2, y = 3, z = 4, xyz = 2:4, temperature = 5, button = 6, light = 7, voltage = 8, svm = 9)
+	if (identical(ind, 8)){
+		return(rep(x$page.volt, each = ceiling(nrow(x)/length(x$page.volt)) )[1:nrow(x)])
+	} else if (identical(ind, 9)){
+		return(svm(x))
+	} else {
+		return(x[,ind])
+}
+}
+
+}
+
 
 
 c.AccData <- function(..., recursive=FALSE){
