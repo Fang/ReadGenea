@@ -7,38 +7,42 @@
 #MV method wrapper
 #maybe we should implement sums?
 
-stft <- function(X, start=0, end=1, length=NULL,  time.format = c("auto"), type = c("svm", "mv", "sum"), mv.indices = 1:3, date.col,...){
+stft <- function(X, start=0, end=1, length=NULL,  time.format = c("auto"), type = c("mv", "svm", "sum"), mv.indices, date.col, reassign = TRUE,plot.it = FALSE,...){
 type = match.arg(type)
 call <- match.call()
 if (is.list(X)){
-if (!is.null(X$freq)) freq = X$freq
+#if (!is.null(X$freq)) freq = X$freq
 
 X = get.intervals(X, start, end, length, time.format, incl.date=TRUE, simplify  = TRUE)
+if (missing( date.col)) date.col = TRUE
 }
+
+if (length(dim(X)) < 2) X = matrix(X, ncol = 1)
 
 #is first col date-like?
 if (missing(date.col)){
 
-if (X[1,1] >= 365 * 60*60*24){
+if ((ncol(X)> 1) && ( X[1,1] >= 365 * 60*60*24)){
 print("Assuming first column is time.")
 date.col = T
 } else {
 date.col = F
 }
 }
+if (missing(mv.indices)) mv.indices <- 1:(min(ncol(X), 3) - date.col)
 
 if (type == "svm"){
 if (date.col){
-obj1 = stft(cbind(X[,1], sqrt(rowSums(X[,2:4]^2))), ...)
+obj1 = stftcalc(cbind(X[,1], sqrt(rowSums(X[,mv.indices + 1, drop = F]^2))), reassign = reassign,...)
 } else {
-obj1 = stft( sqrt(rowSums(X[,1:3]^2)), ...)
+obj1 = stftcalc( sqrt(rowSums(X[,mv.indices, drop = F]^2)),reassign = reassign, ...)
 }
 obj1$type = "svm"
 } else {
 ind = mv.indices[1]
 if (date.col) ind = c(1,ind +1)
 
-obj1 = stft(X[,ind], ...) 
+obj1 = stftcalc(X[,ind], reassign = reassign,...) 
 
 if (length(mv.indices) > 1){
 
@@ -46,7 +50,7 @@ if (type == "mv"){
 for (ind in mv.indices[-1] ) {
 
 if (date.col) ind = c(1,ind +1)
-obj = stft(X[,ind], reassign = F, ...)
+obj = stftcalc(X[,ind], reassign = F, ...)
 obj1$values = pmax(obj1$values, obj$values)
 }
 obj1$type = c("mv", paste(mv.indices, collapse=""))
@@ -54,7 +58,7 @@ obj1$type = c("mv", paste(mv.indices, collapse=""))
 for (ind in mv.indices[-1] ) {
 
 if (date.col) ind = c(1,ind +1)
-obj = stft(X[,ind], reassign = F, ...)
+obj = stftcalc(X[,ind], reassign = F, ...)
 obj1$values = sqrt(obj1$values^2 + obj$values^2)
 }
 obj1$type = c("sum", paste(mv.indices, collapse=""))
@@ -65,24 +69,25 @@ obj1$type = c("sum", paste(mv.indices, collapse=""))
 
 }
 obj1$call = call
+if (plot.it) plot(obj1)
 obj1
 }
 
 
 stftcalc <- function(X, win=10, 
                  inc=  win/2, coef=Inf, 
-		 wtype="hanning.window", freq , center = T, plot.it = F, calc.null = F , pvalues = F, start.time = NULL, reassign = T , quiet = F)
+		 wtype="hanning.window", freq , center = T, calc.null = F , pvalues = F, time = NULL, reassign = T , quiet = F)
   {
 call = match.call()
 if (length(dim(X)) ==2) {
-start.time = X[1,1]
-if (missing(freq)) freq =1/(X[2,1] -  X[1,1] )
+if (is.null(time)) time = X[,1]
 
 X = X[,2]
 
 }
 
-if (missing(freq) ) freq = 100
+if ((length(time) >1) && (missing(freq))) freq =length(time) /( max(time) - min(time) )
+if (missing(freq) ) freq = 1
 inc0 = inc
 win0 = win
 coef0 = coef
@@ -143,23 +148,27 @@ null.logsd = NULL
 if (calc.null){
 tmpdat = stft(sample(X), win = win0, 
                  inc= inc0, coef=coef0, 
-		 wtype=wtype, freq = freq, center = T, plot.it = F, calc.null = F , quiet= T)
+		 wtype=wtype, freq = freq, center = T,  calc.null = F , quiet= T)
 null.logmean = log(sqrt(mean((tmpdat$values)^2)))
 #null.logsd = sd(tmpdat$values))
 }
 if (!quiet)setTxtProgressBar(pb, 100)
-if (is.null(start.time)){
+if (is.null(time)){
     Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times =  (win/2 +  inc * 0:(nrow(y) - 1))/(freq), p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef] )
 } else {
-times = (start.time  + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
+if (length(time) == 1){
+times = (time  + (win/2 +  inc * 0:(nrow(y) - 1))/freq)
+} else {
+times = time[win/2 + inc* 0:(nrow(y) - 1) ] 
+}
+
    Y<- list (values = cbind(Mod(y[,1]) ,2*Mod(y[,(2):coef])), windowsize=win, increment=inc,
 		  windowtype=wtype, center = center, sampling.frequency = freq, null.logmean = null.logmean, null.logsd = null.logsd, principals = (freq * (1:coef  - 1 ) / win)[apply( Mod(y[,(1):coef]),1, which.max)], frequency = (freq * (1:coef  - 1 ) / win), times = times, p.values = pval, LGD = yfreqdel[,1:coef], CIF = ydel[,1:coef]  )
 }
 if (!quiet)close(pb)
 Y$call = call
     class(Y) <- "stft"
-    if (plot.it) plot.stft(Y)
     return(Y)
   }
 
@@ -381,6 +390,7 @@ cat(nrow(x$values), "increments of" , round(x$increment/x$sampling.freq, 3), "s 
 cat("Window size: " , x$windowsize, "(", round(x$windowsize/x$sampling.frequency, 3), "s ) -> f resolution: ", round(x$frequency[2],3), "Hz\n")
 if ("svm" %in% x$type) cat("[SVM]")
 if ("mv" %in% x$type) cat("[MV-", x$type[2], "]")
+if ("sum" %in% x$type) cat("[SUM-", x$type[2], "]")
 if (!is.null(x$LGD)) cat ("[Reassign]")
 cat("\n------ \n")
 cat("{" ,format(x$call), "}\n")
