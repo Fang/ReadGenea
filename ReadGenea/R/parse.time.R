@@ -54,7 +54,7 @@ if (length(strsplit(t1, split = "-")[[1]]) > 1){
 } else {
 #add some days?
 	t = lapply(strsplit(t, split=" "), function(t) (t[t != ""]))
-	if (is.numeric(t[[1]][1])){
+	if (!suppressWarnings(is.na(as.numeric(t[[1]][1])))){
 		t1 = sapply(t, function(x) as.numeric(x[ 1]))
 		t = sapply(t, function(t) t[ 2])
 	} else {
@@ -79,14 +79,15 @@ if ((!is.null(start)) || (!is.null(startmidnight))){
 #resolve ambiguity
 	if (is.null(dow)){
 		if (t[1] < startmidnight) t= t + startmidnight
-		if (t[1] < start) t= t + ceiling((start-t[1])/(60*60*24)) * 60*60*24
+		if (t[1] < start) t= t + ceiling((start-as.numeric(t[1]))/(60*60*24)) * 60*60*24
 	} else {
 		#day of the week processing
 		#get DOW for midnight on start
-		startmidnight= as.POSIXct( floor(start/(60*60*24)) * 60*60*24 , origin = "1970-1-1")
-		next_week <- as.Date(startmidnight) + 0:6
+		startmidnight= as.POSIXct( floor(start/(60*60*24)) * 60*60*24 , origin = "1970-1-1", tz = "UTC")
+		next_week <- as.Date(startmidnight) + 1:7
 		dow = substr(tolower(dow), 1, min(nchar(dow)))
-		t = t + startmidnight + (match(dow, substr(tolower(weekdays(next_week)), 1, min(nchar(dow)))) - 1) * 24*60*60
+		startmidnight = as.numeric(startmidnight)
+		t = t + startmidnight + (match(dow, substr(tolower(weekdays(next_week)), 1, min(nchar(dow)))) - 0) * 24*60*60
 #TODO
 
 	}
