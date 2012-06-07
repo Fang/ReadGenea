@@ -29,6 +29,65 @@ ReadGenea 2.5 loaded
 > 
 > assign(".oldSearch", search(), pos = 'CheckExEnv')
 > cleanEx()
+> nameEx("RGtime")
+> ### * RGtime
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: RGtime
+> ### Title: Date time handling for the ReadGenea package.
+> ### Aliases: RGtime convert.time as.RGtime format.RGtime axis.RGtime
+> ###   pretty.RGtime
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> as.RGtime("00:01")
+[1] 00:01
+> #format is automatically set
+> convert.time(1:10)
+ [1] 00:01.000 00:02.000 00:03.000 00:04.000 00:05.000 00:06.000 00:07.000
+ [8] 00:08.000 00:09.000 00:10.000
+> convert.time(1:10*1000)
+ [1] 00:16 00:33 00:50 01:06 01:23 01:40 01:56 02:13 02:30 02:46
+> #we add a different default format
+> convert.time(1:10*1000, "%H:%M:%OS3") -> t
+> t
+ [1] 00:16:40.000 00:33:20.000 00:50:00.000 01:06:40.000 01:23:20.000
+ [6] 01:40:00.000 01:56:40.000 02:13:20.000 02:30:00.000 02:46:40.000
+> str(t)
+Classes 'RGtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000
+  ..- attr(*, "format")= chr "%H:%M:%OS3"
+> #we override format with our own
+> format(t, format = "%a %d/%m/%y %H:%M:%OS3")
+ [1] "Thu 01/01/70 00:16:40.000" "Thu 01/01/70 00:33:20.000"
+ [3] "Thu 01/01/70 00:50:00.000" "Thu 01/01/70 01:06:40.000"
+ [5] "Thu 01/01/70 01:23:20.000" "Thu 01/01/70 01:40:00.000"
+ [7] "Thu 01/01/70 01:56:40.000" "Thu 01/01/70 02:13:20.000"
+ [9] "Thu 01/01/70 02:30:00.000" "Thu 01/01/70 02:46:40.000"
+> 
+> #plot calls axis.RGtime automatically. Notice
+> #that the format attribute is used.
+> plot(t, 1:10)
+> #strip out the default format
+> t2 = convert.time(t, format = NULL)
+> plot(t2, 1:10)
+> 
+> #image plots are a bit more complex
+> 
+> Z = matrix(rnorm(100), 10)
+> image(x = t, y = t2, z = Z, axes = FALSE)
+> axis.RGtime(x = t2, side = 2)
+> Axis(x = t, side = 1) #Axis also works
+> box() #complete the bounding box
+> 
+> #custom axes
+> plot(t2, 1:10, xaxt = "n")
+> axis.RGtime(at = pretty(t2, 20) , side = 1)
+> 
+> 
+> 
+> cleanEx()
 > nameEx("epoch.apply")
 > ### * epoch.apply
 > 
@@ -48,7 +107,7 @@ ReadGenea 2.5 loaded
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.156 secs .
+Processing took: 0.148 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -177,17 +236,41 @@ $headlines
 > 
 > flush(stderr()); flush(stdout())
 > 
-> ### Name: reformat.time
-> ### Title: Reformats a character time representation to a POSIXct object.
-> ### Aliases: reformat.time
+> ### Name: parse.time
+> ### Title: Parses a character time representation to another format.
+> ### Aliases: parse.time
 > ### Keywords: manip
 > 
 > ### ** Examples
 > 
 > 
-> #reformat.time("2011:02:11:12:34:02","julian")
+> t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+[1] 1340283841
+> parse.time("21/06/12 13:04:01") #gives the same result
+[1] 1340283841
 > 
-> #reformat.time("2010-07-19 13:04:01","POSIX")
+> parse.time(c("19/07/70", "20/07/70"), format = "days")
+[1] 199 200
+> #results here will depend on your locale
+> parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+[1] "1970-07-19 05:00:00 BST" "1970-07-20 05:00:00 BST"
+> 
+> #one is the same day, one can only find a match the next day
+> parse.time("13:05", start = t1) - t1
+[1] 59
+> parse.time("13:00", start = t1) - t1
+[1] 86159
+> #asking to wait 1 midnight means both times are considered as 
+> #times on the same, full day of data
+> parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+[1] 86459 86159
+> #2012-06-21 is a Thursday, so this is equivalent
+> parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+[1] 86459 86159
+> #Longer form days of the week are also understood. Note that 
+> #the first day does not get matched.
+> parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+[1] 604859 604559
 > 
 > 
 > 
@@ -213,7 +296,7 @@ $headlines
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.125 secs .
+Processing took: 0.135 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -239,7 +322,7 @@ ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.094 secs .
+Processing took: 0.105 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -255,7 +338,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.125 secs .
+Processing took: 0.134 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -265,7 +348,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.078 secs .
+Processing took: 0.091 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -273,14 +356,14 @@ ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 [ TESTfile.bin ]
 > object.size(procfilelo) / object.size(procfile)
-0.103882662970629 bytes
+0.103886748580938 bytes
 > 
 > #Read in a 1 minute interval
 > procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.016 secs .
+Processing took: 0.018 secs .
 Loaded 6600 records (Approx  0 MB of RAM)
 12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
 > print(procfileshort)
@@ -300,7 +383,7 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  1.03 0.09 1.12 NA NA 
+Time elapsed:  1.22 0.17 1.4 NA NA 
 > grDevices::dev.off()
 null device 
           1 

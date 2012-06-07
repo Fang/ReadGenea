@@ -10,6 +10,7 @@ return( convert.time(as.numeric(x, ...), format))
 }
 }
 
+
 c.RGtime <-
 function (..., recursive = FALSE) 
 structure(c(unlist(lapply(list(...), unclass))), class = "RGtime")

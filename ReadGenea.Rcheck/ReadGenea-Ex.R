@@ -6,6 +6,52 @@ library('ReadGenea')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
 cleanEx()
+nameEx("RGtime")
+### * RGtime
+
+flush(stderr()); flush(stdout())
+
+### Name: RGtime
+### Title: Date time handling for the ReadGenea package.
+### Aliases: RGtime convert.time as.RGtime format.RGtime axis.RGtime
+###   pretty.RGtime
+### Keywords: manip
+
+### ** Examples
+
+as.RGtime("00:01")
+#format is automatically set
+convert.time(1:10)
+convert.time(1:10*1000)
+#we add a different default format
+convert.time(1:10*1000, "%H:%M:%OS3") -> t
+t
+str(t)
+#we override format with our own
+format(t, format = "%a %d/%m/%y %H:%M:%OS3")
+
+#plot calls axis.RGtime automatically. Notice
+#that the format attribute is used.
+plot(t, 1:10)
+#strip out the default format
+t2 = convert.time(t, format = NULL)
+plot(t2, 1:10)
+
+#image plots are a bit more complex
+
+Z = matrix(rnorm(100), 10)
+image(x = t, y = t2, z = Z, axes = FALSE)
+axis.RGtime(x = t2, side = 2)
+Axis(x = t, side = 1) #Axis also works
+box() #complete the bounding box
+
+#custom axes
+plot(t2, 1:10, xaxt = "n")
+axis.RGtime(at = pretty(t2, 20) , side = 1)
+
+
+
+cleanEx()
 nameEx("epoch.apply")
 ### * epoch.apply
 
@@ -80,17 +126,32 @@ nameEx("parse.time")
 
 flush(stderr()); flush(stdout())
 
-### Name: reformat.time
-### Title: Reformats a character time representation to a POSIXct object.
-### Aliases: reformat.time
+### Name: parse.time
+### Title: Parses a character time representation to another format.
+### Aliases: parse.time
 ### Keywords: manip
 
 ### ** Examples
 
 
-#reformat.time("2011:02:11:12:34:02","julian")
+t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+parse.time("21/06/12 13:04:01") #gives the same result
 
-#reformat.time("2010-07-19 13:04:01","POSIX")
+parse.time(c("19/07/70", "20/07/70"), format = "days")
+#results here will depend on your locale
+parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+
+#one is the same day, one can only find a match the next day
+parse.time("13:05", start = t1) - t1
+parse.time("13:00", start = t1) - t1
+#asking to wait 1 midnight means both times are considered as 
+#times on the same, full day of data
+parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+#2012-06-21 is a Thursday, so this is equivalent
+parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+#Longer form days of the week are also understood. Note that 
+#the first day does not get matched.
+parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
 
 
 

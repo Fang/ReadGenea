@@ -1,4 +1,7 @@
 ReadGenea-package	ReadGenea-package
+as.RGtime	RGtime
+axis.RGtime	RGtime
+convert.time	RGtime
 epoch.apply	epoch.apply
 epoch.autocor	epoch.apply
 epoch.mad	epoch.apply
@@ -6,8 +9,11 @@ epoch.mean	epoch.apply
 epoch.median	epoch.apply
 epoch.quantile	epoch.apply
 epoch.sd	epoch.apply
+format.RGtime	RGtime
 header.info	header.info
+parse.time	parse.time
+pretty.RGtime	RGtime
 read.bin	read.bin
 ReadGenea	ReadGenea-package
-reformat.time	parse.time
+RGtime	RGtime
 svm	epoch.apply

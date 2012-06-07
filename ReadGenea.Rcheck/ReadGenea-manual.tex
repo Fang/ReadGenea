@@ -201,6 +201,73 @@ attr(fileheader, "calibration")
 \end{ExampleCode}
 \end{Examples}
 \inputencoding{utf8}
+\HeaderA{parse.time}{Parses a character time representation to another format. }{parse.time}
+\keyword{manip}{parse.time}
+%
+\begin{Description}\relax
+Converts a character vector in a variety of forms into either the raw second, second classed as POSIXct, or days since Unix epoch.
+\end{Description}
+%
+\begin{Usage}
+\begin{verbatim}
+parse.time(t="",format=c("seconds", "days", "POSIX"), tzone = 0, 
+	start = NULL, startmidnight = NULL)
+\end{verbatim}
+\end{Usage}
+%
+\begin{Arguments}
+\begin{ldescription}
+\item[\code{t}] A character string representation of a date-time expression.
+\item[\code{format}] A character string indicating which representation to output.  Can be either \code{seconds}, \code{days} or \code{POSIX}.
+\item[\code{tzone}] The time zone the time is given in, expressed as an offset from UTC in hours.
+\item[\code{start}] Earliest allowable time stamp in the data, as seconds since Unix epoch.
+\item[\code{startmidnight}] Midnight of day '0' in the data, as seconds since Unix epoch.
+\end{ldescription}
+\end{Arguments}
+%
+\begin{Details}\relax
+The function processes character vectors of the form "DATE TIME" -- that is to say, a maximum of two terms separated by a space per value. 
+
+"TIME" is given in 24 hour format, seperated by colons, in "hh:mm", "hh:mm:ss", "hh:mm:ss:ms" or "hh:mm:ss.ms" format. If ommitted, the time is taken to be 00:00:00.000.
+
+"DATE" can be a date representation as "YYYY-MM-DD", "DD/MM/YY" or "DD/MM/YYYY" (noting the use of a colon or backslash seperator to distinguish between the two). Alternatively, with \code{start} and/or \code{startmidnight} supplied, an integer "NN" or string "DOW" corresponding to a day of the week can be used instead. Then, the function will find the first timestamp matching the correct "TIME", that falls NN midnights after \code{startmidnight} and is after \code{start}, or, in the latter case, the first timestamp after the day of \code{start} that matches the appropriate day of the week. If a blank "DATE" is supplied, the function will either use the UNIX epoch, or find the first match, corresponding to the case NN = 0.
+
+Once this is done the time is converted to the required format: \code{POSIX} is the usual R POSIXct format; \code{days} is the julian days since UNIX epoch 1970-1-1; \code{seconds} is the number of seconds (including subseconds) since 1970-1-1. Note that for formats other than POSIX, the output is in the same timezone as \code{tzone}. POSIX stores the time internally as the time in UTC, and applies a format that gives this time local to the user.
+\end{Details}
+%
+\begin{Value}
+A converted date-time string in the specified format. In the case of "seconds", or "days", a numeric. For POSIX, a \code{\LinkA{POSIXct}{POSIXct}} object.
+\end{Value}
+%
+\begin{SeeAlso}\relax
+\code{\LinkA{convert.time}{convert.time}}, \code{\LinkA{get.intervals}{get.intervals}}
+\end{SeeAlso}
+%
+\begin{Examples}
+\begin{ExampleCode}
+
+t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+parse.time("21/06/12 13:04:01") #gives the same result
+
+parse.time(c("19/07/70", "20/07/70"), format = "days")
+#results here will depend on your locale
+parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+
+#one is the same day, one can only find a match the next day
+parse.time("13:05", start = t1) - t1
+parse.time("13:00", start = t1) - t1
+#asking to wait 1 midnight means both times are considered as 
+#times on the same, full day of data
+parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+#2012-06-21 is a Thursday, so this is equivalent
+parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+#Longer form days of the week are also understood. Note that 
+#the first day does not get matched.
+parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+
+\end{ExampleCode}
+\end{Examples}
+\inputencoding{utf8}
 \HeaderA{read.bin}{File processing function for binary files.}{read.bin}
 \keyword{manip}{read.bin}
 %
@@ -375,43 +442,98 @@ print(procfileshort)
 \end{ExampleCode}
 \end{Examples}
 \inputencoding{utf8}
-\HeaderA{reformat.time}{Reformats a character time representation to a POSIXct object. }{reformat.time}
-\keyword{manip}{reformat.time}
+\HeaderA{RGtime}{Date time handling for the ReadGenea package.}{RGtime}
+\aliasA{as.RGtime}{RGtime}{as.RGtime}
+\aliasA{axis.RGtime}{RGtime}{axis.RGtime}
+\aliasA{convert.time}{RGtime}{convert.time}
+\aliasA{format.RGtime}{RGtime}{format.RGtime}
+\aliasA{pretty.RGtime}{RGtime}{pretty.RGtime}
+\keyword{manip}{RGtime}
 %
 \begin{Description}\relax
-A function to reformat a time representation to a POSIXct object.
+Stores date time data as a numeric, with facility for pretty printing and axis commands.
 \end{Description}
 %
 \begin{Usage}
 \begin{verbatim}
-reformat.time(t,format="julian")
+convert.time(x, format = NULL)
+as.RGtime(x, format = NULL, ...)
+## S3 method for class 'RGtime'
+format(x, format = NULL, ...)
+## S3 method for class 'RGtime'
+axis(side, x=NULL, at=NULL, format = NULL,labels  = TRUE, add = TRUE,  ...)
+## S3 method for class 'RGtime'
+pretty(x, n = 5, ...)
 \end{verbatim}
 \end{Usage}
 %
 \begin{Arguments}
 \begin{ldescription}
-\item[\code{t}] A character string representation of a date-time expression, for example colon-separated.
-\item[\code{format}] A character string indicating which date-time representation to output.  Can be either \code{POSIX}, \code{julian} or \code{seconds}.
+\item[\code{x}] Object to process. For \code{convert.time}, must be numeric. For \code{as.RGtime} may be numeric or character. For \code{format.RGtime}, a RGtime object, or a numeric.
+\item[\code{format}] A character string indicating the form of output. See \code{\LinkA{strptime}{strptime}} for details. If NULL, will be automatically chosen.
+\item[\code{add}] logical. If TRUE, actually plot the axis.
+\item[\code{at, side, labels}] Additional arguments as in \code{\LinkA{axis}{axis}}.
+\item[\code{n}] Approximate number of breakpoints.
+\item[\code{...}] Additional arguments to be passed to \code{\LinkA{parse.time}{parse.time}}, \code{\LinkA{as.numeric}{as.numeric}}, \code{\LinkA{format.POSIXct}{format.POSIXct}}, \code{\LinkA{axis}{axis}}, \code{\LinkA{pretty.POSIXt}{pretty.POSIXt}}. 
 \end{ldescription}
 \end{Arguments}
 %
 \begin{Details}\relax
-The function separates individual components in a date-time representation, adding enough components if necessary so that the representation has seconds.
-Note that the representation should either be colon-separated, or as a space-separated date-time string of the form: Y-m-d h:m.  Once this is done the time
-is converted to the required format: \code{POSIX} is the usual R POSIXct format; \code{julian} is the julian date-time representation, modified so that the origin is midnight, 1st January, 2000; \code{seconds} is the number of seconds (including subseconds) since 1st January, 2000.  Note that this is similar to the usual Unix \code{date '+\%s'} function, which is the number of seconds since 1st January, 1970.
+The RGtime class handles dates and times for the ReadGenea class. The class treats dates as numerics denoting seconds since the UNIX epoch, with potentially a string attached specifying the format to print in. Unlike \code{POSIXct}, we avoid some of the processing, especially with respect to time zones, and allow some more flexibility in time computation and display. A range of operators are defined.
+
+\code{convert.time} converts numerics to RGtime objects. The \code{format} argument allows a format string to be attached specifying the default format to display in. \code{as.RGtime} is a wrapper to \code{convert.time}, that when supplied with character input, coerces the value first to numeric using \code{parse.time}.
+
+\code{format.RGtime} formats RGtime objects for pretty printing. If \code{format} is provided as argument, that is used. Else, if the \code{format} attribute is set on \code{x}, that is used. Finally, if formats are not provided, and \code{x} is of length greater than one, the range of values of \code{x} is used to decide the units displayed. Numerics are also accepted - they are coerced to RGtime.
+
+\code{axis.RGtime} is used to plot RGtime axis, choosing, by default, breakpoints that give 'pretty' sub intervals. Note that \code{\LinkA{plot.default}{plot.default}} uses \code{axis.RGtime} by default if supplied with a RGtime object in one of the directions. However, \code{\LinkA{image.default}{image.default}} based functions do not use the class axis functions, so axes must be plotted manually.
+
+\code{pretty.RGtime} computes 'pretty' breakpoints, using the algorithm of \code{pretty.POSIXt}. Attributes are preserved.
+
 \end{Details}
 %
 \begin{Value}
-A converted date-time string in the specified format.
+For \code{convert.time}, \code{as.RGtime} and \code{pretty.RGtime}, a RGtime object.
+
+For \code{format.RGtime} a character string representation.
+
+For \code{axis.RGtime} a list containing positions and labels for axis markers.
 \end{Value}
+%
+\begin{SeeAlso}\relax
+\code{\LinkA{parse.time}{parse.time}}, \code{\LinkA{get.intervals}{get.intervals}}, \code{\LinkA{print.AccData}{print.AccData}}
+\end{SeeAlso}
 %
 \begin{Examples}
 \begin{ExampleCode}
+as.RGtime("00:01")
+#format is automatically set
+convert.time(1:10)
+convert.time(1:10*1000)
+#we add a different default format
+convert.time(1:10*1000, "%H:%M:%OS3") -> t
+t
+str(t)
+#we override format with our own
+format(t, format = "%a %d/%m/%y %H:%M:%OS3")
 
-#reformat.time("2011:02:11:12:34:02","julian")
+#plot calls axis.RGtime automatically. Notice
+#that the format attribute is used.
+plot(t, 1:10)
+#strip out the default format
+t2 = convert.time(t, format = NULL)
+plot(t2, 1:10)
 
-#reformat.time("2010-07-19 13:04:01","POSIX")
+#image plots are a bit more complex
 
+Z = matrix(rnorm(100), 10)
+image(x = t, y = t2, z = Z, axes = FALSE)
+axis.RGtime(x = t2, side = 2)
+Axis(x = t, side = 1) #Axis also works
+box() #complete the bounding box
+
+#custom axes
+plot(t2, 1:10, xaxt = "n")
+axis.RGtime(at = pretty(t2, 20) , side = 1)
 \end{ExampleCode}
 \end{Examples}
 \printindex{}
