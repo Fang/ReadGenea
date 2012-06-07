@@ -1,4 +1,6 @@
 ReadGenea-package	ReadGenea-package
+$.AccData	get.intervals
+AccData	get.intervals
 as.RGtime	RGtime
 axis.RGtime	RGtime
 convert.time	RGtime
@@ -10,10 +12,19 @@ epoch.median	epoch.apply
 epoch.quantile	epoch.apply
 epoch.sd	epoch.apply
 format.RGtime	RGtime
+get.intervals	get.intervals
+hanning.window	hanning.window
 header.info	header.info
 parse.time	parse.time
+plot.AccData	get.intervals
+plot.stft	stft
 pretty.RGtime	RGtime
+print.AccData	get.intervals
+print.stft	stft
 read.bin	read.bin
 ReadGenea	ReadGenea-package
 RGtime	RGtime
+stft	stft
 svm	epoch.apply
+uniform.window	hanning.window
+[.AccData	get.intervals

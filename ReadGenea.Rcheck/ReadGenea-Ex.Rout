@@ -107,7 +107,7 @@ Classes 'RGtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 80
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.148 secs .
+Processing took: 0.145 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -143,147 +143,15 @@ Loaded 31200 records (Approx  2 MB of RAM)
 > 
 > graphics::par(get("par.postscript", pos = 'CheckExEnv'))
 > cleanEx()
-> nameEx("header.info")
-> ### * header.info
+> nameEx("get.intervals")
+> ### * get.intervals
 > 
 > flush(stderr()); flush(stdout())
 > 
-> ### Name: header.info
-> ### Title: Get header info from Genea output (.bin) file
-> ### Aliases: header.info
-> ### Keywords: manip
-> 
-> ### ** Examples
-> 
-> 
-> fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)
-> print(fileheader)
-                                            Value
-Device_Unique_Serial_Code                  011073
-Measurement_Frequency                      100 Hz
-Measurement_Period                      168 Hours
-Start_Time                0000-00-00 00:00:00:000
-Study_Centre                 TESTCenter          
-Study_Code                   TESTCode            
-Investigator_ID              TESTID              
-Exercise_Type                Sample Code         
-Device_Location_Code                   left wrist
-Subject_Code                 TESTSubject         
-Date_of_Birth                            1900-1-1
-Sex                                          male
-Height                                        160
-Weight                                        100
-Handedness_Code                             right
-Number_of_Pages                               104
-> attr(fileheader, "calibration")
-$tzone
-[1] 1
-
-$xgain
-[1] 25344
-
-$xoffset
-[1] 1104
-
-$ygain
-[1] 25870
-
-$yoffset
-[1] 454
-
-$zgain
-[1] 25470
-
-$zoffset
-[1] -1433
-
-$volts
-[1] 300
-
-$lux
-[1] 800
-
-$npages
-[1] 104
-
-$firstpage
-[1] 0
-
-$freq
-[1] 100
-
-$t1
-[1] 1337791670
-
-$t1c
-[1] "2012-05-23 16:47:50 BST"
-
-$inc
-[1] 0.01
-
-$t1midnight
-[1] 1337731200
-
-$headlines
-[1] 59
-
-> 
-> 
-> 
-> cleanEx()
-> nameEx("parse.time")
-> ### * parse.time
-> 
-> flush(stderr()); flush(stdout())
-> 
-> ### Name: parse.time
-> ### Title: Parses a character time representation to another format.
-> ### Aliases: parse.time
-> ### Keywords: manip
-> 
-> ### ** Examples
-> 
-> 
-> t1 = parse.time("2012-06-21 13:04:01"); print(t1)
-[1] 1340283841
-> parse.time("21/06/12 13:04:01") #gives the same result
-[1] 1340283841
-> 
-> parse.time(c("19/07/70", "20/07/70"), format = "days")
-[1] 199 200
-> #results here will depend on your locale
-> parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
-[1] "1970-07-19 05:00:00 BST" "1970-07-20 05:00:00 BST"
-> 
-> #one is the same day, one can only find a match the next day
-> parse.time("13:05", start = t1) - t1
-[1] 59
-> parse.time("13:00", start = t1) - t1
-[1] 86159
-> #asking to wait 1 midnight means both times are considered as 
-> #times on the same, full day of data
-> parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
-[1] 86459 86159
-> #2012-06-21 is a Thursday, so this is equivalent
-> parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
-[1] 86459 86159
-> #Longer form days of the week are also understood. Note that 
-> #the first day does not get matched.
-> parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
-[1] 604859 604559
-> 
-> 
-> 
-> 
-> cleanEx()
-> nameEx("read.bin")
-> ### * read.bin
-> 
-> flush(stderr()); flush(stdout())
-> 
-> ### Name: read.bin
-> ### Title: File processing function for binary files.
-> ### Aliases: read.bin
+> ### Name: get.intervals
+> ### Title: Methods for processing and summarising AccData.
+> ### Aliases: AccData get.intervals [.AccData $.AccData print.AccData
+> ###   plot.AccData
 > ### Keywords: manip
 > 
 > ### ** Examples
@@ -296,7 +164,7 @@ $headlines
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.135 secs .
+Processing took: 0.125 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -322,7 +190,7 @@ ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.105 secs .
+Processing took: 0.097 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -338,7 +206,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.134 secs .
+Processing took: 0.125 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -348,7 +216,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.091 secs .
+Processing took: 0.085 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -380,16 +248,27 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > 
 > 
 > 
-> ### * <FOOTER>
-> ###
-> cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  1.22 0.17 1.4 NA NA 
-> grDevices::dev.off()
-null device 
-          1 
-> ###
-> ### Local variables: ***
-> ### mode: outline-minor ***
-> ### outline-regexp: "\\(> \\)?### [*]+" ***
-> ### End: ***
-> quit('no')
+> cleanEx()
+> nameEx("hanning.window")
+> ### * hanning.window
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: hanning.window
+> ### Title: Computes the Coefficients of a Hanning or Uniform Window.
+> ### Aliases: hanning.window uniform.window
+> ### Keywords: ts
+> 
+> ### ** Examples
+> hanning.window(10)
+ [1] 0.000000000000 0.116977778441 0.413175911167 0.750000000000 0.969846310393
+ [6] 0.969846310393 0.750000000000 0.413175911167 0.116977778441 0.000000000000
+> 
+> x<-rnorm(500)
+> y<-stft(x, wtype="hanning.window")
+================================================================================
+> plot(y)
+Error in xy.coords(x, y, xlabel, ylabel, log) : 
+  'x' is a list, but does not have components 'x' and 'y'
+Calls: plot -> plot.default -> xy.coords
+Execution halted
