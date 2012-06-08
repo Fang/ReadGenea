@@ -1,7 +1,5 @@
 \name{stft}
 \alias{stft}
-\alias{print.stft}
-\alias{plot.stft}
 \title{
 Computes Short Time Fourier Transforms
 }
@@ -9,23 +7,41 @@ Computes Short Time Fourier Transforms
 Processes a dataset, creating an object contained processed time-frequency analyses. These can then be plotted.
 }
 \usage{
-
+stft(X, start=0, end=1, length=NULL,  time.format = c("auto"), type = c("mv", "svm", "sum"), mv.indices, date.col, reassign = TRUE,plot.it = FALSE,\dots)
 }
 \arguments{
-  \item{t}{A character string representation of a date-time expression.}
-  \item{format}{A character string indicating which representation to output.  Can be either \code{seconds}, \code{days} or \code{POSIX}.}
-  \item{tzone}{The time zone the time is given in, expressed as an offset from UTC in hours.}
-  \item{start}{Earliest allowable time stamp in the data, as seconds since Unix epoch.}
-  \item{startmidnight}{Midnight of day '0' in the data, as seconds since Unix epoch.}
+  \item{X}{The dataset to be processed.}
+  \item{start, end, length, time.format}{A specification for the segment to process, as in \code{\link{get.intervals}}.}
+  \item{type}{The type of STFT to compute.}
+  \item{mv.indices}{For \code{type = "mv"} or \code{type = "sum"}, the indices to process and the order to process them in.}
+  \item{date.col}{logical. Whether the first column should be ignored and treated as a timestamp. If unset, is automatically chosen.}
+  \item{reassign}{logical. If TRUE, compute the time-reassigned STFT. For \code{type \%in\% c("mv", "sum")}, this is done with the first coordinate in \code{mv.indices}.}
+  \item{plot.it}{logical. Whether to plot the STFT immediately when processing is complete, using the default \code{plot.stft} options.}
+  \item{\dots}{Additional optional arguments to control the STFT computation. These are: \cr\cr
+
+  \code{win}: Window size in seconds for STFT computation. Increased window size mean better frequency resolution, but poorer time resolution. Defaults to 10 seconds.\cr
+
+  \code{inc}: Increment between successive time steps for processing. Defaults to \code{win/2}. \cr
+
+  \code{coef}: Number of fourier frequencies to compute. Small values will remove the higher frequencies from the processed object. Defaults to the maximum, \code{win/2}.\cr
+
+  \code{wtype}: String giving the name of a window function, providing coefficients for filtering before processing. "hanning.window" is the default, with "uniform.window" also available.\cr
+
+  \code{freq}: Sampling frequency of data set. If not given, is taken from X itself, or assumed to be 1 if unavailable.\cr
+
+  \code{center}: If TRUE (Default), center the data in each window before processing is done. Useful for avoiding excessively large DC offset coefficients in results.\cr
+
+  \code{calc.null}: If TRUE (Defaults to FALSE), compute a 'null' STFT by resampling the data completely, then doing a STFT.\cr
+
+  \code{pvalues}: If TRUE (Defaults to FALSE) Compute bootstrapped pvalues for each position by resampling within each window and applying a wilcox test.\cr
+
+  \code{time}: Allows the user to set an overriding timestamp vector to be used for processing.\cr
+
+  \code{quiet}: If TRUE, suppress output.
+}
 }
 \details{
-The function processes character vectors of the form "DATE TIME" -- that is to say, a maximum of two terms separated by a space per value. 
-
-"TIME" is given in 24 hour format, seperated by colons, in "hh:mm", "hh:mm:ss", "hh:mm:ss:ms" or "hh:mm:ss.ms" format. If ommitted, the time is taken to be 00:00:00.000.
-
-"DATE" can be a date representation as "YYYY-MM-DD", "DD/MM/YY" or "DD/MM/YYYY" (noting the use of a colon or backslash seperator to distinguish between the two). Alternatively, with \code{start} and/or \code{startmidnight} supplied, an integer "NN" or string "DOW" corresponding to a day of the week can be used instead. Then, the function will find the first timestamp matching the correct "TIME", that falls NN midnights after \code{startmidnight} and is after \code{start}, or, in the latter case, the first timestamp after the day of \code{start} that matches the appropriate day of the week. If a blank "DATE" is supplied, the function will either use the UNIX epoch, or find the first match, corresponding to the case NN = 0.
- 
-Once this is done the time is converted to the required format: \code{POSIX} is the usual R POSIXct format; \code{days} is the julian days since UNIX epoch 1970-1-1; \code{seconds} is the number of seconds (including subseconds) since 1970-1-1. Note that for formats other than POSIX, the output is in the same timezone as \code{tzone}. POSIX stores the time internally as the time in UTC, and applies a format that gives this time local to the user.
+This function accepts input in a variety of forms and computes short time fourier transforms to extract frequency structure from the data.
 }
 
 \value{
