@@ -12,31 +12,17 @@ Methods for processing and summarising AccData.
 A variety of functions and methods for handling processed AccData.
 }
 \usage{
-
+get.intervals(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = FALSE, simplify = TRUE ,read.from.file=FALSE, size=Inf, \dots)
 }
 \arguments{
-  \item{binfile}{
-A filename of a file to process.
-}
-  \item{outfile}{
-An optional filename specifying where to save the processed data object.
-}
-  \item{start}{Either:
-A representation of when in the file to begin processing, see Details.
-}
-  \item{end}{Either:
-A representation of when in the file to end processing, see Details.
-}
-  \item{verbose}{
-	A boolean variable indicating whether some information should be printed during processing should be printed.
-}
-  \item{do.temp}{
-	A boolean variable indicating whether the temperature signal should be extracted.
-}
- \item{do.volt}{
-	A boolean variable indicating whether the voltage signal should be extracted.
-}
-  \item{calibrate}{
+  \item{x}{Object to process.}
+  \item{start}{Start of interval.}
+  \item{end}{End of interval.}
+  \item{time.format}{Method with which \code{start} and \code{end} should be understood.}
+  \item{incl.date}{logical. Include a column denoting time?}
+  \item{simplify}{logical. If TRUE, output an array. Otherwise output a AccData object.}
+ \item{read.from.file}{logical. If TRUE, re-read the relevant time interval from the original bin file.}
+  \item{size}{
 	A boolean variable indicating whether the raw accelerometer values and the light variable should be calibrated according to the calibration data in the headers.
 }
 \item{downsample}{

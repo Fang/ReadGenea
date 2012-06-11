@@ -188,9 +188,13 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x,  mode = c("decibels", "modulus", "pval"), log = "", showmax = TRUE, median = FALSE, xaxis = TRUE, topthresh, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = TRUE, zlim.raw,zlim.quantile, cex = 2,col = gray (63:0/63),...)
+plot.stft <- function (x,  mode = c("decibels", "modulus", "pval"), log = "", showmax = TRUE, median = FALSE, xaxis = TRUE, topthresh, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = TRUE, zlim.raw,zlim.quantile, cex,col = gray (63:0/63),...)
   {
     xv <- x$values
+if (missing(cex)){
+cex = 5
+if (nrow(xv) > 500) cex = 2
+}
 if (missing(topthresh)){
 topthresh = Inf
 if (x$sampling.frequency > 30) topthresh = 15
@@ -341,11 +345,11 @@ axis(2, pretty(constrain(frequency, ylim[1], ylim[2]), min(floor(topthresh), flo
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
-points(timegrid, x$principals, col = 2, pch = ".", cex = 3)
+points(timegrid, x$principals, col = 2, pch = ".", cex = cex)
 
 }
 if (as.numeric(showmax) > 1){
-points(timegrid, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = 3)
+points(timegrid, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = cex)
 }
 
 }

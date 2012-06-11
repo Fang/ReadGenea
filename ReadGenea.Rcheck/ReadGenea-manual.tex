@@ -534,45 +534,49 @@ print(x, ...)
 \end{Arguments}
 %
 \begin{Details}\relax
-The function processes character vectors of the form "DATE TIME" -- that is to say, a maximum of two terms separated by a space per value. 
+STFT objects are created by the \code{\LinkA{stft}{stft}} function. These methods print some useful summary statistics about them, and produce plots.
 
-"TIME" is given in 24 hour format, seperated by colons, in "hh:mm", "hh:mm:ss", "hh:mm:ss:ms" or "hh:mm:ss.ms" format. If ommitted, the time is taken to be 00:00:00.000.
+\code{mode} determines the type of plot. "decibel" and "modulus" work with the raw values, while "pvalue" conducts some degree of normalisation in each time window and so is perhaps more useful for data showing a large variation in sd across different points in time. If the \code{null.calc} was set in the original stft argument, that is used - otherwise, an Exponential distribution is fit to each window, and the pvalues computed from that.
 
-"DATE" can be a date representation as "YYYY-MM-DD", "DD/MM/YY" or "DD/MM/YYYY" (noting the use of a colon or backslash seperator to distinguish between the two). Alternatively, with \code{start} and/or \code{startmidnight} supplied, an integer "NN" or string "DOW" corresponding to a day of the week can be used instead. Then, the function will find the first timestamp matching the correct "TIME", that falls NN midnights after \code{startmidnight} and is after \code{start}, or, in the latter case, the first timestamp after the day of \code{start} that matches the appropriate day of the week. If a blank "DATE" is supplied, the function will either use the UNIX epoch, or find the first match, corresponding to the case NN = 0.
+By default, the function uses some empirical quantile based colour thresholds designed to give somewhat reasonable and informative plots. This can be overridden, however, by setting different \code{zlim.raw} or \code{zlim.quantile} results. This can be useful for comparing two different datasets.
 
-Once this is done the time is converted to the required format: \code{POSIX} is the usual R POSIXct format; \code{days} is the julian days since UNIX epoch 1970-1-1; \code{seconds} is the number of seconds (including subseconds) since 1970-1-1. Note that for formats other than POSIX, the output is in the same timezone as \code{tzone}. POSIX stores the time internally as the time in UTC, and applies a format that gives this time local to the user.
+Reassigned stft plots are constructed, by default, when they are available, and when the original was not a "mv" stft. Unlike the heatmap used in the usual stft plot, a 2d scatterplot is used instead. This means that if there are few data points, it can be advantageous to set a higher \code{cex} value for larger points and better display.
+
+With Accelerometer data, often the frequencies of interest are concentrated at the lower frequencies. Topthresh crops the frequency display to show only those frequencies. A summary plot is show on the top, to compensate. Choosing a grid of frequencies, this plot draws one line to represent the energies present in the signal at that particular frequency, and higher. Black lines are drawn for frequencies less than 2/3 the \code{topthresh}, red lines for 2/3 - 1 times \code{topthresh}, and blue lines for frequencies higher than \code{topthresh}. Alternative, set \code{log = "y"} to put frequencies on a log scale.
 \end{Details}
 %
 \begin{Value}
-A converted date-time string in the specified format. In the case of "seconds", or "days", a numeric. For POSIX, a \code{\LinkA{POSIXct}{POSIXct}} object.
+These functions are run for their side effects.
 \end{Value}
 %
 \begin{SeeAlso}\relax
-\code{\LinkA{convert.time}{convert.time}}, \code{\LinkA{get.intervals}{get.intervals}}
+\code{\LinkA{stft}{stft}}, \code{\LinkA{image.default}{image.default}}
 \end{SeeAlso}
 %
 \begin{Examples}
 \begin{ExampleCode}
 
-t1 = parse.time("2012-06-21 13:04:01"); print(t1)
-parse.time("21/06/12 13:04:01") #gives the same result
+#Real data
+binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
 
-parse.time(c("19/07/70", "20/07/70"), format = "days")
-#results here will depend on your locale
-parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+#Read in the entire file, calibrated
+procfile<-read.bin(binfile)
+#Create stft object
+obj = stft(procfile, type = "svm", quiet = TRUE)
+#Look at it
+print(obj)
 
-#one is the same day, one can only find a match the next day
-parse.time("13:05", start = t1) - t1
-parse.time("13:00", start = t1) - t1
-#asking to wait 1 midnight means both times are considered as 
-#times on the same, full day of data
-parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
-#2012-06-21 is a Thursday, so this is equivalent
-parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
-#Longer form days of the week are also understood. Note that 
-#the first day does not get matched.
-parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+plot(obj, cex = 5)
+plot(obj, showmax = FALSE, cex = 5) #suppress principals
 
+#pval plot
+plot(obj, mode = "pval", cex = 5)
+#disable reassigned stft
+plot(obj, mode = "pval", reassign = FALSE) 
+#median smoothing
+plot(obj, mode = "pval", reassign = FALSE, median = TRUE) 
+#log scale frequency, no top bar
+dev.new(); plot(obj, mode = "pval", reassign = FALSE, topthresh = Inf, log = "y") 
 \end{ExampleCode}
 \end{Examples}
 \inputencoding{utf8}
