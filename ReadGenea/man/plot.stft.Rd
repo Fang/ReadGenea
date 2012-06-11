@@ -8,12 +8,11 @@ Plots and prints Short Time Fourier Transforms
 Processes a dataset, creating an object contained processed time-frequency analyses. These can then be plotted.
 }
 \usage{
-\method{plot}{stft}(x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = TRUE, median = FALSE, xaxis = TRUE, topthresh = Inf, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = TRUE, zlim.raw,zlim.quantile, cex = 2,\dots)
+\method{plot}{stft}(x, mode = c("decibels", "modulus", "pval"), log = "", showmax = TRUE, median = FALSE, xaxis = TRUE, topthresh, reassign = (!(is.null(x$LGD)) && !("mv" \%in\% x$type)), ylim, xlim,new = TRUE, zlim.raw,zlim.quantile, cex = 2, col = gray (63:0/63),\dots)
 \method{print}{stft}(x, \dots)
 }
 \arguments{
   \item{x}{"stft" class object to be processed.}
-  \item{col}{Vector of colours to be used for plotting.}
   \item{mode}{What should be plotted?\cr\cr
   "decibels": log10 of FFT modulus\cr
   "modulus": Raw FFT modulus\cr
@@ -21,9 +20,16 @@ Processes a dataset, creating an object contained processed time-frequency analy
   \item{log}{For \code{log = "y"}, use a log scale on the y axis.}
   \item{showmax}{Vector or logical. Compute and plot the principle frequency components?}
   \item{median}{logical. If TRUE, smooth the STFT plot in the time direction with a running median.}
-
-  \item{start}{Earliest allowable time stamp in the data, as seconds since Unix epoch.}
-  \item{startmidnight}{Midnight of day '0' in the data, as seconds since Unix epoch.}
+  \item{xaxis}{logical. If TRUE, plot pretty time axes.}
+  \item{topthresh}{For finite values, crop plot for frequencies higher than this value, and show a summary plot up top.}
+  \item{reassign}{logical. Plot reassigned stft, if available?}
+  \item{xlim, ylim}{Parameters controlling axes limits of plot.}
+  \item{new}{logical. If TRUE, make a new plot. Otherwise overlay on to existing plot.}
+  \item{zlim.raw}{Raw values at which to threshold values for computation of heatmap colours.}
+  \item{zlim.quantile}{Quantile values at which to threshold values for computation of heatmap colours.}
+  \item{cex}{Size of points for reassigned STFT plotting.}
+  \item{col}{Vector of colours to be used for plotting.}
+  \item{\dots}{Additional arguments to be passed to methods.}
 }
 \details{
 The function processes character vectors of the form "DATE TIME" -- that is to say, a maximum of two terms separated by a space per value. 

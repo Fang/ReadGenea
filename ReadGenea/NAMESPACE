@@ -32,6 +32,7 @@ S3method(c, AccData)
 S3method(dim, AccData)
 
 S3method(print, stft)
+S3method(plot, stft)
 
 #export(read.bin, header.info, 
 ###################

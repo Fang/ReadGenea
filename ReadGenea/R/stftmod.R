@@ -29,7 +29,7 @@ date.col = T
 date.col = F
 }
 }
-if (missing(mv.indices)) mv.indices <- 1:(min(ncol(X), 3) - date.col)
+if (missing(mv.indices)) mv.indices <- 1:(min(ncol(X) - date.col, 3))
 
 if (type == "svm"){
 if (date.col){
@@ -150,7 +150,7 @@ tmpdat = stft(sample(X), win = win0,
                  inc= inc0, coef=coef0, 
 		 wtype=wtype, freq = freq, center = T,  calc.null = F , quiet= T)
 null.logmean = log(sqrt(mean((tmpdat$values)^2)))
-#null.logsd = sd(tmpdat$values))
+null.logsd = log(sd(tmpdat$values))
 }
 if (!quiet)setTxtProgressBar(pb, 100)
 if (is.null(time)){
@@ -188,10 +188,13 @@ rep(1, n)
 
 #topthresh - threshold frequency at which to put higher frequency bins into a top plot # proportional for pval plot, else absolute?
 #reassign - use reassigned stft?
-plot.stft <- function (x, col = gray (63:0/63), mode = c("decibels", "modulus", "pval"), log = "", showmax = T, median = F, xaxis = T, topthresh = Inf, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = T, zlim.raw,zlim.quantile, cex = 2,...)
+plot.stft <- function (x,  mode = c("decibels", "modulus", "pval"), log = "", showmax = TRUE, median = FALSE, xaxis = TRUE, topthresh, reassign = (!(is.null(x$LGD)) && !("mv" %in% x$type)), ylim, xlim,new = TRUE, zlim.raw,zlim.quantile, cex = 2,col = gray (63:0/63),...)
   {
     xv <- x$values
-
+if (missing(topthresh)){
+topthresh = Inf
+if (x$sampling.frequency > 30) topthresh = 15
+}
 
 if (median) xv = apply(xv,2, function(t) (runmed(t, k = 1 + 2 * min((length(t)-1)%/% 2, ceiling(0.005*length(t))) )))
 
@@ -249,9 +252,11 @@ if (new){
  par(oma = c(5, 4, 4, 2) + 0.1)
 
 binwidth = ceiling(length(timegrid) /100)
+topind = 1:(floor(length(timegrid) / binwidth) * binwidth)
 
-res = apply(x$values, 2, function(t)  apply(matrix(t, binwidth), 2, median))
-timegridtop = matrix(timegrid, binwidth)[1,]
+#res = epoch.apply(x$values, epoch.size = binwidth, function(t) apply(t,2,median)) #apply(x$values, 2, function(t)  apply(matrix(t, binwidth), 2, median))
+res = apply(x$values[topind,], 2, function(t)  apply(matrix(t, binwidth), 2, median))
+timegridtop = matrix(timegrid[topind], binwidth)[1,]
 ind = ceiling(ncol(xv) * 1:20/20)
 ylim =  c(0, quantile(sqrt(rowSums(res^2)), 0.95)*1.1)
 if (xaxis){

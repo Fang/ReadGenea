@@ -107,7 +107,7 @@ Classes 'RGtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 80
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.145 secs .
+Processing took: 0.14 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -164,7 +164,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.125 secs .
+Processing took: 0.127 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -190,7 +190,7 @@ ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.097 secs .
+Processing took: 0.099 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -206,7 +206,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.125 secs .
+Processing took: 0.123 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -216,7 +216,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.085 secs .
+Processing took: 0.087 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -268,7 +268,459 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > y<-stft(x, wtype="hanning.window")
 ================================================================================
 > plot(y)
-Error in xy.coords(x, y, xlabel, ylabel, log) : 
-  'x' is a list, but does not have components 'x' and 'y'
-Calls: plot -> plot.default -> xy.coords
-Execution halted
+> 
+> 
+> 
+> cleanEx()
+> nameEx("header.info")
+> ### * header.info
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: header.info
+> ### Title: Get header info from Genea output (.bin) file
+> ### Aliases: header.info
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGenea")[1], more = TRUE)
+> print(fileheader)
+                                            Value
+Device_Unique_Serial_Code                  011073
+Measurement_Frequency                      100 Hz
+Measurement_Period                      168 Hours
+Start_Time                0000-00-00 00:00:00:000
+Study_Centre                 TESTCenter          
+Study_Code                   TESTCode            
+Investigator_ID              TESTID              
+Exercise_Type                Sample Code         
+Device_Location_Code                   left wrist
+Subject_Code                 TESTSubject         
+Date_of_Birth                            1900-1-1
+Sex                                          male
+Height                                        160
+Weight                                        100
+Handedness_Code                             right
+Number_of_Pages                               104
+> attr(fileheader, "calibration")
+$tzone
+[1] 1
+
+$xgain
+[1] 25344
+
+$xoffset
+[1] 1104
+
+$ygain
+[1] 25870
+
+$yoffset
+[1] 454
+
+$zgain
+[1] 25470
+
+$zoffset
+[1] -1433
+
+$volts
+[1] 300
+
+$lux
+[1] 800
+
+$npages
+[1] 104
+
+$firstpage
+[1] 0
+
+$freq
+[1] 100
+
+$t1
+[1] 1337791670
+
+$t1c
+[1] "2012-05-23 16:47:50 BST"
+
+$inc
+[1] 0.01
+
+$t1midnight
+[1] 1337731200
+
+$headlines
+[1] 59
+
+> 
+> 
+> 
+> cleanEx()
+> nameEx("parse.time")
+> ### * parse.time
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: parse.time
+> ### Title: Parses a character time representation to another format.
+> ### Aliases: parse.time
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+[1] 1340283841
+> parse.time("21/06/12 13:04:01") #gives the same result
+[1] 1340283841
+> 
+> parse.time(c("19/07/70", "20/07/70"), format = "days")
+[1] 199 200
+> #results here will depend on your locale
+> parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+[1] "1970-07-19 05:00:00 BST" "1970-07-20 05:00:00 BST"
+> 
+> #one is the same day, one can only find a match the next day
+> parse.time("13:05", start = t1) - t1
+[1] 59
+> parse.time("13:00", start = t1) - t1
+[1] 86159
+> #asking to wait 1 midnight means both times are considered as 
+> #times on the same, full day of data
+> parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+[1] 86459 86159
+> #2012-06-21 is a Thursday, so this is equivalent
+> parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+[1] 86459 86159
+> #Longer form days of the week are also understood. Note that 
+> #the first day does not get matched.
+> parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+[1] 604859 604559
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("plot.stft")
+> ### * plot.stft
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: plot.stft
+> ### Title: Plots and prints Short Time Fourier Transforms
+> ### Aliases: plot.stft print.stft
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+[1] 1340283841
+> parse.time("21/06/12 13:04:01") #gives the same result
+[1] 1340283841
+> 
+> parse.time(c("19/07/70", "20/07/70"), format = "days")
+[1] 199 200
+> #results here will depend on your locale
+> parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+[1] "1970-07-19 05:00:00 BST" "1970-07-20 05:00:00 BST"
+> 
+> #one is the same day, one can only find a match the next day
+> parse.time("13:05", start = t1) - t1
+[1] 59
+> parse.time("13:00", start = t1) - t1
+[1] 86159
+> #asking to wait 1 midnight means both times are considered as 
+> #times on the same, full day of data
+> parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+[1] 86459 86159
+> #2012-06-21 is a Thursday, so this is equivalent
+> parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+[1] 86459 86159
+> #Longer form days of the week are also understood. Note that 
+> #the first day does not get matched.
+> parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+[1] 604859 604559
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("read.bin")
+> ### * read.bin
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: read.bin
+> ### Title: File processing function for binary files.
+> ### Aliases: read.bin
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> 
+> binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+> 
+> #Read in the entire file, calibrated
+> procfile<-read.bin(binfile)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.116 secs .
+Loaded 31200 records (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> print(procfile)
+ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+[ TESTfile.bin ]
+> procfile$data.out[1:5,]
+         timestamp                  x              y                z light
+[1,] 1337791670.00  0.023516414141414 -0.88728256668 -0.1007852375344     0
+[2,] 1337791670.01 -0.000157828282828 -1.08828759181 -0.0929328621908     0
+[3,] 1337791670.02  0.023516414141414 -1.04190181678 -0.0733019238320     0
+[4,] 1337791670.03  0.011679292929293 -1.06509470429 -0.0654495484884     0
+[5,] 1337791670.04  0.031407828282828 -1.11148047932 -0.1400471142521     0
+     button temperature
+[1,]      0        25.8
+[2,]      0        25.8
+[3,]      0        25.8
+[4,]      0        25.8
+[5,]      0        25.8
+> 
+> #Uncalibrated, mmap off
+> procfile2<-read.bin(binfile, calibrate = FALSE)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.121 secs .
+Loaded 31200 records (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> procfile2$data.out[1:5,]
+         timestamp  x    y   z light button temperature
+[1,] 1337791670.00 17 -225 -40     0      0        25.8
+[2,] 1337791670.01 11 -277 -38     0      0        25.8
+[3,] 1337791670.02 17 -265 -33     0      0        25.8
+[4,] 1337791670.03 14 -271 -31     0      0        25.8
+[5,] 1337791670.04 19 -283 -50     0      0        25.8
+> 
+> #Read in again, reusing already computed mmap pagerefs
+> procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.107 secs .
+Loaded 31200 records (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> 
+> #Downsample by a factor of 10
+> procfilelo<-read.bin(binfile, downsample = 10)
+Downsampling to  10  Hz 
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.103 secs .
+Loaded 3120 records (Approx  0 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
+> print(procfilelo)
+ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
+[ TESTfile.bin ]
+> object.size(procfilelo) / object.size(procfile)
+0.103886748580938 bytes
+> 
+> #Read in a 1 minute interval
+> procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.019 secs .
+Loaded 6600 records (Approx  0 MB of RAM)
+12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
+> print(procfileshort)
+ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
+12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
+[ TESTfile.bin ]
+> 
+> ##NOT RUN: Read, and save as a R workspace
+> #read.bin(binfile, outfile="tmp.Rdata")
+> #print(load("tmp.Rdata"))
+> #print(processedfile)
+> 
+> 
+> 
+> 
+> 
+> cleanEx()
+> nameEx("stft")
+> ### * stft
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: stft
+> ### Title: Computes Short Time Fourier Transforms
+> ### Aliases: stft
+> ### Keywords: manip
+> 
+> ### ** Examples
+> 
+> #Some artificial data
+> time = 1:5000
+> #sum of two sine curves at 0.3 Hz and 0.05 Hz
+> f1 = 0.3; f2 = 0.05
+> sin1 = sin(time * f1 * 2*pi)
+> sin2 = sin(time * f2 * 2*pi)
+> #add a bit of noise
+> signal = sin1 + sin2 + 1*rnorm(5000)
+> #non-reassigned
+> stft(signal, plot = TRUE, reassign = FALSE, win = 100)
+================================================================================
+STFT object:
+70-01-01 00:00:50.000 (Thu)  to  70-01-01 01:22:30.000 (Thu) 
+99 increments of 50 s 
+Window size:  100 ( 100 s ) -> f resolution:  0.01 Hz
+
+------ 
+{ stft(X = signal, reassign = FALSE, plot.it = TRUE, win = 100) }
+> #reassigned
+> stft(signal, plot = TRUE, reassign = TRUE, win = 100)
+================================================================================
+STFT object:
+70-01-01 00:00:50.000 (Thu)  to  70-01-01 01:22:30.000 (Thu) 
+99 increments of 50 s 
+Window size:  100 ( 100 s ) -> f resolution:  0.01 Hz
+[Reassign]
+------ 
+{ stft(X = signal, reassign = TRUE, plot.it = TRUE, win = 100) }
+> 
+> #add a third component: varying frequency.
+> stft(signal + sin( cumsum(seq(f2, f1, length = 5000))*2*pi), plot = TRUE, reassign = TRUE, win = 100)
+================================================================================
+STFT object:
+70-01-01 00:00:50.000 (Thu)  to  70-01-01 01:22:30.000 (Thu) 
+99 increments of 50 s 
+Window size:  100 ( 100 s ) -> f resolution:  0.01 Hz
+[Reassign]
+------ 
+{ stft(X = signal + sin(cumsum(seq(f2, f1, length = 5000)) * 2 *      pi), reassign = TRUE, plot.it = TRUE, win = 100) }
+> 
+> #Real data
+> binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+> 
+> #Read in the entire file, calibrated
+> procfile<-read.bin(binfile)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.125 secs .
+Loaded 31200 records (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> #Default is mv
+> stft(procfile, plot.it = TRUE)
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+================================================================================
+================================================================================
+STFT object:
+12-05-23 16:47:54.990 (Wed)  to  12-05-23 16:52:54.990 (Wed) 
+61 increments of 5 s 
+Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
+[MV- 123 ][Reassign]
+------ 
+{ stft(X = procfile, plot.it = TRUE) }
+> #Try sum?
+> stft(procfile, plot.it = TRUE, type = "sum", reassign = FALSE)
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+================================================================================
+================================================================================
+STFT object:
+12-05-23 16:47:54.990 (Wed)  to  12-05-23 16:52:54.990 (Wed) 
+61 increments of 5 s 
+Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
+[SUM- 123 ]
+------ 
+{ stft(X = procfile, type = "sum", reassign = FALSE, plot.it = TRUE) }
+> 
+> #Just look at the last 50% of the data
+> stft(procfile, start = 0.5, plot.it = TRUE)
+Extracting time interval:  16:50:25 16:53:01 
+================================================================================
+================================================================================
+================================================================================
+STFT object:
+12-05-23 16:50:30.980 (Wed)  to  12-05-23 16:52:55.980 (Wed) 
+30 increments of 5 s 
+Window size:  1000 ( 9.999 s ) -> f resolution:  0.1 Hz
+[MV- 123 ][Reassign]
+------ 
+{ stft(X = procfile, start = 0.5, plot.it = TRUE) }
+> 
+> #not reassigned, svm
+> stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE)
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+STFT object:
+12-05-23 16:47:54.990 (Wed)  to  12-05-23 16:52:54.990 (Wed) 
+61 increments of 5 s 
+Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
+[SVM]
+------ 
+{ stft(X = procfile, type = "svm", reassign = FALSE, plot.it = TRUE) }
+> #a narrower 5 second window means better time resolution
+> stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, win = 5)
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+STFT object:
+12-05-23 16:47:52.490 (Wed)  to  12-05-23 16:52:57.490 (Wed) 
+123 increments of 2.5 s 
+Window size:  500 ( 5 s ) -> f resolution:  0.2 Hz
+[SVM]
+------ 
+{ stft(X = procfile, type = "svm", reassign = FALSE, plot.it = TRUE,      win = 5) }
+> #choose increments so as not to overlap
+> stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, win = 5, inc = 5)
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+STFT object:
+12-05-23 16:47:52.490 (Wed)  to  12-05-23 16:52:57.490 (Wed) 
+62 increments of 5 s 
+Window size:  500 ( 5 s ) -> f resolution:  0.2 Hz
+[SVM]
+------ 
+{ stft(X = procfile, type = "svm", reassign = FALSE, plot.it = TRUE,      win = 5, inc = 5) }
+> #uniform windows
+> stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, wtype = "uniform.window")
+Extracting time interval:  16:47:50 16:53:01 
+================================================================================
+STFT object:
+12-05-23 16:47:54.990 (Wed)  to  12-05-23 16:52:54.990 (Wed) 
+61 increments of 5 s 
+Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
+[SVM]
+------ 
+{ stft(X = procfile, type = "svm", reassign = FALSE, plot.it = TRUE,      wtype = "uniform.window") }
+> 
+> #Svm, reassigned, quietly
+> obj = stft(procfile, type = "svm", quiet = TRUE)
+Extracting time interval:  16:47:50 16:53:01 
+> plot(obj, cex = 3, showmax = FALSE, mode = "pval")
+> 
+> 
+> 
+> ### * <FOOTER>
+> ###
+> cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
+Time elapsed:  8.04 0.11 8.19 NA NA 
+> grDevices::dev.off()
+null device 
+          1 
+> ###
+> ### Local variables: ***
+> ### mode: outline-minor ***
+> ### outline-regexp: "\\(> \\)?### [*]+" ***
+> ### End: ***
+> quit('no')

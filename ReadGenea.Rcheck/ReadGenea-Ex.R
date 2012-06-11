@@ -224,6 +224,42 @@ parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
 
 
 cleanEx()
+nameEx("plot.stft")
+### * plot.stft
+
+flush(stderr()); flush(stdout())
+
+### Name: plot.stft
+### Title: Plots and prints Short Time Fourier Transforms
+### Aliases: plot.stft print.stft
+### Keywords: manip
+
+### ** Examples
+
+
+t1 = parse.time("2012-06-21 13:04:01"); print(t1)
+parse.time("21/06/12 13:04:01") #gives the same result
+
+parse.time(c("19/07/70", "20/07/70"), format = "days")
+#results here will depend on your locale
+parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+
+#one is the same day, one can only find a match the next day
+parse.time("13:05", start = t1) - t1
+parse.time("13:00", start = t1) - t1
+#asking to wait 1 midnight means both times are considered as 
+#times on the same, full day of data
+parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
+#2012-06-21 is a Thursday, so this is equivalent
+parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
+#Longer form days of the week are also understood. Note that 
+#the first day does not get matched.
+parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+
+
+
+
+cleanEx()
 nameEx("read.bin")
 ### * read.bin
 
@@ -277,31 +313,52 @@ flush(stderr()); flush(stdout())
 
 ### Name: stft
 ### Title: Computes Short Time Fourier Transforms
-### Aliases: stft print.stft plot.stft
+### Aliases: stft
 ### Keywords: manip
 
 ### ** Examples
 
+#Some artificial data
+time = 1:5000
+#sum of two sine curves at 0.3 Hz and 0.05 Hz
+f1 = 0.3; f2 = 0.05
+sin1 = sin(time * f1 * 2*pi)
+sin2 = sin(time * f2 * 2*pi)
+#add a bit of noise
+signal = sin1 + sin2 + 1*rnorm(5000)
+#non-reassigned
+stft(signal, plot = TRUE, reassign = FALSE, win = 100)
+#reassigned
+stft(signal, plot = TRUE, reassign = TRUE, win = 100)
 
-t1 = parse.time("2012-06-21 13:04:01"); print(t1)
-parse.time("21/06/12 13:04:01") #gives the same result
+#add a third component: varying frequency.
+stft(signal + sin( cumsum(seq(f2, f1, length = 5000))*2*pi), plot = TRUE, reassign = TRUE, win = 100)
 
-parse.time(c("19/07/70", "20/07/70"), format = "days")
-#results here will depend on your locale
-parse.time(c("19/07/70", "20/07/70"), format = "POSIX", tzone = -4)
+#Real data
+binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
 
-#one is the same day, one can only find a match the next day
-parse.time("13:05", start = t1) - t1
-parse.time("13:00", start = t1) - t1
-#asking to wait 1 midnight means both times are considered as 
-#times on the same, full day of data
-parse.time(c("1 13:05", "1 13:00"), start = t1) - t1
-#2012-06-21 is a Thursday, so this is equivalent
-parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
-#Longer form days of the week are also understood. Note that 
-#the first day does not get matched.
-parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
+#Read in the entire file, calibrated
+procfile<-read.bin(binfile)
+#Default is mv
+stft(procfile, plot.it = TRUE)
+#Try sum?
+stft(procfile, plot.it = TRUE, type = "sum", reassign = FALSE)
 
+#Just look at the last 50% of the data
+stft(procfile, start = 0.5, plot.it = TRUE)
+
+#not reassigned, svm
+stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE)
+#a narrower 5 second window means better time resolution
+stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, win = 5)
+#choose increments so as not to overlap
+stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, win = 5, inc = 5)
+#uniform windows
+stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, wtype = "uniform.window")
+
+#Svm, reassigned, quietly
+obj = stft(procfile, type = "svm", quiet = TRUE)
+plot(obj, cex = 3, showmax = FALSE, mode = "pval")
 
 
 

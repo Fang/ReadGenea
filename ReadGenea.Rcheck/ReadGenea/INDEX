@@ -8,5 +8,6 @@ hanning.window          Computes the Coefficients of a Hanning or
 header.info             Get header info from Genea output (.bin) file
 parse.time              Parses a character time representation to
                         another format.
+plot.stft               Plots and prints Short Time Fourier Transforms
 read.bin                File processing function for binary files.
 stft                    Computes Short Time Fourier Transforms

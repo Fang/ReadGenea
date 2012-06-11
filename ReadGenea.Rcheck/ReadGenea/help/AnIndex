@@ -17,10 +17,10 @@ hanning.window	hanning.window
 header.info	header.info
 parse.time	parse.time
 plot.AccData	get.intervals
-plot.stft	stft
+plot.stft	plot.stft
 pretty.RGtime	RGtime
 print.AccData	get.intervals
-print.stft	stft
+print.stft	plot.stft
 read.bin	read.bin
 ReadGenea	ReadGenea-package
 RGtime	RGtime

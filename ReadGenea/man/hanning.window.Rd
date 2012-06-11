@@ -4,7 +4,7 @@
 
 \usage{
 hanning.window(n)
-unifom.window(n)
+uniform.window(n)
 }
 
 \alias{hanning.window}

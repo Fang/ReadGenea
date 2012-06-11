@@ -32,7 +32,6 @@
 * checking R code for possible problems ... OK
 * checking Rd files ... NOTE
 prepare_Rd: get.intervals.Rd:14-16: Dropping empty section \usage
-prepare_Rd: stft.Rd:11-13: Dropping empty section \usage
 * checking Rd metadata ... OK
 * checking Rd cross-references ... WARNING
 Missing link(s) in documentation object 'C:/Users/zhou/PortableGit/ReadGenea/ReadGenea/man/epoch.apply.Rd':
@@ -47,40 +46,13 @@ Undocumented code objects:
 All user-level objects in a package should have documentation entries.
 See the chapter 'Writing R documentation files' in the 'Writing R
 Extensions' manual.
-* checking for code/documentation mismatches ... WARNING
-Functions/methods with usage in documentation object 'hanning.window' but not in code:
-  unifom.window
-
-* checking Rd \usage sections ... WARNING
-Objects in \usage without \alias in documentation object 'hanning.window':
-  'unifom.window'
-
-Functions with \usage entries need to have the appropriate \alias
-entries, and all their arguments documented.
-The \usage entries must correspond to syntactically valid R code.
-See the chapter 'Writing R documentation files' in the 'Writing R
-Extensions' manual.
+* checking for code/documentation mismatches ... OK
+* checking Rd \usage sections ... OK
 * checking Rd contents ... OK
 * checking for unstated dependencies in examples ... OK
-* checking examples ... ERROR
-Running examples in 'ReadGenea-Ex.R' failed
-The error most likely occurred in:
-
-> ### Name: hanning.window
-> ### Title: Computes the Coefficients of a Hanning or Uniform Window.
-> ### Aliases: hanning.window uniform.window
-> ### Keywords: ts
-> 
-> ### ** Examples
-> hanning.window(10)
- [1] 0.000000000000 0.116977778441 0.413175911167 0.750000000000 0.969846310393
- [6] 0.969846310393 0.750000000000 0.413175911167 0.116977778441 0.000000000000
-> 
-> x<-rnorm(500)
-> y<-stft(x, wtype="hanning.window")
-================================================================================
-> plot(y)
-Error in xy.coords(x, y, xlabel, ylabel, log) : 
-  'x' is a list, but does not have components 'x' and 'y'
-Calls: plot -> plot.default -> xy.coords
-Execution halted
+* checking examples ... OK
+* checking PDF version of manual ... WARNING
+LaTeX errors when creating PDF version.
+This typically indicates Rd problems.
+* checking PDF version of manual without hyperrefs or index ... ERROR
+Re-running with no redirection of stdout/stderr.
