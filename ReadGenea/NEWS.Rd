@@ -2,6 +2,12 @@
 \title{News for Package \pkg{ReadGenea}}
 \newcommand{\cpkg}{\href{http://CRAN.R-project.org/package=#1}{\pkg{#1}}}
 
+\section{Changes in version 3.0}{
+\itemize{
+	\item Many changes and alterations and documentation.
+	\item Version submitted to CRAN
+}
+
 \section{Changes in version 2.5}{
 \itemize{
 	\item BUGFIX: Software should deal with multi-line comments correctly now.

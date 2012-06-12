@@ -496,7 +496,7 @@ class(processedfile) = "AccData"
 }
 
 print.VirtAccData <- function(x, ...){
-cat("[Virtual ReadGenea dataset]: ", length(x$data.out)*x$nobs, "records at", round(x$freq,2), "Hz (Approx ", round(object.size(x$data.out)/1000000) ,"MB of RAM if loaded)\n")
+cat("[Virtual ReadGenea dataset]: ", length(x$data.out)*x$nobs, "records at", round(x$freq,2), "Hz (Approx ", round(56 * as.double(length(x$data.out) * x$nobs )/1000000)   ,"MB of RAM)\n")
 cat(  format.RGtime(x$data.out[1], format = "%y-%m-%d %H:%M:%OS3 (%a)")," to ", format.RGtime(tail(x$data.out,1) + x$nobs /x$freq, format = "%y-%m-%d %H:%M:%OS3 (%a)"), "\n")
 cat("[", x$filename, "]\n")
 }
@@ -509,7 +509,7 @@ cat("[", x$filename, "]\n")
 
 
 
-"[.AccData"    <- function (x, i=1:dim(x$data.out)[1], j=NULL, drop=T) {
+"[.AccData"    <- function (x, i=1:dim(x$data.out)[1], j=NULL, drop=TRUE) {
 if (is.null(j)){
 x$page.timestamps = x$page.timestamps[ unique(ceiling(i/300))]
 x$data.out = x$data.out[i,]
@@ -521,7 +521,7 @@ if ( j[1] == 1 ){
 if (length(j) != 1){
 value = x$data.out[i, j[-1] , drop = F]
 
-return( data.frame( time = convert.time(x$data.out[i,1, drop = F]), value  ))
+return( data.frame( time = convert.time(x$data.out[i,1, drop = T]), value  ))
 } else{
 return (convert.time(x$data.out[i,1, drop = drop]))
 }
@@ -538,7 +538,7 @@ class(x) <- NULL
 return(x[[name, exact = FALSE]])
 }else { 
 #	x = unclass(x)
-	ind = switch(nmatch, time = 1, x = 2, y = 3, z = 4, xyz = 2:4, temperature = 5, button = 6, light = 7, voltage = 8, svm = 9)
+	ind = switch(nmatch, time = 1, x = 2, y = 3, z = 4, xyz = 2:4, temperature = 7, button = 6, light = 5, voltage = 8, svm = 9)
 	if (identical(ind, 8)){
 		return(rep(x$page.volt, each = ceiling(nrow(x)/length(x$page.volt)) )[1:nrow(x)])
 	} else if (identical(ind, 9)){

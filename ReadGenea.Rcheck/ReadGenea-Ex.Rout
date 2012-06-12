@@ -24,10 +24,50 @@ Type 'q()' to quit R.
 > options(pager = "console")
 > library('ReadGenea')
 Loading required package: bitops
-ReadGenea 2.5 loaded
+ReadGenea 3.0 loaded
 
 > 
 > assign(".oldSearch", search(), pos = 'CheckExEnv')
+> cleanEx()
+> nameEx("AccData")
+> ### * AccData
+> 
+> flush(stderr()); flush(stdout())
+> 
+> ### Name: AccData
+> ### Title: Methods for processing and summarising AccData.
+> ### Aliases: AccData [.AccData $.AccData print.AccData plot.AccData
+> ###   summary.AccData
+> ### Keywords: methods
+> 
+> ### ** Examples
+> 
+> 
+> binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+> 
+> #Read in the entire file, calibrated
+> procfile<-read.bin(binfile)
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.154 secs .
+Loaded 31200 records (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> 
+> print(procfile)
+ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+[ TESTfile.bin ]
+> summary(procfile)
+        Min.      1st Qu.       Median         Mean      3rd Qu.         Max. 
+0.0581691866 0.4191740870 0.4828117050 0.6204790930 0.7199023660 1.6533637100 
+> 
+> plot(procfile$temperature)
+> plot(procfile[,c(1,7)])
+> 
+> 
+> 
+> 
 > cleanEx()
 > nameEx("RGtime")
 > ### * RGtime
@@ -38,7 +78,7 @@ ReadGenea 2.5 loaded
 > ### Title: Date time handling for the ReadGenea package.
 > ### Aliases: RGtime convert.time as.RGtime format.RGtime axis.RGtime
 > ###   pretty.RGtime
-> ### Keywords: manip
+> ### Keywords: methods
 > 
 > ### ** Examples
 > 
@@ -97,7 +137,7 @@ Classes 'RGtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 80
 > ### Title: Compute epochal summary statistics.
 > ### Aliases: epoch.apply epoch.mean epoch.sd epoch.median epoch.mad
 > ###   epoch.autocor epoch.quantile svm
-> ### Keywords: manip
+> ### Keywords: ts
 > 
 > ### ** Examples
 > 
@@ -107,7 +147,7 @@ Classes 'RGtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 80
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.145 secs .
+Processing took: 0.141 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -149,9 +189,8 @@ Loaded 31200 records (Approx  2 MB of RAM)
 > flush(stderr()); flush(stdout())
 > 
 > ### Name: get.intervals
-> ### Title: Methods for processing and summarising AccData.
-> ### Aliases: AccData get.intervals [.AccData $.AccData print.AccData
-> ###   plot.AccData
+> ### Title: Extract an interval of data.
+> ### Aliases: get.intervals print.VirtAccData VirtAccData
 > ### Keywords: manip
 > 
 > ### ** Examples
@@ -159,90 +198,79 @@ Loaded 31200 records (Approx  2 MB of RAM)
 > 
 > binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
 > 
-> #Read in the entire file, calibrated
-> procfile<-read.bin(binfile)
+> #Read in a highly downsampled version of the file
+> procfile<-read.bin(binfile, downsample = 100)
+Downsampling to  1  Hz 
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.124 secs .
-Loaded 31200 records (Approx  2 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+Processing took: 0.117 secs .
+Loaded 312 records (Approx  0 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.000 (Wed) 
 > print(procfile)
-ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+ReadGenea dataset:  312 records at 1 Hz (Approx  0 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.000 (Wed) 
 [ TESTfile.bin ]
-> procfile$data.out[1:5,]
-         timestamp                  x              y                z light
-[1,] 1337791670.00  0.023516414141414 -0.88728256668 -0.1007852375344     0
-[2,] 1337791670.01 -0.000157828282828 -1.08828759181 -0.0929328621908     0
-[3,] 1337791670.02  0.023516414141414 -1.04190181678 -0.0733019238320     0
-[4,] 1337791670.03  0.011679292929293 -1.06509470429 -0.0654495484884     0
-[5,] 1337791670.04  0.031407828282828 -1.11148047932 -0.1400471142521     0
-     button temperature
-[1,]      0        25.8
-[2,]      0        25.8
-[3,]      0        25.8
-[4,]      0        25.8
-[5,]      0        25.8
+> #Plot the x component
+> plot(procfile[,1:2], type = "l")
 > 
-> #Uncalibrated, mmap off
-> procfile2<-read.bin(binfile, calibrate = FALSE)
+> #Overlay some segments in different colour
+> lines(get.intervals(procfile, start = 0.4, end = 0.5, time.format = "prop", incl.date = TRUE)[,1:2], col=2) 
+Extracting time interval:  16:49:54 16:50:25 
+> lines(get.intervals(procfile, start = 0.4, end = 5, time.format = "sec", incl.date = TRUE)[,1:2], col=3) 
+Extracting time interval:  47:50.000 47:54.000 
+> lines(get.intervals(procfile, start = "16:51", end = "16:52", time.format = "time", incl.date = TRUE)[,1:2], col=4) 
+Extracting time interval:  16:51:00 16:52:01 
+> #Note that measurements will depend on the downsampling rate, not the original sampling rate of the data
+> lines(get.intervals(procfile, start = 100, length = 10, time.format = "measurement", incl.date = TRUE)[,1:2], col=5) 
+Extracting time interval:  16:49:29 16:49:39 
+> #This is also understood
+> lines(get.intervals(procfile, start = "16:52:10", 30,  incl.date = TRUE)[,1:2], col=6) 
+Extracting time interval:  16:52:10 16:52:40 
+> 
+> #Now load in virtually
+> virtfile<-read.bin(binfile, virtual = TRUE)
+Number of pages in binary file: 104 
+Processing...
+
+Virtually loaded 31200 records at 100 Hz (Will take up approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:02.000 (Wed) 
+> #Notice that get.intervals with simplify = FALSE gives a genuine AccData object
+> realfile = get.intervals(virtfile, start = 0.5, end = 1, simplify = FALSE)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.097 secs .
-Loaded 31200 records (Approx  2 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
-> procfile2$data.out[1:5,]
-         timestamp  x    y   z light button temperature
-[1,] 1337791670.00 17 -225 -40     0      0        25.8
-[2,] 1337791670.01 11 -277 -38     0      0        25.8
-[3,] 1337791670.02 17 -265 -33     0      0        25.8
-[4,] 1337791670.03 14 -271 -31     0      0        25.8
-[5,] 1337791670.04 19 -283 -50     0      0        25.8
-> 
-> #Read in again, reusing already computed mmap pagerefs
-> procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
-Number of pages in binary file: 104 
-Processing...
-================================================================================
-Processing took: 0.123 secs .
-Loaded 31200 records (Approx  2 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
-> 
-> #Downsample by a factor of 10
-> procfilelo<-read.bin(binfile, downsample = 10)
-Downsampling to  10  Hz 
-Number of pages in binary file: 104 
-Processing...
-================================================================================
-Processing took: 0.087 secs .
-Loaded 3120 records (Approx  0 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
-> print(procfilelo)
-ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
-12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
+Processing took: 0.048 secs .
+Loaded 15900 records (Approx  1 MB of RAM)
+12-05-23 16:50:23.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+> virtfile
+[Virtual ReadGenea dataset]:  31200 records at 100 Hz (Approx  2 MB of RAM)
+12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:02.000 (Wed) 
 [ TESTfile.bin ]
-> object.size(procfilelo) / object.size(procfile)
-0.103886748580938 bytes
-> 
-> #Read in a 1 minute interval
-> procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
+> realfile
+ReadGenea dataset:  15900 records at 100 Hz (Approx  1 MB of RAM)
+12-05-23 16:50:23.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
+[ TESTfile.bin ]
+> #get.intervals calls read.bin automatically
+> points(get.intervals(virtfile, start = "16:52:10", "16:52:40",  incl.date = TRUE)[,1:2], col=4, pch = ".") 
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.018 secs .
-Loaded 6600 records (Approx  0 MB of RAM)
-12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
-> print(procfileshort)
-ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
-12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
-[ TESTfile.bin ]
+Processing took: 0.01 secs .
+Loaded 3600 records (Approx  0 MB of RAM)
+12-05-23 16:52:08.000 (Wed)  to  12-05-23 16:52:43.990 (Wed) 
+Extracting time interval:  16:52:08 16:52:43 
 > 
-> ##NOT RUN: Read, and save as a R workspace
-> #read.bin(binfile, outfile="tmp.Rdata")
-> #print(load("tmp.Rdata"))
-> #print(processedfile)
+> #Alternatively, re-read procfile at a different resampling rate.
+> lines(get.intervals(procfile, start = "16:49:00", "16:49:30",  incl.date = TRUE, read.from.file = TRUE, downsample = 300)[,1:2], col=2) 
+Downsampling to  0.33  Hz 
+Number of pages in binary file: 104 
+Processing...
+================================================================================
+Processing took: 0.01 secs .
+Loaded 12 records (Approx  0 MB of RAM)
+12-05-23 16:48:59.000 (Wed)  to  12-05-23 16:49:32.000 (Wed) 
+Extracting time interval:  16:48:59 16:49:32 
 > 
 > 
 > 
@@ -280,7 +308,7 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > ### Name: header.info
 > ### Title: Get header info from Genea output (.bin) file
 > ### Aliases: header.info
-> ### Keywords: manip
+> ### Keywords: IO
 > 
 > ### ** Examples
 > 
@@ -368,7 +396,7 @@ $headlines
 > ### Name: parse.time
 > ### Title: Parses a character time representation to another format.
 > ### Aliases: parse.time
-> ### Keywords: manip
+> ### Keywords: utilities
 > 
 > ### ** Examples
 > 
@@ -413,7 +441,7 @@ $headlines
 > ### Name: plot.stft
 > ### Title: Plots and prints Short Time Fourier Transforms
 > ### Aliases: plot.stft print.stft
-> ### Keywords: manip
+> ### Keywords: hplot
 > 
 > ### ** Examples
 > 
@@ -426,7 +454,7 @@ $headlines
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.122 secs .
+Processing took: 0.144 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > #Create stft object
@@ -465,7 +493,7 @@ Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
 > ### Name: read.bin
 > ### Title: File processing function for binary files.
 > ### Aliases: read.bin
-> ### Keywords: manip
+> ### Keywords: IO
 > 
 > ### ** Examples
 > 
@@ -477,7 +505,7 @@ Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.131 secs .
+Processing took: 0.141 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -503,7 +531,7 @@ ReadGenea dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.101 secs .
+Processing took: 0.119 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -519,7 +547,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.127 secs .
+Processing took: 0.144 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -529,7 +557,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.085 secs .
+Processing took: 0.093 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -544,7 +572,7 @@ ReadGenea dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.019 secs .
+Processing took: 0.02 secs .
 Loaded 6600 records (Approx  0 MB of RAM)
 12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
 > print(procfileshort)
@@ -570,7 +598,7 @@ ReadGenea dataset:  6600 records at 100 Hz (Approx  0 MB of RAM)
 > ### Name: stft
 > ### Title: Computes Short Time Fourier Transforms
 > ### Aliases: stft
-> ### Keywords: manip
+> ### Keywords: ts
 > 
 > ### ** Examples
 > 
@@ -622,7 +650,7 @@ Window size:  100 ( 100 s ) -> f resolution:  0.01 Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.116 secs .
+Processing took: 0.128 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > #Default is mv
@@ -721,7 +749,7 @@ Extracting time interval:  16:47:50 16:53:01
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  12.43 0.11 12.68 NA NA 
+Time elapsed:  13.15 0.2 13.34 NA NA 
 > grDevices::dev.off()
 pdf 
   2 

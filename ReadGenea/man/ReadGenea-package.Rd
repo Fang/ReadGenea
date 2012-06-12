@@ -14,14 +14,15 @@ read.bin\cr
 \tabular{ll}{
 Package: \tab ReadGenea\cr
 Type: \tab Package\cr
-Version: \tab 2.0-1\cr
-Date: \tab 12/10/2011\cr
+Version: \tab 3.0\cr
+Date: \tab 12/06/2012\cr
 License: \tab GPL\cr
 LazyLoad: \tab yes\cr
 }
 
 }
 \author{
+Zhou Fang <zhou@activinsights.co.uk>
 ActivInsights Ltd. <joss.langford@activinsights.co.uk>
 }
 \keyword{ package }

@@ -106,7 +106,7 @@ With \code{virtual = FALSE}, an "AccData" S3 object with 9 components:
 \item{filename}{The file name of the bin file.}
 \item{page.numbers}{The pages that were loaded.}
 \item{call}{The function call that the object was created with.}
-\item{volt}{The battery voltage associated with each loaded page, if \code{do.volt} is TRUE.}
+\item{page.volts}{The battery voltage associated with each loaded page, if \code{do.volt} is TRUE.}
 \item{pagerefs}{The page byte offsets that were computed.}
 \item{header}{File header output, as given by \code{\link{header.info}}.}
 
@@ -156,4 +156,4 @@ print(procfileshort)
 
 
 }
-\keyword{manip}
+\keyword{IO}

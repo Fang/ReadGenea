@@ -108,7 +108,7 @@ conv01 <- function(x){
 #convert time intervals
 #size <- desired number of measurements
 
-get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = F, simplify = T ,read.from.file=F, size=Inf, ...){
+get.intervals = function(x, start=0, end = 1, length = NULL, time.format = c("auto", "seconds", "days", "proportion", "measurements", "time"), incl.date = FALSE, simplify = TRUE ,read.from.file=FALSE, size=Inf, ...){
 
 if (inherits(x, "VirtAccData")) read.from.file = TRUE
 #virtual database, go get the relevant period first
@@ -271,6 +271,7 @@ end = min(end, n)
 
 if (incl.date) cat("Extracting time interval: ", format(convert.time(c(x[start,1], x[end,1]))) , "\n")
 ind = start:end
+tmp = 1
 if (length(ind) > size){
 tmp = ceiling(length(ind) / size)
 ind = ind[(ind %% tmp == 0)]
@@ -291,11 +292,24 @@ return(x)
 
 dim.AccData <- function(x) dim(x$data.out)
 
-plot.AccData <- function(x, y=NULL, ...){
+plot.AccData <- function(x, y=NULL, what = c("sd", "mean", "temperature", "light", "voltage"),...){
+what = match.arg(what)
 if (is.null(y)){
 epoch = floor(nrow(x)/200 + 1)/x$freq
-obj = epoch.apply(x, epoch, TRUE, function(t) sd(svm(t)))
-plot(convert.time(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = "SVM SD", log = "y")
+if (what == "sd"){
+obj = epoch.apply(x, epoch, TRUE, FUN = function(t) sd(svm(t)))
+} else if (what == "mean"){
+obj = epoch.apply(x, epoch, TRUE, FUN = function(t) mean(svm(t)))
+} else if (what == "temperature"){
+obj = epoch.apply( x, epoch, incl = T, function(t) mean(t[,7]))
+} else if (what == "voltage"){
+obj = x[(1: floor(nrow(x) / epoch) * epoch), c(1, 7)]
+obj[2] = x$voltage[(1: floor(nrow(x) / epoch) * epoch)]
+} else {
+#current workaround for light?
+obj = epoch.apply(x, epoch, incl = T, FUN = function(t) max(t[,5]))
+}
+plot(convert.time(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = what, ...)
 } else {
 plot(convert.time(x[,1]), y, ...)
 }
@@ -375,3 +389,8 @@ c(rep(X, each = floor(length / length(X))), rep(tail(X,1), length - length(X) * 
 }
 
 
+summary.AccData <- function(object, ...){
+
+summary(epoch.sd(object, 10))
+
+}

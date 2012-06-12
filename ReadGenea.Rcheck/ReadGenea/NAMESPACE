@@ -12,8 +12,6 @@ importFrom("graphics", "Axis", "axis", "barplot", "hist", "par", "plot",
            "plot.default")
 
 
-#export(read.bin, stft, plot.stft, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.mv, get.intervals, positionals, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%", header.info, print.AccData, "[.AccData", c.AccData, nrow.AccData, length.AccData, correctpages, print.stft)
-#export(read.bin, stft, plot.stft, plot.times2, times2, print.times2, format.times2, chron2, getfreqs, plotsphere, axis.times2, stft.AccData, get.intervals, positionals, header.info, print.AccData, "[.AccData", c.AccData, dim.AccData, plot.AccData, svm, print.VirtAccData, correctpages, print.stft, bapply, bapply.basic, expand, "%bt%", constrain, "%bq%" )
 export(read.bin,header.info,get.intervals, stft, convert.time, parse.time, axis.RGtime, format.RGtime, plot.AccData, print.VirtAccData,  epoch.apply, svm, epoch.mean, epoch.sd, epoch.median, epoch.mad, epoch.autocor, epoch.quantile, hanning.window, uniform.window, as.RGtime)
 
 S3method(Axis, RGtime)
@@ -30,34 +28,10 @@ S3method("[", AccData)
 S3method("$", AccData)
 S3method(c, AccData)
 S3method(dim, AccData)
+S3method(summary, AccData)
 
 S3method(print, stft)
 S3method(plot, stft)
-
-#export(read.bin, header.info, 
-###################
-#read.bin
-#get.intervals
-#stft <- various arguments
-#positionals <- including kernel density estimates
-#svm <- calculate svms
-#apply.epoch <- epochal calculations
-#svm.epoch
-#sd.epoch
-#mad.epoch
-#autocor.epoch
-#obj$temp
-#obj$volt
-#obj$light
-#plot(obj) <- summary plots?
-#summary(obj) <- 24 hour summaries
-#
-#
-####################################
-#autocalibration...
-
-
-
 
 
 # Import all packages listed as Imports or Depends

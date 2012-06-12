@@ -35,4 +35,4 @@ fileheader <- header.info(system.file("binfile/TESTfile.bin", package = "ReadGen
 print(fileheader)
 attr(fileheader, "calibration")
 }
-\keyword{manip}
+\keyword{IO}

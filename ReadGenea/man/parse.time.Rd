@@ -55,4 +55,4 @@ parse.time(c("Fri 13:05", "Fri 13:00"), start = t1) - t1
 parse.time(c("Thursday 13:05", "Thursday 13:00"), start = t1) - t1
 
 }
-\keyword{manip}
+\keyword{utilities}

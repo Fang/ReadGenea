@@ -1,9 +1,9 @@
 Package: ReadGenea
 Type: Package
 Title: Package For Reading Binary files
-Version: 2.5
-Date: 23/05/2012
-Author: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
+Version: 3.0
+Date: 12/06/2012
+Author: Zhou Fang <zhou@activinsights.co.uk>
 Maintainer: ActivInsights Ltd. <joss.langford@activinsights.co.uk>
 Description: Functions and analytics for Genea accelerometer data into R objects
 License: GPL
@@ -12,4 +12,4 @@ ByteCompile: yes
 Depends: bitops
 Suggests: mmap, MASS
 Packaged: 2011-10-12 13:17:57 UTC; admin
-Built: R 2.14.1; ; 2012-06-11 15:48:18 UTC; windows
+Built: R 2.14.1; ; 2012-06-12 13:54:14 UTC; windows

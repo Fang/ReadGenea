@@ -118,4 +118,4 @@ stft(procfile, type = "svm", reassign = FALSE, plot.it = TRUE, wtype = "uniform.
 obj = stft(procfile, type = "svm", quiet = TRUE)
 plot(obj, cex = 3, showmax = FALSE, mode = "pval")
 }
-\keyword{manip}
+\keyword{ts}

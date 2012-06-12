@@ -80,4 +80,4 @@ box() #complete the bounding box
 plot(t2, 1:10, xaxt = "n")
 axis.RGtime(at = pretty(t2, 20) , side = 1)
 }
-\keyword{manip}
+\keyword{methods}

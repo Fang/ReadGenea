@@ -73,5 +73,5 @@ plot(obj, mode = "pval", reassign = FALSE, median = TRUE)
 #log scale frequency, no top bar
 dev.new(); plot(obj, mode = "pval", reassign = FALSE, topthresh = Inf, log = "y") 
 }
-\keyword{manip}
+\keyword{hplot}
 

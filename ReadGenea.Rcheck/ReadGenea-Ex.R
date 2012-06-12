@@ -6,6 +6,35 @@ library('ReadGenea')
 
 assign(".oldSearch", search(), pos = 'CheckExEnv')
 cleanEx()
+nameEx("AccData")
+### * AccData
+
+flush(stderr()); flush(stdout())
+
+### Name: AccData
+### Title: Methods for processing and summarising AccData.
+### Aliases: AccData [.AccData $.AccData print.AccData plot.AccData
+###   summary.AccData
+### Keywords: methods
+
+### ** Examples
+
+
+binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
+
+#Read in the entire file, calibrated
+procfile<-read.bin(binfile)
+
+print(procfile)
+summary(procfile)
+
+plot(procfile$temperature)
+plot(procfile[,c(1,7)])
+
+
+
+
+cleanEx()
 nameEx("RGtime")
 ### * RGtime
 
@@ -15,7 +44,7 @@ flush(stderr()); flush(stdout())
 ### Title: Date time handling for the ReadGenea package.
 ### Aliases: RGtime convert.time as.RGtime format.RGtime axis.RGtime
 ###   pretty.RGtime
-### Keywords: manip
+### Keywords: methods
 
 ### ** Examples
 
@@ -61,7 +90,7 @@ flush(stderr()); flush(stdout())
 ### Title: Compute epochal summary statistics.
 ### Aliases: epoch.apply epoch.mean epoch.sd epoch.median epoch.mad
 ###   epoch.autocor epoch.quantile svm
-### Keywords: manip
+### Keywords: ts
 
 ### ** Examples
 
@@ -107,9 +136,8 @@ nameEx("get.intervals")
 flush(stderr()); flush(stdout())
 
 ### Name: get.intervals
-### Title: Methods for processing and summarising AccData.
-### Aliases: AccData get.intervals [.AccData $.AccData print.AccData
-###   plot.AccData
+### Title: Extract an interval of data.
+### Aliases: get.intervals print.VirtAccData VirtAccData
 ### Keywords: manip
 
 ### ** Examples
@@ -117,31 +145,32 @@ flush(stderr()); flush(stdout())
 
 binfile  = system.file("binfile/TESTfile.bin", package = "ReadGenea")[1]
 
-#Read in the entire file, calibrated
-procfile<-read.bin(binfile)
+#Read in a highly downsampled version of the file
+procfile<-read.bin(binfile, downsample = 100)
 print(procfile)
-procfile$data.out[1:5,]
+#Plot the x component
+plot(procfile[,1:2], type = "l")
 
-#Uncalibrated, mmap off
-procfile2<-read.bin(binfile, calibrate = FALSE)
-procfile2$data.out[1:5,]
+#Overlay some segments in different colour
+lines(get.intervals(procfile, start = 0.4, end = 0.5, time.format = "prop", incl.date = TRUE)[,1:2], col=2) 
+lines(get.intervals(procfile, start = 0.4, end = 5, time.format = "sec", incl.date = TRUE)[,1:2], col=3) 
+lines(get.intervals(procfile, start = "16:51", end = "16:52", time.format = "time", incl.date = TRUE)[,1:2], col=4) 
+#Note that measurements will depend on the downsampling rate, not the original sampling rate of the data
+lines(get.intervals(procfile, start = 100, length = 10, time.format = "measurement", incl.date = TRUE)[,1:2], col=5) 
+#This is also understood
+lines(get.intervals(procfile, start = "16:52:10", 30,  incl.date = TRUE)[,1:2], col=6) 
 
-#Read in again, reusing already computed mmap pagerefs
-procfile3<-read.bin(binfile, pagerefs = procfile2$pagerefs )
+#Now load in virtually
+virtfile<-read.bin(binfile, virtual = TRUE)
+#Notice that get.intervals with simplify = FALSE gives a genuine AccData object
+realfile = get.intervals(virtfile, start = 0.5, end = 1, simplify = FALSE)
+virtfile
+realfile
+#get.intervals calls read.bin automatically
+points(get.intervals(virtfile, start = "16:52:10", "16:52:40",  incl.date = TRUE)[,1:2], col=4, pch = ".") 
 
-#Downsample by a factor of 10
-procfilelo<-read.bin(binfile, downsample = 10)
-print(procfilelo)
-object.size(procfilelo) / object.size(procfile)
-
-#Read in a 1 minute interval
-procfileshort <- read.bin(binfile, start = "16:50", end = "16:51")
-print(procfileshort)
-
-##NOT RUN: Read, and save as a R workspace
-#read.bin(binfile, outfile="tmp.Rdata")
-#print(load("tmp.Rdata"))
-#print(processedfile)
+#Alternatively, re-read procfile at a different resampling rate.
+lines(get.intervals(procfile, start = "16:49:00", "16:49:30",  incl.date = TRUE, read.from.file = TRUE, downsample = 300)[,1:2], col=2) 
 
 
 
@@ -176,7 +205,7 @@ flush(stderr()); flush(stdout())
 ### Name: header.info
 ### Title: Get header info from Genea output (.bin) file
 ### Aliases: header.info
-### Keywords: manip
+### Keywords: IO
 
 ### ** Examples
 
@@ -196,7 +225,7 @@ flush(stderr()); flush(stdout())
 ### Name: parse.time
 ### Title: Parses a character time representation to another format.
 ### Aliases: parse.time
-### Keywords: manip
+### Keywords: utilities
 
 ### ** Examples
 
@@ -232,7 +261,7 @@ flush(stderr()); flush(stdout())
 ### Name: plot.stft
 ### Title: Plots and prints Short Time Fourier Transforms
 ### Aliases: plot.stft print.stft
-### Keywords: manip
+### Keywords: hplot
 
 ### ** Examples
 
@@ -270,7 +299,7 @@ flush(stderr()); flush(stdout())
 ### Name: read.bin
 ### Title: File processing function for binary files.
 ### Aliases: read.bin
-### Keywords: manip
+### Keywords: IO
 
 ### ** Examples
 
@@ -316,7 +345,7 @@ flush(stderr()); flush(stdout())
 ### Name: stft
 ### Title: Computes Short Time Fourier Transforms
 ### Aliases: stft
-### Keywords: manip
+### Keywords: ts
 
 ### ** Examples
 
