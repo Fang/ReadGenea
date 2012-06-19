@@ -119,7 +119,7 @@ With \code{virtual = TRUE}, a "VirtAccData" S3 object with page.timestamps, freq
 \section{Warning}{
 Reading in an entire .bin file will take a long time if the file contains a lot of datasets. Reading in such files without downsampling can use up all available memory. See \code{\link{memory.limit}}.
 
-This function is specific to header structure in Geneactiv output files. By design, it should be compatible with all firmware and software versions to date (as of version of current release). If order or field names are changed in future .bin files, this function may have to be updated appropriately.
+This function is specific to header structure in GENEActiv output files. By design, it should be compatible with all firmware and software versions to date (as of version of current release). If order or field names are changed in future .bin files, this function may have to be updated appropriately.
 }
 \seealso{
 \code{\link{header.info}}, \code{\link{print.AccData}}, \code{\link{get.intervals}}

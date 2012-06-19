@@ -1,0 +1,11 @@
+* installing *source* package 'GENEAread' ...
+** R
+** inst
+** byte-compile and prepare package for lazy loading
+** help
+*** installing help indices
+** building package indices ...
+** testing if installed package can be loaded
+running .First.lib() for package 'GENEAread' as .onLoad/.onAttach were not found
+
+* DONE (GENEAread)

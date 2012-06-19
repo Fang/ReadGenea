@@ -1,0 +1,14 @@
+AccData                 Methods for processing and summarising AccData.
+GENEAread-package       GENEAread: a package to process binary
+                        accelerometer output files.
+GRtime                  Date time handling for the GENEAread package.
+epoch.apply             Compute epochal summary statistics.
+get.intervals           Extract an interval of data.
+hanning.window          Computes the Coefficients of a Hanning or
+                        Uniform Window.
+header.info             Get header info from GENEA output (.bin) file
+parse.time              Parses a character time representation to
+                        another format.
+plot.stft               Plots and prints Short Time Fourier Transforms
+read.bin                File processing function for binary files.
+stft                    Computes Short Time Fourier Transforms
