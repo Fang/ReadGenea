@@ -9,11 +9,11 @@ Run cmd.exe to start a command prompt.
 cd  to whereever the package root 'ReadGenea' folder was extracted.
 
 To build for windows, run:
-C:\R2141\bin\x64\Rcmd.exe INSTALL --build --clean ReadGenea 
+C:\R2141\bin\x64\Rcmd.exe INSTALL --build --clean GENEAread 
 
 (Or its equivalent, depending on where R is installed)
 
-This creates a file that you can install into R with Packages>Install packages from local zip file, and load with library(ReadGenea)
+This creates a file that you can install into R with Packages>Install packages from local zip file, and load with library(GENEAread)
 
 To build for linux, run:
-C:\R2141\bin\x64\Rcmd.exe build ReadGenea
+C:\R2141\bin\x64\Rcmd.exe build GENEAread
