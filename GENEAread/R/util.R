@@ -301,13 +301,13 @@ obj = epoch.apply(x, epoch, TRUE, FUN = function(t) sd(svm(t)))
 } else if (what == "mean"){
 obj = epoch.apply(x, epoch, TRUE, FUN = function(t) mean(svm(t)))
 } else if (what == "temperature"){
-obj = epoch.apply( x, epoch, incl = T, function(t) mean(t[,7]))
+obj = epoch.apply( x, epoch, incl.date = T, function(t) mean(t[,7]))
 } else if (what == "voltage"){
 obj = x[(1: floor(nrow(x) / epoch) * epoch), c(1, 7)]
 obj[2] = x$voltage[(1: floor(nrow(x) / epoch) * epoch)]
 } else {
 #current workaround for light?
-obj = epoch.apply(x, epoch, incl = T, FUN = function(t) max(t[,5]))
+obj = epoch.apply(x, epoch, incl.date = T, FUN = function(t) max(t[,5]))
 }
 if (draw) plot(convert.time(obj[,1]) ,obj[,2] ,  type = "l", xlab = "Time", ylab = what, ...)
 return(invisible(obj))
@@ -396,3 +396,48 @@ summary.AccData <- function(object, ...){
 summary(epoch.sd(object, 10))
 
 }
+
+
+# Plot a line graph, with breaks when things change too much
+# (assume x is sorted)
+pseudolines <- function(x,y=NULL, max.shift, new = FALSE,...){
+if (new) plot(x,y, type = "n", ...)
+if (is.null(y)){
+if ((length(dim(x)) > 1) && (ncol(x)==2 ) ){
+y = x[,2]
+x = x[,1]
+} else {
+y = drop(x)
+x = 1:length(y)
+}
+}
+n = length(y)
+if (missing(max.shift)) max.shift = max(sqrt(2) /n, 0.05)
+
+xrng = par("usr")
+yrng = xrng[4] - xrng[3]
+xrng = xrng[2] - xrng[1]
+
+deltas = sqrt(rowSums(cbind(diff(x/xrng), diff(y/yrng))^2))
+deltas = (deltas > max.shift)
+switches = c(which(diff(deltas) != 0), n)
+
+pos = 1
+for (i in 1: (length(switches)+1)){
+type = deltas[pos]
+leng = switches[i] - pos + 2
+
+if (type == TRUE){
+leng = leng - 2
+if (leng > 0){
+ points(x[pos + 1:leng ], y[pos + 1:leng], ...)
+}
+leng = leng + 2
+}else{
+ lines(x[pos -1+ 1:leng], y[pos -1+ 1:leng], ...)
+}
+pos = pos + leng-1
+if (pos > n ) break
+}
+}
+

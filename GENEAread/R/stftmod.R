@@ -306,7 +306,7 @@ if (reassign){
 		frequency =  as.vector(x$CIF[,1:ncol(xv)])
 if (is.numeric(col)){
 	colours = col2rgb(palette()[col] )
-	colours = rgb(colours[1], colours[2], colours[3], alpha = 255*(conv01(as.vector(xv)))  , m = 255)
+	colours = rgb(colours[1], colours[2], colours[3], alpha = 255*(conv01(as.vector(xv)))  , maxColorValue = 255)
 } else {
 	colours = col[1+ (length(col) - 1) * ( conv01(as.vector(xv)))]
 }
@@ -345,11 +345,11 @@ axis(2, pretty(constrain(frequency, ylim[1], ylim[2]), min(floor(topthresh), flo
 if (as.numeric(showmax) > 0){
 #points ( time, x$principals, col=2 * (rowMeans(xv) > 1 * x$null.logmean)  , pch=".", cex = 3)
 
-points(timegrid, x$principals, col = 2, pch = ".", cex = cex)
+pseudolines(timegrid, x$principals, col = 2, pch = ".", lwd = 2, cex = 2)
 
 }
 if (as.numeric(showmax) > 1){
-points(timegrid, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", cex = cex)
+pseudolines(timegrid, frequency[ apply(x$values, 1, function(t) which.max(replace(t, which.max(t), -Inf)))], col=3, pch = ".", lwd = 2, cex = 2)
 }
 
 }

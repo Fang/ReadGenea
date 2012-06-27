@@ -12,4 +12,4 @@ ByteCompile: yes
 Depends: bitops
 Suggests: mmap, MASS
 Packaged: 2011-10-12 13:17:57 UTC; admin
-Built: R 2.14.1; ; 2012-06-19 10:22:44 UTC; windows
+Built: R 2.14.1; ; 2012-06-27 12:33:07 UTC; windows

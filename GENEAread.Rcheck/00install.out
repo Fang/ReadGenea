@@ -1,3 +1,7 @@
+Loading required package: grDevices
+Loading required package: graphics
+Loading required package: stats
+Loading required package: utils
 * installing *source* package 'GENEAread' ...
 ** R
 ** inst
@@ -6,6 +10,10 @@
 *** installing help indices
 ** building package indices ...
 ** testing if installed package can be loaded
+Loading required package: grDevices
+Loading required package: graphics
+Loading required package: stats
+Loading required package: utils
 running .First.lib() for package 'GENEAread' as .onLoad/.onAttach were not found
 
 * DONE (GENEAread)

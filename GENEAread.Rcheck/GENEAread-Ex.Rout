@@ -50,7 +50,7 @@ GENEAread 1.0 loaded
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.142 secs .
+Processing took: 0.14 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -147,7 +147,7 @@ Classes 'GRtime', 'numeric'  atomic [1:10] 1000 2000 3000 4000 5000 6000 7000 80
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.142 secs .
+Processing took: 0.14 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -204,7 +204,7 @@ Downsampling to  1  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.121 secs .
+Processing took: 0.126 secs .
 Loaded 312 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.000 (Wed) 
 > print(procfile)
@@ -256,7 +256,7 @@ GENEAread dataset:  15900 records at 100 Hz (Approx  1 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.011 secs .
+Processing took: 0.01 secs .
 Loaded 3600 records (Approx  0 MB of RAM)
 12-05-23 16:52:08.000 (Wed)  to  12-05-23 16:52:43.990 (Wed) 
 Extracting time interval:  16:52:08 16:52:43 
@@ -454,7 +454,7 @@ $headlines
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.142 secs .
+Processing took: 0.141 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > #Create stft object
@@ -505,7 +505,7 @@ Window size:  1000 ( 10 s ) -> f resolution:  0.1 Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.139 secs .
+Processing took: 0.133 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > print(procfile)
@@ -531,7 +531,7 @@ GENEAread dataset:  31200 records at 100 Hz (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.102 secs .
+Processing took: 0.104 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > procfile2$data.out[1:5,]
@@ -547,7 +547,7 @@ Loaded 31200 records (Approx  2 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.132 secs .
+Processing took: 0.13 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > 
@@ -557,7 +557,7 @@ Downsampling to  10  Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.088 secs .
+Processing took: 0.085 secs .
 Loaded 3120 records (Approx  0 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.900 (Wed) 
 > print(procfilelo)
@@ -572,7 +572,7 @@ GENEAread dataset:  3120 records at 10 Hz (Approx  0 MB of RAM)
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.019 secs .
+Processing took: 0.018 secs .
 Loaded 6600 records (Approx  0 MB of RAM)
 12-05-23 16:49:59.000 (Wed)  to  12-05-23 16:51:04.990 (Wed) 
 > print(procfileshort)
@@ -650,7 +650,7 @@ Window size:  100 ( 100 s ) -> f resolution:  0.01 Hz
 Number of pages in binary file: 104 
 Processing...
 ================================================================================
-Processing took: 0.116 secs .
+Processing took: 0.121 secs .
 Loaded 31200 records (Approx  2 MB of RAM)
 12-05-23 16:47:50.000 (Wed)  to  12-05-23 16:53:01.990 (Wed) 
 > #Default is mv
@@ -749,7 +749,7 @@ Extracting time interval:  16:47:50 16:53:01
 > ### * <FOOTER>
 > ###
 > cat("Time elapsed: ", proc.time() - get("ptime", pos = 'CheckExEnv'),"\n")
-Time elapsed:  12.99 0.2 13.22 NA NA 
+Time elapsed:  12.71 0.21 12.93 NA NA 
 > grDevices::dev.off()
 pdf 
   2 
